@@ -1,0 +1,16 @@
+{
+    "folders": [
+        {
+            "name": "API",
+            "path": "./apps/api"
+        },
+        {
+            "name": "Logger",
+            "path": "./packages/logger"
+        },
+        {
+            "name": "Monorepo",
+            "path": "."
+        },
+    ]
+}

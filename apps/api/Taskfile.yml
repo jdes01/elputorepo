@@ -1,0 +1,48 @@
+version: '3'
+
+tasks:
+  setup:
+    desc: "Instala dependencias y aplica migraciones"
+    cmds:
+      - uv sync --dev
+      - task db.apply_migrations
+
+  test:
+    desc: "Ejecuta los tests"
+    cmds:
+      - bash scripts/test.sh
+
+  migrations:newmigration:*:
+    vars:
+      TITLE: '{{index .MATCH 0}}'
+    cmds:
+      - task db.migrate MESSAGE="{{.TITLE}}"
+
+  migrations:downgrade:*:
+    vars:
+      VERSIONS: '{{index .MATCH 0}}'
+    cmds:
+      - task db.downgrade VERSIONS="{{.VERSIONS}}"
+
+  migrations:migrate:
+    cmds:
+      - task db.apply_migrations
+
+  db.apply_migrations:
+    desc: "Aplica todas las migraciones pendientes"
+    cmds:
+      - alembic upgrade head
+    silent: true
+
+  db.migrate:
+    desc: "Genera nueva migración con mensaje"
+    cmds:
+      - alembic revision --autogenerate -m "{{.MESSAGE}}"
+      - task db.apply_migrations
+    silent: true
+
+  db.downgrade:
+    desc: "Revertir la última migración"
+    cmds:
+      - alembic downgrade -{{.VERSIONS}}
+    silent: true

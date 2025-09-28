@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+        "name": "Attach to Docker Container",
+        "type": "debugpy",
+        "request": "attach",
+        "connect": {
+            "host": "localhost",
+            "port": 5678
+        },
+        "pathMappings": [
+            {
+                "localRoot": "${workspaceFolder}/apps/api/src",
+                "remoteRoot": "/app/src"
+            }
+        ]
+    }
+  ]
+}
