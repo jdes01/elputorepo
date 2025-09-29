@@ -6,9 +6,8 @@
   "ruff.configurationPreference": "filesystemFirst",
   "mypy-type-checker.args": ["--config-file=../pyproject.toml"],
   "mypy-type-checker.cwd": "${workspaceFolder}/src",
-  "python.testing.pytestArgs": [
-    "."
-  ],
+  "python.testing.pytestArgs": ["."],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "python.analysis.extraPaths": ["/home/jdes01/DEV/elputorepo/packages/logger/src"]
 }

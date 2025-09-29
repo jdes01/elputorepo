@@ -3,19 +3,28 @@ FROM python:3.12-slim
 ARG DEBUG
 ENV DEBUG=${DEBUG:-0}
 
+# Traemos uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-WORKDIR /app
+# Estructura dentro del contenedor:
+# /app
+# └── api
+# /packages
+# └── logger
 
+WORKDIR /packages/logger
+COPY packages/logger ./
+RUN uv sync 
+
+
+WORKDIR /app/api
 ENV UV_CACHE_DIR=/tmp/uv-cache
 
-COPY pyproject.toml uv.lock* ./
+COPY apps/api/pyproject.toml apps/api/uv.lock* ./
+RUN uv sync --frozen --no-editable
 
-RUN uv sync --frozen
-
-COPY src/ ./src/
-
-COPY scripts/ ./scripts/
+COPY apps/api/src ./src
+COPY apps/api/scripts ./scripts
 
 EXPOSE 8000
 

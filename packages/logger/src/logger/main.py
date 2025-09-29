@@ -1,28 +1,25 @@
-import logging
+# logger/main.py
+from loguru import logger as loguru_logger
+from .context import request_id_var, execution_id_var
 import sys
-import structlog
 
 
 def configure_logger(level: str = "INFO"):
-    logging.basicConfig(
-        level=getattr(logging, level),
-        format="%(message)s",
-        handlers=[logging.StreamHandler(sys.stdout)],
-    )
-
-    structlog.configure(
-        processors=[
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.add_log_level,
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.processors.JSONRenderer(),
-        ],
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        wrapper_class=structlog.stdlib.BoundLogger,
-        cache_logger_on_first_use=True,
+    loguru_logger.remove()
+    loguru_logger.add(
+        sys.stdout,
+        level=level,
+        colorize=True,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+        "<level>{level: <8}</level> | "
+        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+        "req={extra[request_id]} exec={extra[execution_id]} | "
+        "{message}",
     )
 
 
-def get_logger(name: str = "app"):
-    return structlog.get_logger(name)
+def get_logger(name: str = "app"):  # sin tipo explícito
+    return loguru_logger.bind(
+        request_id=request_id_var.get(), execution_id=execution_id_var.get(), name=name
+    )
+
