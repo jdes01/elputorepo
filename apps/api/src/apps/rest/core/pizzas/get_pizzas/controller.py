@@ -1,27 +1,15 @@
-from typing import Annotated
+from fastapi import APIRouter, Depends
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
-
-from src.apps.rest.utils.schemas import ResponseMetaSchema, ResponseSchema, Schema
+from src.apps.rest.core.pizzas.get_pizzas.request import (
+    GetPizzasRequest,
+    get_pizza_request,
+)
+from src.apps.rest.core.pizzas.get_pizzas.response import GetPizzasResponse
+from src.apps.rest.utils.schemas import ResponseMetaSchema, ResponseSchema
 from src.contexts.core.application.queries.get_pizzas_query_handler import (
     GetPizzasQuery,
     GetPizzasQueryHandler,
 )
-
-
-class GetPizzasRequest(BaseModel):
-    with_cheese: bool
-
-
-class GetPizzasResponse(Schema):
-    names: list[str]
-
-
-def get_pizza_request(
-    with_cheese: Annotated[bool, Query(alias="withCheese")] = False,
-) -> GetPizzasRequest:
-    return GetPizzasRequest(with_cheese=with_cheese)
 
 
 class GetPizzasController:
@@ -42,11 +30,9 @@ class GetPizzasController:
     def handle_request(
         self, request: GetPizzasRequest = Depends(get_pizza_request)
     ) -> ResponseSchema[GetPizzasResponse]:
-        result = self.get_pizzas_use_case.handle(
-            GetPizzasQuery(with_cheese=request.with_cheese)
-        )
+        result = self.get_pizzas_use_case.handle(GetPizzasQuery())
 
         return ResponseSchema[GetPizzasResponse](
-            data=GetPizzasResponse(names=[pizza for pizza in result.pizzas]),
+            data=GetPizzasResponse(pizzas=[pizza for pizza in result.pizzas]),
             metadata=ResponseMetaSchema(count=len(result.pizzas)),
         )

@@ -8,4 +8,4 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     app_name: str = "PIZZERIA CHULERIA"
-    postgres_uri: str = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
+    postgres_uri: str = "postgresql://myuser:mypassword@db:5432/mydatabase"

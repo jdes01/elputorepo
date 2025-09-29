@@ -2,6 +2,9 @@ from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Factory, Dependency
 from sqlalchemy.orm import Session
 
+from src.contexts.core.application.commands.create_pizza_command_handler import (
+    CreatePizzaCommandHandler,
+)
 from src.contexts.shared.settings import Settings
 
 from ..application import GetPizzasQueryHandler
@@ -26,6 +29,12 @@ class CoreContainer(DeclarativeContainer):
 
     get_pizzas_query_handler: Factory[GetPizzasQueryHandler] = Factory(
         GetPizzasQueryHandler,
+        settings=settings,
+        pizza_repository=postgres_pizza_repository,
+    )
+
+    create_pizza_command_handler: Factory[CreatePizzaCommandHandler] = Factory(
+        CreatePizzaCommandHandler,
         settings=settings,
         pizza_repository=postgres_pizza_repository,
     )

@@ -12,7 +12,7 @@ def configure_logger(level: str = "INFO"):
         colorize=True,
         format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
-        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+        "<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
         "req={extra[request_id]} exec={extra[execution_id]} | "
         "{message}",
     )

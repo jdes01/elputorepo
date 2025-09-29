@@ -1,7 +1,10 @@
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Container, Dependency, Factory
 
-from src.apps.rest.core.pizzas.controllers.get_pizzas_controller import (
+from src.apps.rest.core.pizzas.create_pizza.controller import (
+    CreatePizzaController,
+)
+from src.apps.rest.core.pizzas.get_pizzas.controller import (
     GetPizzasController,
 )
 from src.apps.rest.core.pizzas.router import PizzasRouter
@@ -27,8 +30,15 @@ class CoreAPIContainer(DeclarativeContainer):
         GetPizzasController,
         get_pizzas_use_case=core_container.container.get_pizzas_query_handler,
     )
+    create_pizza_controller = Factory(
+        CreatePizzaController,
+        create_pizza_use_case=core_container.container.create_pizza_command_handler,
+    )
+
     pizzas_router: Factory[PizzasRouter] = Factory(
-        PizzasRouter, get_pizzas_controller=get_pizzas_controller
+        PizzasRouter,
+        get_pizzas_controller=get_pizzas_controller,
+        create_pizza_controller=create_pizza_controller,
     )
 
     # ============================== CONTAINER EXPORTS ===================================

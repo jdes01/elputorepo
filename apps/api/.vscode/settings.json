@@ -9,5 +9,5 @@
   "python.testing.pytestArgs": ["."],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.analysis.extraPaths": ["/home/jdes01/DEV/elputorepo/packages/logger/src"]
+  "python.analysis.extraPaths": ["${workspaceFolder}/../../packages/logger/src"]
 }
