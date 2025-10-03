@@ -32,7 +32,7 @@ services:
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydatabase
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD", "pg_isready", "-U", "myuser", "-d", "mydatabase"]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -72,6 +72,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_LOG_LEVEL=warn
     restart: unless-stopped
     networks:
       - app-network
@@ -100,6 +101,8 @@ services:
     image: grafana/promtail:latest
     container_name: promtail
     restart: unless-stopped
+    environment:
+      - LOG_LEVEL=warn
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock
@@ -109,6 +112,47 @@ services:
     networks:
       - app-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak-db
+    command:
+      - start-dev
+    networks:
+      - app-network
+
+  keycloak-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: keycloak
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "myuser", "-d", "mydatabase"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-keycloak:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+
 networks:
   app-network:
     driver: bridge
@@ -117,4 +161,4 @@ volumes:
   pgdata:
   pgadmin-data:
   grafana-data:
-
+  pgdata-keycloak:

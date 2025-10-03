@@ -1,7 +1,7 @@
 .PHONY: help run save-pizza test
 
 # ------------------------
-# Makefile de apps/api
+# Api Makefile
 # ------------------------
 
 help:  ## Muestra los comandos disponibles
@@ -16,3 +16,6 @@ save-pizza:  ## Guarda una pizza con NAME
 
 test:  ## Ejecuta tests con pytest
 	@PYTHONPATH=src .venv/bin/python3 -m pytest
+
+install: ## Install dependencies
+	uv sync --dev

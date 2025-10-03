@@ -14,7 +14,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 WORKDIR /packages/logger
 COPY packages/logger ./
-RUN uv sync 
+RUN uv sync --editable
 
 
 WORKDIR /app/api
