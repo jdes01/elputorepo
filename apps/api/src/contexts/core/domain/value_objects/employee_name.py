@@ -2,20 +2,20 @@ from dataclasses import dataclass
 from src.contexts.shared import DomainException
 
 
-class PizzaNameEmptyError(DomainException):
+class EmployeeNameEmptyError(DomainException):
     pass
 
 
-class PizzaNameTooLongError(DomainException):
+class EmployeeNameTooLongError(DomainException):
     pass
 
 
-class PizzaNameInvalidCharactersError(DomainException):
+class EmployeeNameInvalidCharactersError(DomainException):
     pass
 
 
 @dataclass(frozen=True)
-class PizzaName:
+class EmployeeName:
     value: str
 
     def __post_init__(self):
@@ -35,16 +35,18 @@ class PizzaName:
 
     def _validate_not_empty(self):
         if not self.value:
-            raise PizzaNameEmptyError("El nombre de la pizza no puede estar vacío.")
+            raise EmployeeNameEmptyError(
+                "El nombre de la employee no puede estar vacío."
+            )
 
     def _validate_length(self):
         if len(self.value) > 50:
-            raise PizzaNameTooLongError(
-                "El nombre de la pizza no puede superar 50 caracteres."
+            raise EmployeeNameTooLongError(
+                "El nombre de la employee no puede superar 50 caracteres."
             )
 
     def _validate_characters(self):
         if not all(c.isalpha() or c.isspace() or c == "-" for c in self.value):
-            raise PizzaNameInvalidCharactersError(
-                "El nombre de la pizza solo puede contener letras, espacios o guiones."
+            raise EmployeeNameInvalidCharactersError(
+                "El nombre de la employee solo puede contener letras, espacios o guiones."
             )

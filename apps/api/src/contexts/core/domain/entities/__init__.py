@@ -1,3 +1,3 @@
-from .pizza import Pizza
+from .employee import Employee
 
-__all__ = ["Pizza"]
+__all__ = ["Employee"]

@@ -2,14 +2,14 @@ from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Factory, Dependency
 from sqlalchemy.orm import Session
 
-from src.contexts.core.application.commands.create_pizza_command_handler import (
-    CreatePizzaCommandHandler,
+from src.contexts.core.application.commands.create_employee_command_handler import (
+    CreateEmployeeCommandHandler,
 )
 from src.contexts.shared.settings import Settings
 
-from ..application import GetPizzasQueryHandler
+from ..application import GetEmployeesQueryHandler
 from ..infrastructure import (
-    PostgresPizzaRepository,
+    PostgresEmployeeRepository,
 )
 
 
@@ -23,20 +23,20 @@ class CoreContainer(DeclarativeContainer):
     #
     # ============================== CONTAINER EXPORTS ===================================
 
-    postgres_pizza_repository: Factory[PostgresPizzaRepository] = Factory(
-        PostgresPizzaRepository, session=sqlalchemy_session
+    postgres_employee_repository: Factory[PostgresEmployeeRepository] = Factory(
+        PostgresEmployeeRepository, session=sqlalchemy_session
     )
 
-    get_pizzas_query_handler: Factory[GetPizzasQueryHandler] = Factory(
-        GetPizzasQueryHandler,
+    get_employees_query_handler: Factory[GetEmployeesQueryHandler] = Factory(
+        GetEmployeesQueryHandler,
         settings=settings,
-        pizza_repository=postgres_pizza_repository,
+        employee_repository=postgres_employee_repository,
     )
 
-    create_pizza_command_handler: Factory[CreatePizzaCommandHandler] = Factory(
-        CreatePizzaCommandHandler,
+    create_employee_command_handler: Factory[CreateEmployeeCommandHandler] = Factory(
+        CreateEmployeeCommandHandler,
         settings=settings,
-        pizza_repository=postgres_pizza_repository,
+        employee_repository=postgres_employee_repository,
     )
 
     # ====================================================================================

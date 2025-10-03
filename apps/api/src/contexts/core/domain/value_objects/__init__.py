@@ -1,4 +1,4 @@
-from .pizza_name import PizzaName
-from .pizza_id import PizzaId
+from .employee_name import EmployeeName
+from .employee_id import EmployeeId
 
-__all__ = ["PizzaName", "PizzaId"]
+__all__ = ["EmployeeName", "EmployeeId"]

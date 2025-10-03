@@ -1,4 +1,3 @@
-from .pizza_postgres_schema import PizzaPostgresSchema
-from .user_postgres_schema import UserPostgresSchema
+from .employee_postgres_schema import EmployeePostgresSchema
 
-__all__ = ["PizzaPostgresSchema", "UserPostgresSchema"]
+__all__ = ["EmployeePostgresSchema"]

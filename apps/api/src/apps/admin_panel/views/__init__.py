@@ -1,3 +1,3 @@
-from .pizza_view import PizzaView
+from .employee_view import EmployeeView
 
-__all__ = ["PizzaView"]
+__all__ = ["EmployeeView"]

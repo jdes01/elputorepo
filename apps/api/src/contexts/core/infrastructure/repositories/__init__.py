@@ -1,3 +1,3 @@
-from .postgres_pizza_repository import PostgresPizzaRepository
+from .postgres_employee_repository import PostgresEmployeeRepository
 
-__all__ = ["PostgresPizzaRepository"]
+__all__ = ["PostgresEmployeeRepository"]

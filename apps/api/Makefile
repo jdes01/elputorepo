@@ -1,4 +1,4 @@
-.PHONY: help run save-pizza test
+.PHONY: help run save-employee test
 
 # ------------------------
 # Api Makefile
@@ -11,8 +11,8 @@ help:  ## Muestra los comandos disponibles
 run:  ## Ejecuta la app Typer con ARGS
 	@PYTHONPATH=src .venv/bin/python3 -m apps.cli.app $(ARGS)
 
-save-pizza:  ## Guarda una pizza con NAME
-	@PYTHONPATH=src .venv/bin/python3 -m apps.cli.app core save-pizza $(NAME)
+save-employee:  ## Guarda una employee con NAME
+	@PYTHONPATH=src .venv/bin/python3 -m apps.cli.app core save-employee $(NAME)
 
 test:  ## Ejecuta tests con pytest
 	@PYTHONPATH=src .venv/bin/python3 -m pytest

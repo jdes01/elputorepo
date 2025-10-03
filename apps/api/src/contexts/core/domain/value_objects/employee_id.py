@@ -3,12 +3,12 @@ from dataclasses import dataclass
 from src.contexts.shared import DomainException
 
 
-class PizzaIdInvalidError(DomainException):
+class EmployeeIdInvalidError(DomainException):
     pass
 
 
 @dataclass(frozen=True)
-class PizzaId:
+class EmployeeId:
     value: str
 
     def __post_init__(self):
@@ -21,8 +21,8 @@ class PizzaId:
         uuid.UUID(self.value)
 
     @staticmethod
-    def generate() -> "PizzaId":
-        return PizzaId(str(uuid.uuid4()))
+    def generate() -> "EmployeeId":
+        return EmployeeId(str(uuid.uuid4()))
 
     def is_valid(self) -> bool:
         try:

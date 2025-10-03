@@ -1,3 +1,3 @@
-from .entities import Pizza
+from .entities import Employee
 
-__all__ = ["Pizza"]
+__all__ = ["Employee"]

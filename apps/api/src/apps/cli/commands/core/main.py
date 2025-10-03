@@ -1,5 +1,5 @@
 from typing import Annotated
-from src.contexts.core.domain.entities.pizza import Pizza
+from src.contexts.core.domain.entities.employee import Employee
 from src.contexts.core.infrastructure.container import CoreContainer
 import typer
 
@@ -12,19 +12,19 @@ container = CoreContainer(
     settings=shared_contaienr.settings,
 )
 
-repository = container.postgres_pizza_repository()
+repository = container.postgres_employee_repository()
 
 app = typer.Typer()
 
 
 @app.command()
-def save_pizza(
-    name: Annotated[str, typer.Argument(help="Name of the pizza")],
+def save_employee(
+    name: Annotated[str, typer.Argument(help="Name of the employee")],
 ):
-    pizza = Pizza(name=name)
-    result = repository.save(pizza)
+    employee = Employee(name=name)
+    result = repository.save(employee)
 
     if isinstance(result, Exception):
-        typer.echo(f"Error saving pizza: {result}")
+        typer.echo(f"Error saving employee: {result}")
     else:
-        typer.echo(f"Pizza '{name}' saved")
+        typer.echo(f"Employee '{name}' saved")

@@ -1,7 +1,7 @@
-from .schemas import PizzaPostgresSchema
-from .repositories import PostgresPizzaRepository
+from .schemas import EmployeePostgresSchema
+from .repositories import PostgresEmployeeRepository
 
 __all__ = [
-    "PizzaPostgresSchema",
-    "PostgresPizzaRepository",
+    "EmployeePostgresSchema",
+    "PostgresEmployeeRepository",
 ]

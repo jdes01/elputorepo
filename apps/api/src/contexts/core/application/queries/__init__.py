@@ -1,11 +1,11 @@
-from .get_pizzas_query_handler import (
-    GetPizzasQuery,
-    GetPizzasQueryHandler,
-    GetPizzasResult,
+from .get_employees_query_handler import (
+    GetEmployeesQuery,
+    GetEmployeesQueryHandler,
+    GetEmployeesResult,
 )
 
 __all__ = [
-    "GetPizzasQuery",
-    "GetPizzasQueryHandler",
-    "GetPizzasResult",
+    "GetEmployeesQuery",
+    "GetEmployeesQueryHandler",
+    "GetEmployeesResult",
 ]

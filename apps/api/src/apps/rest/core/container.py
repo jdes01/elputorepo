@@ -1,13 +1,13 @@
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Container, Dependency, Factory
 
-from src.apps.rest.core.pizzas.create_pizza.controller import (
-    CreatePizzaController,
+from src.apps.rest.core.employees.create_employee.controller import (
+    CreateEmployeeController,
 )
-from src.apps.rest.core.pizzas.get_pizzas.controller import (
-    GetPizzasController,
+from src.apps.rest.core.employees.get_employees.controller import (
+    GetEmployeesController,
 )
-from src.apps.rest.core.pizzas.router import PizzasRouter
+from src.apps.rest.core.employees.router import EmployeesRouter
 from src.apps.rest.core.router import CoreRouter
 from src.contexts.core.infrastructure.container import CoreContainer
 from src.contexts.shared.settings import Settings
@@ -26,23 +26,25 @@ class CoreAPIContainer(DeclarativeContainer):
         CoreContainer, settings=settings, sqlalchemy_session=sqlalchemy_session
     )
 
-    get_pizzas_controller: Factory[GetPizzasController] = Factory(
-        GetPizzasController,
-        get_pizzas_use_case=core_container.container.get_pizzas_query_handler,
+    get_employees_controller: Factory[GetEmployeesController] = Factory(
+        GetEmployeesController,
+        get_employees_use_case=core_container.container.get_employees_query_handler,
     )
-    create_pizza_controller = Factory(
-        CreatePizzaController,
-        create_pizza_use_case=core_container.container.create_pizza_command_handler,
+    create_employee_controller = Factory(
+        CreateEmployeeController,
+        create_employee_use_case=core_container.container.create_employee_command_handler,
     )
 
-    pizzas_router: Factory[PizzasRouter] = Factory(
-        PizzasRouter,
-        get_pizzas_controller=get_pizzas_controller,
-        create_pizza_controller=create_pizza_controller,
+    employees_router: Factory[EmployeesRouter] = Factory(
+        EmployeesRouter,
+        get_employees_controller=get_employees_controller,
+        create_employee_controller=create_employee_controller,
     )
 
     # ============================== CONTAINER EXPORTS ===================================
 
-    core_router: Factory[CoreRouter] = Factory(CoreRouter, pizzas_router=pizzas_router)
+    core_router: Factory[CoreRouter] = Factory(
+        CoreRouter, employees_router=employees_router
+    )
 
     # ====================================================================================
