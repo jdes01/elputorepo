@@ -1,4 +1,3 @@
-# logger/main.py
 from loguru import logger as loguru_logger
 from .context import request_id_var, execution_id_var
 import sys

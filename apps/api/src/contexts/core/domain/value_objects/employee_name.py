@@ -1,16 +1,16 @@
 from dataclasses import dataclass
-from src.contexts.shared import DomainException
+from src.contexts.shared import DomainError
 
 
-class EmployeeNameEmptyError(DomainException):
+class EmployeeNameEmptyError(DomainError):
     pass
 
 
-class EmployeeNameTooLongError(DomainException):
+class EmployeeNameTooLongError(DomainError):
     pass
 
 
-class EmployeeNameInvalidCharactersError(DomainException):
+class EmployeeNameInvalidCharactersError(DomainError):
     pass
 
 
@@ -30,7 +30,7 @@ class EmployeeName:
         try:
             self.validate()
             return True
-        except DomainException:
+        except DomainError:
             return False
 
     def _validate_not_empty(self):

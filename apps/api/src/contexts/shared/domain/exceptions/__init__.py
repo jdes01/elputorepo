@@ -1,3 +1,3 @@
-from .domain_exception import DomainException
+from .domain_error import DomainError
 
-__all__ = ["DomainException"]
+__all__ = ["DomainError"]

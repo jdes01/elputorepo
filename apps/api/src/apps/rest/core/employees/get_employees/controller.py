@@ -20,7 +20,7 @@ class GetEmployeesController:
 
     def connect(self, router: APIRouter) -> None:
         router.add_api_route(
-            "/employees",
+            "/",
             self.handle_request,
             methods=["GET"],
             summary="Get all employees",

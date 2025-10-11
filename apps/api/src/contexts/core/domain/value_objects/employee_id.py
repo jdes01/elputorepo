@@ -1,9 +1,9 @@
 import uuid
 from dataclasses import dataclass
-from src.contexts.shared import DomainException
+from src.contexts.shared import DomainError
 
 
-class EmployeeIdInvalidError(DomainException):
+class EmployeeIdInvalidError(DomainError):
     pass
 
 
@@ -28,5 +28,5 @@ class EmployeeId:
         try:
             self.validate()
             return True
-        except DomainException:
+        except DomainError:
             return False

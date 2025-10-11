@@ -19,6 +19,7 @@ class PostgresEmployeeRepository(EmployeeRepository):
                 new_employee = EmployeePostgresSchema(
                     employee_id=employee.id.value,
                     name=employee.name.value,
+                    company_id=employee.company_id.value,
                 )
                 self.session.add(new_employee)
                 self.session.flush()
@@ -39,8 +40,9 @@ class PostgresEmployeeRepository(EmployeeRepository):
             return [
                 Employee.from_primitives(
                     EmployeePrimitives(
-                        id=employee.employee_id,
-                        name=employee.name,
+                        id=employee.employee_id,  # type: ignore
+                        name=employee.name,  # type: ignore
+                        company_id=employee.company_id,  # type: ignore
                     )
                 )
                 for employee in employees

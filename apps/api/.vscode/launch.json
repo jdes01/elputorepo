@@ -5,10 +5,7 @@
       "type": "debugpy",
       "request": "attach",
       "connect": { "host": "localhost", "port": 5678 },
-      "pathMappings": [
-        { "localRoot": "${workspaceFolder}", "remoteRoot": "/home/jdes01/DEV/elputorepo/apps/api" },
-        { "localRoot": "${workspaceFolder}/../../packages/logger", "remoteRoot": "/home/jdes01/DEV/elputorepo/packages/logger" }
-      ]
+      "pathMappings": [{ "localRoot": "${workspaceFolder}", "remoteRoot": "." }]
     }
   ]
 }

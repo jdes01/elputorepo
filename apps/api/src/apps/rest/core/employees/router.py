@@ -17,7 +17,7 @@ class EmployeesRouter(Router):
     create_employee_controller: CreateEmployeeController
 
     def connect(self) -> APIRouter:
-        router = APIRouter()
+        router = APIRouter(prefix="/employees")
         self.get_employees_controller.connect(router)
         self.create_employee_controller.connect(router)
         return router

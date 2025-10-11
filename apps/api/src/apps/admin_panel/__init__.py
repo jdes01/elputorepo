@@ -1,3 +1,3 @@
-from .views import EmployeeView
+from .views import EmployeeView, ShiftView, ShiftPauseView
 
-__all__ = ["EmployeeView"]
+__all__ = ["EmployeeView", "ShiftView", "ShiftPauseView"]

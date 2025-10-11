@@ -12,6 +12,11 @@ up: ## Turn up app
 	@echo "→ Starting docker compose..."
 	@docker compose up --build -d
 
+down: ## Turn down app
+	@echo "→ Stopping docker compose..."
+	@docker compose down
+
+
 restart: ## Restart one or more services: make restart api worker
 	@echo "→ Restarting docker compose service(s): $(filter-out $@,$(MAKECMDGOALS))"
 	@docker compose up --build -d $(filter-out $@,$(MAKECMDGOALS))
@@ -47,7 +52,6 @@ test: ## Run tests
 			echo "→ Skipping package: $$package (no Makefile)"; \
 		fi; \
 	done
-
 
 # Prevent make from treating args as targets
 %:

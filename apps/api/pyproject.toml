@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "sqladmin>=0.21.0",
     "sqlalchemy>=2.0.43",
+    "testcontainers[postgresql]>=4.13.2",
 ]
 
 [dependency-groups]
@@ -86,3 +87,5 @@ warn_return_any = true
 [tool.uv.sources]
 logger = { path = "../../packages/logger", editable = true }
 
+[tool.pytest.ini_options]
+python_files = ["test*.py", "tests.py"]
