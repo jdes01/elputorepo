@@ -1,4 +1,3 @@
-from .postgres_employee_repository import PostgresEmployeeRepository
-from .postgres_shift_repository import PostgresShiftRepository
+from .postgres_event_repository import PostgresEventRepository
 
-__all__ = ["PostgresEmployeeRepository", "PostgresShiftRepository"]
+__all__ = ["PostgresEventRepository"]

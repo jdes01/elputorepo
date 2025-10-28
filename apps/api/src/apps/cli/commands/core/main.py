@@ -1,5 +1,5 @@
 from typing import Annotated
-from src.contexts.core.domain.entities.employee import Employee
+from src.contexts.core.domain.entities.event import Event
 from src.contexts.core.infrastructure.container import CoreContainer
 import typer
 
@@ -12,19 +12,19 @@ container = CoreContainer(
     settings=shared_contaienr.settings,
 )
 
-repository = container.postgres_employee_repository()
+repository = container.postgres_event_repository()
 
 app = typer.Typer()
 
 
 @app.command()
-def save_employee(
-    name: Annotated[str, typer.Argument(help="Name of the employee")],
+def save_event(
+    name: Annotated[str, typer.Argument(help="Name of the event")],
 ):
-    employee = Employee(name=name)
-    result = repository.save(employee)
+    event = Event(name=name)
+    result = repository.save(event)
 
     if isinstance(result, Exception):
-        typer.echo(f"Error saving employee: {result}")
+        typer.echo(f"Error saving event: {result}")
     else:
-        typer.echo(f"Employee '{name}' saved")
+        typer.echo(f"Event '{name}' saved")

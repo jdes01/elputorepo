@@ -1,3 +1,3 @@
-from .views import EmployeeView, ShiftView, ShiftPauseView
+from .views import EventView
 
-__all__ = ["EmployeeView", "ShiftView", "ShiftPauseView"]
+__all__ = ["EventView"]

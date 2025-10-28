@@ -1,4 +1,3 @@
-from .employee_postgres_schema import EmployeePostgresSchema
-from .company_postgres_schema import CompanyPostgresSchema
+from .event_postgres_schema import EventPostgresSchema
 
-__all__ = ["EmployeePostgresSchema", "CompanyPostgresSchema"]
+__all__ = ["EventPostgresSchema"]

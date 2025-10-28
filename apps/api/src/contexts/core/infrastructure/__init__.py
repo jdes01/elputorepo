@@ -1,8 +1,7 @@
-from .schemas import EmployeePostgresSchema, CompanyPostgresSchema
-from .repositories import PostgresEmployeeRepository
+from .schemas import EventPostgresSchema
+from .repositories import PostgresEventRepository
 
 __all__ = [
-    "EmployeePostgresSchema",
-    "CompanyPostgresSchema",
-    "PostgresEmployeeRepository",
+    "EventPostgresSchema",
+    "PostgresEventRepository",
 ]

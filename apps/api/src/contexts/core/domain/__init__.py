@@ -1,3 +1,3 @@
-from .entities import Employee
+from .entities import Event
 
-__all__ = ["Employee"]
+__all__ = ["Event"]

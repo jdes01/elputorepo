@@ -6,12 +6,12 @@ from .domain_event import DomainEvent
 
 @dataclass
 class Aggregate:
-    _events: List[DomainEvent] = field(default_factory=list, init=False)
+    _domain_events: List[DomainEvent] = field(default_factory=list, init=False)
 
-    def _add_event(self, event: DomainEvent):
-        self._events.append(event)
+    def __add_domain_event(self, domain_event: DomainEvent):
+        self._domain_events.append(domain_event)
 
-    def pull_events(self) -> List[DomainEvent]:
-        events = self._events[:]
-        self._events.clear()
-        return events
+    def __pull_domain_events(self) -> List[DomainEvent]:
+        domain_events = self._domain_events[:]
+        self._domain_events.clear()
+        return domain_events

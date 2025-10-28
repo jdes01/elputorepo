@@ -1,7 +1,3 @@
 from .queries import *
 
-__all__ = [
-    "GetEmployeesQuery",
-    "GetEmployeesQueryHandler",
-    "GetEmployeesResult",
-]
+__all__ = []
