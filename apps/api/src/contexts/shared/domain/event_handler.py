@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from src.contexts.shared.domain.domain_event import DomainEvent
+from .domain_event import DomainEvent
 
 E = TypeVar("E", bound=DomainEvent)
 

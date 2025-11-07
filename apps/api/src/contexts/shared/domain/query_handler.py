@@ -3,8 +3,8 @@ from typing import Generic, TypeVar
 
 from returns.result import Result
 
-from src.contexts.shared.domain.schemas import Schema
-from src.contexts.shared.infrastructure.logging import log_handler_start
+from ..application.utils.logging import log_handler_start
+from .schemas import Schema
 
 Query = TypeVar("Query", bound=Schema)
 ResultType = TypeVar("ResultType", bound=Schema)
@@ -19,4 +19,3 @@ class QueryHandler(ABC, Generic[Query, ResultType]):
         query_dict = query.model_dump() if hasattr(query, "model_dump") else {}
         log_handler_start(self.__class__.__name__, **query_dict)
         return self._handle(query)
-

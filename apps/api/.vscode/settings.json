@@ -7,7 +7,11 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "cursorpyright.analysis.extraPaths": [
-    "${workspaceFolder}/../../packages/logger/src"
+    "${workspaceFolder}/../../packages/logger/src",
+    "${workspaceFolder}/../../packages/contracts/src"
+  ],
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/libs/shared/python"
   ],
   "files.exclude": {
     "**/__pycache__": true,

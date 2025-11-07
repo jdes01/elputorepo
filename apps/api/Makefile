@@ -1,4 +1,4 @@
-.PHONY: help run save-event test
+.PHONY: help run save-event test install migrate migrate-new migrate-downgrade setup
 
 # ------------------------
 # Api Makefile
@@ -17,5 +17,17 @@ save-event:  ## Guarda un evento con NAME
 test:  ## Ejecuta tests con pytest
 	@PYTHONPATH=src .venv/bin/python3 -m pytest
 
-install: ## Install dependencies
-	uv sync --dev
+install: ## Instala dependencias
+	@uv sync --dev
+
+setup: install migrate ## Instala dependencias y aplica migraciones
+
+migrate: ## Aplica todas las migraciones pendientes
+	@alembic upgrade head
+
+migrate-new: ## Genera nueva migración con mensaje MESSAGE="nombre migración"
+	@alembic revision --autogenerate -m "$(MESSAGE)"
+	@alembic upgrade head
+
+migrate-downgrade: ## Revierte migraciones VERSIONS=1
+	@alembic downgrade -$(VERSIONS)

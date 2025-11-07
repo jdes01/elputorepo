@@ -33,7 +33,7 @@ class CreateEventController:
         )
 
     def handle_request(self, request: CreateEventRequest = Depends(create_event_request)) -> ResponseSchema[CreateEventResponse]:
-        result = self.create_event_command_handler.handle(CreateEventCommand(event_id=request.event_id, name=request.name))
+        result = self.create_event_command_handler.handle(CreateEventCommand(event_id=request.event_id, name=request.name, capacity=request.capacity))
 
         match result:
             case Success(value):

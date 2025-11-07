@@ -34,11 +34,13 @@ class PostgresEventRepository(EventRepository):
 
                 if existing:
                     existing.name = event.name.value  # type: ignore
+                    existing.capacity = event.capacity.value  # type: ignore
                     existing.deleted_at = event._deleted_at  # type: ignore
                 else:
                     new_event = EventPostgresSchema(
                         event_id=event.id.value,
                         name=event.name.value,
+                        capacity=event.capacity.value,
                         deleted_at=event._deleted_at,
                     )
                     self.session.add(new_event)
@@ -89,6 +91,7 @@ class PostgresEventRepository(EventRepository):
                     EventPrimitives(
                         id=event.event_id,  # type: ignore
                         name=event.name,  # type: ignore
+                        capacity=event.capacity,  # type: ignore
                         deleted_at=event.deleted_at,  # type: ignore
                     )
                 )
@@ -123,6 +126,7 @@ class PostgresEventRepository(EventRepository):
                         EventPrimitives(
                             id=event.event_id,  # type: ignore
                             name=event.name,  # type: ignore
+                            capacity=event.capacity,  # type: ignore
                             deleted_at=event.deleted_at,  # type: ignore
                         )
                     )

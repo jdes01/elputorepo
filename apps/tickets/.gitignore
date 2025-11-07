@@ -1,0 +1,9 @@
+dist
+node_modules
+.prisma
+*.generated
+
+
+
+node_modules
+dist

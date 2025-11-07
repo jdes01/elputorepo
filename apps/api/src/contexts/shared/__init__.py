@@ -1,5 +1,5 @@
 from .domain import CommandHandler, DomainError, QueryHandler, Schema
-from .infrastructure import SharedContainer, log_handler_error, log_handler_success
+from .infrastructure.container import SharedContainer
 from .settings import Settings
 
 __all__ = [
@@ -9,6 +9,4 @@ __all__ = [
     "Schema",
     "CommandHandler",
     "QueryHandler",
-    "log_handler_error",
-    "log_handler_success",
 ]

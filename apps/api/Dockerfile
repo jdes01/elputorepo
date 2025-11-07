@@ -16,7 +16,6 @@ WORKDIR /packages/logger
 COPY packages/logger ./
 RUN uv sync --editable
 
-
 WORKDIR /app/api
 ENV UV_CACHE_DIR=/tmp/uv-cache
 

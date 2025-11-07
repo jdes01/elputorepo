@@ -7,6 +7,8 @@ from src.apps.rest.core.events.delete_event.controller import DeleteEventControl
 from src.apps.rest.core.events.get_all_events.controller import GetAllEventsController
 from src.apps.rest.core.events.get_event.controller import GetEventController
 from src.apps.rest.core.events.router import EventsRouter
+from src.apps.rest.core.users.create_user.controller import CreateUserController
+from src.apps.rest.core.users.router import UsersRouter
 from src.apps.rest.core.router import CoreRouter
 from src.contexts.core.infrastructure.container import CoreContainer
 from src.contexts.shared.settings import Settings
@@ -52,11 +54,22 @@ class CoreAPIContainer(DeclarativeContainer):
         get_all_events_controller=get_all_events_controller,
     )
 
+    create_user_controller = Factory(
+        CreateUserController,
+        create_user_command_handler=core_container.container.create_user_command_handler,
+    )
+
+    users_router: Factory[UsersRouter] = Factory(
+        UsersRouter,
+        create_user_controller=create_user_controller,
+    )
+
     # ============================== CONTAINER EXPORTS ===================================
 
     core_router: Factory[CoreRouter] = Factory(
         CoreRouter,
         events_router=events_router,
+        users_router=users_router,
     )
 
     # ====================================================================================

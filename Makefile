@@ -1,4 +1,4 @@
-.PHONY: up restart logs install test help
+.PHONY: up restart logs install test migrate help
 
 APPS     := $(notdir $(wildcard apps/*))
 PACKAGES := $(notdir $(wildcard packages/*))
@@ -35,6 +35,20 @@ install: ## Install dependencies
 		$(MAKE) -s -C packages/$$package install || true; \
 	done
 
+migrate: ## Run migrations for all apps
+	@for app in $(APPS); do \
+		if [ -f apps/$$app/Makefile ]; then \
+			if $(MAKE) -q -C apps/$$app migrate >/dev/null 2>&1; then \
+				echo "→ Running migrations for app: $$app"; \
+				$(MAKE) -s -C apps/$$app migrate || true; \
+			else \
+				echo "→ Skipping app: $$app (no migrate target)"; \
+			fi \
+		else \
+			echo "→ Skipping app: $$app (no Makefile)"; \
+		fi; \
+	done
+
 test: ## Run tests
 	@for app in $(APPS); do \
 		echo "→ Testing app: $$app"; \
@@ -56,4 +70,5 @@ test: ## Run tests
 # Prevent make from treating args as targets
 %:
 	@:
+
 

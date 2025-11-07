@@ -11,7 +11,7 @@ class Aggregate:
     def _add_domain_event(self, domain_event: DomainEvent):
         self._domain_events.append(domain_event)
 
-    def __pull_domain_events(self) -> List[DomainEvent]:
+    def pull_domain_events(self) -> List[DomainEvent]:
         domain_events = self._domain_events[:]
         self._domain_events.clear()
         return domain_events

@@ -15,8 +15,6 @@ class AdminPanelContainer(DeclarativeContainer):
 
     # ============================== CONTAINER EXPORTS ===================================
 
-    admin_panel_factory: Factory[AdminPanelFactory] = Factory(
-        AdminPanelFactory, engine=shared_container.container.sqlalchemy_engine
-    )
+    admin_panel_factory: Factory[AdminPanelFactory] = Factory(AdminPanelFactory, engine=shared_container.container.sqlalchemy_engine)
 
     # ====================================================================================

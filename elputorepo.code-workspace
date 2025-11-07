@@ -5,8 +5,16 @@
             "path": "./apps/api"
         },
         {
+            "name": "Tickets",
+            "path": "./apps/tickets"
+        },
+        {
             "name": "Logger",
             "path": "./packages/logger"
+        },
+        {
+            "name": "Contracts",
+            "path": "./packages/contracts"
         },
         {
             "name": "Monorepo",
@@ -17,6 +25,7 @@
         "files.exclude": {
             "**/__pycache__": true,
             "**/*.pyc": true
-        }
+        },
+        "makefile.configureOnOpen": false
     }
 }

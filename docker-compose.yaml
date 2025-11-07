@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     build: 
@@ -13,15 +11,19 @@ services:
     environment:
       PYTHONPATH: /app/api/src
       POSTGRES_URI: postgresql://myuser:mypassword@db:5432/mydatabase
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672/
       
     volumes:
       - ./apps/api/src:/app/api/src
       - ./apps/api/scripts:/app/api/scripts
       - ./packages/logger:/packages/logger
+      - ./packages/contracts:/packages/contracts
     networks:
       - app-network
     depends_on:
       db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   db:
@@ -151,6 +153,86 @@ services:
     networks:
       - app-network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck: 
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - app-network
+
+  tickets:
+    build:
+      context: .
+      dockerfile: ./apps/tickets/Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongodb:27017/tickets
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672/
+    volumes:
+      - ./apps/tickets/src:/app/tickets/src
+      - ./apps/tickets/scripts:/app/tickets/scripts
+      - ./packages/contracts:/packages/contracts
+      - /app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    command: mongod --replSet rs0
+    environment:
+      MONGO_INITDB_DATABASE: tickets
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - app-network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - app-network
+
 
 networks:
   app-network:
@@ -161,3 +243,5 @@ volumes:
   pgadmin-data:
   grafana-data:
   pgdata-keycloak:
+  rabbitmq-data:
+  mongodb-data:

@@ -1,0 +1,39 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model EventProjection {
+  id        String   @id @map("_id")
+  capacity  Int
+  createdAt DateTime @default(now())
+
+  @@map("events")
+}
+
+model UserProjection {
+  id        String   @id @map("_id")
+  email     String
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+model Ticket {
+  id        String   @id @map("_id")
+  eventId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@map("tickets")
+  @@index([eventId])
+  @@index([userId])
+}
+
+
+
