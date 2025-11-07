@@ -1,5 +1,5 @@
 from dependency_injector.containers import DeclarativeContainer
-from dependency_injector.providers import Factory, Dependency
+from dependency_injector.providers import Dependency, Factory
 from sqlalchemy.orm import Session
 
 from src.contexts.core.domain.events.event_created_domain_event import EventCreated
@@ -10,11 +10,20 @@ from src.contexts.core.infrastructure.repositories.postgres_event_repository imp
 from src.contexts.shared.infrastructure.in_memory_event_bus import InMemoryEventBus
 from src.contexts.shared.settings import Settings
 
+from ..application.commands.create_event.command_handler import (
+    CreateEventCommandHandler,
+)
+from ..application.commands.delete_event.command_handler import (
+    DeleteEventCommandHandler,
+)
 from ..application.events.on_event_created_event_handler import (
     OnEventCreatedEventHandler,
 )
-from ..application.commands.create_event.command_handler import (
-    CreateEventCommandHandler,
+from ..application.queries.get_all_events.query_handler import (
+    GetAllEventsQueryHandler,
+)
+from ..application.queries.get_event_by_id.query_handler import (
+    GetEventByIdQueryHandler,
 )
 
 
@@ -44,6 +53,21 @@ class CoreContainer(DeclarativeContainer):
     create_event_command_handler: Factory[CreateEventCommandHandler] = Factory(
         CreateEventCommandHandler,
         settings=settings,
+        event_repository=postgres_event_repository,
+    )
+
+    delete_event_command_handler: Factory[DeleteEventCommandHandler] = Factory(
+        DeleteEventCommandHandler,
+        event_repository=postgres_event_repository,
+    )
+
+    get_event_by_id_query_handler: Factory[GetEventByIdQueryHandler] = Factory(
+        GetEventByIdQueryHandler,
+        event_repository=postgres_event_repository,
+    )
+
+    get_all_events_query_handler: Factory[GetAllEventsQueryHandler] = Factory(
+        GetAllEventsQueryHandler,
         event_repository=postgres_event_repository,
     )
 

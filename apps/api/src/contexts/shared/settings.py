@@ -9,3 +9,5 @@ class Settings(BaseSettings):
     )
     app_name: str = "PIZZERIA CHULERIA"
     postgres_uri: str = "postgresql://myuser:mypassword@db:5432/mydatabase"
+    environment: str = "local"
+    log_level: str | None = None

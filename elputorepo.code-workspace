@@ -12,5 +12,11 @@
             "name": "Monorepo",
             "path": "."
         },
-    ]
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/__pycache__": true,
+            "**/*.pyc": true
+        }
+    }
 }

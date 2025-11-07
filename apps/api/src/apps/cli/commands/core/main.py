@@ -1,8 +1,9 @@
 from typing import Annotated
-from src.contexts.core.domain.entities.event import Event
-from src.contexts.core.infrastructure.container import CoreContainer
+
 import typer
 
+from src.contexts.core.domain.entities.event import Event
+from src.contexts.core.infrastructure.container import CoreContainer
 from src.contexts.shared.infrastructure.container import SharedContainer
 
 shared_contaienr = SharedContainer()

@@ -1,8 +1,9 @@
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Container, Factory
 
-from .admin_panel_factory import AdminPanelFactory
 from src.contexts.shared import SharedContainer
+
+from .admin_panel_factory import AdminPanelFactory
 
 
 class AdminPanelContainer(DeclarativeContainer):

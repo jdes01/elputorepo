@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+
 from logger.main import get_logger
+
 from src.contexts.core.domain.events.event_created_domain_event import EventCreated
 from src.contexts.shared.domain.event_handler import EventHandler
 

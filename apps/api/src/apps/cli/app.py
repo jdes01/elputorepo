@@ -1,4 +1,5 @@
 import sys
+
 import typer
 
 from .commands.core.main import app as core_cli

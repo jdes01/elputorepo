@@ -8,7 +8,7 @@ from .domain_event import DomainEvent
 class Aggregate:
     _domain_events: List[DomainEvent] = field(default_factory=list, init=False)
 
-    def __add_domain_event(self, domain_event: DomainEvent):
+    def _add_domain_event(self, domain_event: DomainEvent):
         self._domain_events.append(domain_event)
 
     def __pull_domain_events(self) -> List[DomainEvent]:

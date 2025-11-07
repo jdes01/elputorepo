@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+
+from returns.result import Failure, Result, Success
+
 from src.contexts.shared import DomainError
 
 
@@ -25,6 +28,14 @@ class EventName:
         self._validate_not_empty()
         self._validate_length()
         self._validate_characters()
+
+    @staticmethod
+    def try_create(value: str) -> Result["EventName", DomainError]:
+        """Try to create an EventName, returning Result instead of raising exception."""
+        try:
+            return Success(EventName(value))
+        except DomainError as e:
+            return Failure(e)
 
     def is_valid(self) -> bool:
         try:

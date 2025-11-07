@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from sqladmin import Admin
 
 from fastapi import FastAPI
+from sqladmin import Admin
 from sqlalchemy import Engine
+
 from .views import EventView
 
 

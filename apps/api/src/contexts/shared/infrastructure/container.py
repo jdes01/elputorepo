@@ -1,11 +1,11 @@
-from dependency_injector.providers import Singleton, Factory
 from dependency_injector.containers import DeclarativeContainer
+from dependency_injector.providers import Factory, Singleton
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
-
-from .sqlalchemy import init_sqlalchemy_session, init_sqlalchemy_engine
 from src.contexts.shared.settings import Settings
+
+from .sqlalchemy import init_sqlalchemy_engine, init_sqlalchemy_session
 
 
 class SharedContainer(DeclarativeContainer):

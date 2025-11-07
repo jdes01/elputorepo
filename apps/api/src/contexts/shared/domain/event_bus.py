@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Type
+
 from src.contexts.shared.domain.domain_event import DomainEvent
 from src.contexts.shared.domain.event_handler import EventHandler
 

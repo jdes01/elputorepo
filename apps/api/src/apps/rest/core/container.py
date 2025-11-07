@@ -1,12 +1,15 @@
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Container, Dependency, Factory
+from sqlalchemy.orm import Session
 
 from src.apps.rest.core.events.create_event.controller import CreateEventController
+from src.apps.rest.core.events.delete_event.controller import DeleteEventController
+from src.apps.rest.core.events.get_all_events.controller import GetAllEventsController
+from src.apps.rest.core.events.get_event.controller import GetEventController
 from src.apps.rest.core.events.router import EventsRouter
 from src.apps.rest.core.router import CoreRouter
 from src.contexts.core.infrastructure.container import CoreContainer
 from src.contexts.shared.settings import Settings
-from sqlalchemy.orm import Session
 
 
 class CoreAPIContainer(DeclarativeContainer):
@@ -26,9 +29,27 @@ class CoreAPIContainer(DeclarativeContainer):
         create_event_command_handler=core_container.container.create_event_command_handler,
     )
 
+    delete_event_controller = Factory(
+        DeleteEventController,
+        delete_event_command_handler=core_container.container.delete_event_command_handler,
+    )
+
+    get_event_controller = Factory(
+        GetEventController,
+        get_event_by_id_query_handler=core_container.container.get_event_by_id_query_handler,
+    )
+
+    get_all_events_controller = Factory(
+        GetAllEventsController,
+        get_all_events_query_handler=core_container.container.get_all_events_query_handler,
+    )
+
     events_router: Factory[EventsRouter] = Factory(
         EventsRouter,
         create_event_controller=create_event_controller,
+        delete_event_controller=delete_event_controller,
+        get_event_controller=get_event_controller,
+        get_all_events_controller=get_all_events_controller,
     )
 
     # ============================== CONTAINER EXPORTS ===================================

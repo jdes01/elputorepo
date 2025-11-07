@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from zoneinfo import available_timezones, ZoneInfo
+from zoneinfo import ZoneInfo, available_timezones
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,8 @@
+- Imports should be relative within the same context/module. Use `from ..domain import ...`, `from ...infrastructure import ...`, `from .xxx import yyy` when importing within the same context (e.g., within `/application`, `/domain`, `/infrastructure`). Use absolute imports when importing between different contexts (e.g., from `apps` to `contexts` or vice versa), or when importing from `shared`. Use `__all__ = []` in `__init__.py` files to enable clean relative imports.
+- Use the `logger.main` module to get the logger instance.
+- Use the `returns.result` module to handle the result of the commands and queries.
+- Use the `dataclasses` module to create the command and query handlers.
+- Use the `abc` module to create the abstract base classes for the command and query handlers.
+- Use the `typing` module to create the type hints for the command and query handlers.
+- Use the `typing_extensions` module to create the type hints for the command and query handlers.
+- Use the `typing_extensions` module to create the type hints for the command and query handlers.

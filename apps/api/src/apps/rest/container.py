@@ -2,8 +2,8 @@ from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Container, Factory
 
 from src.apps.rest.core.container import CoreAPIContainer
-from src.apps.rest.utils.app_factory import AppFactory
 from src.contexts.shared import SharedContainer
+from src.contexts.shared.infrastructure.app_factory import AppFactory
 
 
 class MainContainer(DeclarativeContainer):
@@ -22,7 +22,9 @@ class MainContainer(DeclarativeContainer):
     # ============================== CONTAINER EXPORTS ===================================
 
     app_factory: Factory[AppFactory] = Factory(
-        AppFactory, core_router=core_api_container.container.core_router
+        AppFactory,
+        routers=lambda: [],  # Will be overridden in main.py
+        settings=shared_container.container.settings,
     )
 
     # ====================================================================================

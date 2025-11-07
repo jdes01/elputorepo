@@ -1,7 +1,7 @@
 from .connection import (
     Base,
-    init_sqlalchemy_session,
     init_sqlalchemy_engine,
+    init_sqlalchemy_session,
 )
 from .result import OperationResult
 

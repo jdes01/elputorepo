@@ -1,13 +1,24 @@
 {
   "python.defaultInterpreterPath": ".venv/bin/python3",
-  "[python]": {
-    "editor.formatOnSave": true
-  },
   "ruff.configurationPreference": "filesystemFirst",
   "mypy-type-checker.args": ["--config-file=../pyproject.toml"],
   "mypy-type-checker.cwd": "${workspaceFolder}/",
   "python.testing.pytestArgs": ["."],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.analysis.extraPaths": ["${workspaceFolder}/../../packages/logger/src"]
+  "cursorpyright.analysis.extraPaths": [
+    "${workspaceFolder}/../../packages/logger/src"
+  ],
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave"  : {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  }
 }

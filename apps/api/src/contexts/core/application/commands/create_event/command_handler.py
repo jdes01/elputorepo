@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 
-from src.apps.rest.utils.schemas import Schema
-from src.contexts.core.domain.entities.event import Event, EventPrimitives
-from src.contexts.core.domain.repositories.event_repository import EventRepository
-from src.contexts.core.domain.value_objects.event_id import EventId
-from src.contexts.core.domain.value_objects.event_name import EventName
-from src.contexts.shared.settings import Settings
 from logger.main import get_logger
+from returns.result import Failure, Result, Success
+
+from src.contexts.shared import CommandHandler, DomainError, Schema, Settings
+
+from ....domain import Event, EventId, EventName, EventPrimitives, EventRepository
+
+logger = get_logger(__name__)
 
 
 class CreateEventCommand(Schema):
@@ -18,26 +19,27 @@ class CreateEventResult(Schema):
     event: EventPrimitives
 
 
-logger = get_logger(__name__)
-
-
 @dataclass
-class CreateEventCommandHandler:
+class CreateEventCommandHandler(CommandHandler[CreateEventCommand, CreateEventResult]):
     event_repository: EventRepository
     settings: Settings
 
-    def handle(self, command: CreateEventCommand) -> CreateEventResult:
-        logger.info(
-            "Handling CreateEventCommand",
-            query=command.to_plain_values(),
-            found_events=[self.settings.app_name],
-        )
+    def _handle(self, command: CreateEventCommand) -> Result[CreateEventResult, Exception]:
+        try:
+            event_id = EventId(command.event_id)
+            event_name = EventName(command.name)
+        except DomainError as e:
+            logger.warning("Validation error", extra={"error": str(e), "event_id": command.event_id, "name": command.name})
+            return Failure(e)
 
-        event = Event.create(id=EventId(command.event_id), name=EventName(command.name))
+        event = Event.create(id=event_id, name=event_name)
 
         result = self.event_repository.save(event)
 
-        if isinstance(result, Exception):
-            raise result
-
-        return CreateEventResult(event=event.to_primitives())
+        match result:
+            case Failure(error):
+                logger.error("Error creating event", extra={"error": str(error)}, exc_info=True)
+                return Failure(error)
+            case Success(_):
+                logger.info("Event created successfully", extra={"event_id": command.event_id, "name": command.name})
+                return Success(CreateEventResult(event=event.to_primitives()))

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from fastapi import APIRouter
 
 from src.apps.rest.core.events.router import EventsRouter
-from src.apps.rest.utils.router import Router
+from src.contexts.shared.infrastructure.router import Router
 
 
 @dataclass
