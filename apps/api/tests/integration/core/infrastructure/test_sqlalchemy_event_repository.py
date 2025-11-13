@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.contexts.core.domain.entities.event import Event
 from src.contexts.core.domain.value_objects import EventId, EventName
+from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
 from src.contexts.core.infrastructure.repositories.postgres_event_repository import (
     PostgresEventRepository,
 )
@@ -42,10 +43,7 @@ def test_save_and_get_all_events(postgres_session: Session):
     postgres_session.commit()
 
     repo = PostgresEventRepository(session=postgres_session)
-    event = Event.create(
-        id=EventId.generate(),
-        name=EventName("Alice"),
-    )
+    event = Event.create(id=EventId.generate(), name=EventName("Alice"), capacity=EventCapacity(200))
 
     # Act
     result = repo.save(event)

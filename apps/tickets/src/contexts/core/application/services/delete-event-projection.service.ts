@@ -6,13 +6,10 @@ import { EventId } from '../../domain/value-objects/event-id';
 export class DeleteEventProjectionService {
   private readonly logger = new Logger(DeleteEventProjectionService.name);
 
-  constructor(
-    private readonly eventRepository: EventRepository,
-  ) {}
+  constructor(private readonly eventRepository: EventRepository) {}
 
   async execute(eventId: string): Promise<void> {
     await this.eventRepository.delete(new EventId(eventId));
     this.logger.log(`Event projection deleted: ${eventId}`);
   }
 }
-

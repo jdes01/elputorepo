@@ -9,4 +9,3 @@ export class EventId {
     return this.value === other.value;
   }
 }
-

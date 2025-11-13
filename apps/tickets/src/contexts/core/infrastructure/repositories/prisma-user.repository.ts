@@ -31,15 +31,14 @@ export class PrismaUserRepository extends UserRepository {
     const result = await this.prisma.userProjection.findUnique({
       where: { id: userId.value },
     });
-    
+
     if (!result) {
       return null;
     }
-    
+
     return User.fromPrimitives({
       id: result.id,
       email: result.email,
     });
   }
 }
-

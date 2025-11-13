@@ -7,9 +7,7 @@ import { EventId } from '../../domain/value-objects/event-id';
 export class CreateEventProjectionService {
   private readonly logger = new Logger(CreateEventProjectionService.name);
 
-  constructor(
-    private readonly eventRepository: EventRepository,
-  ) {}
+  constructor(private readonly eventRepository: EventRepository) {}
 
   async execute(eventId: string, capacity: number): Promise<void> {
     const event = Event.create(new EventId(eventId), capacity);
@@ -17,4 +15,3 @@ export class CreateEventProjectionService {
     this.logger.log(`Event projection created: ${eventId} with capacity ${capacity}`);
   }
 }
-

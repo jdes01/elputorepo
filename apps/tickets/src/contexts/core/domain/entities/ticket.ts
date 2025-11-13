@@ -18,12 +18,7 @@ export class Ticket {
   ) {}
 
   static create(eventId: EventId, userId: UserId): Ticket {
-    return new Ticket(
-      TicketId.generate(),
-      eventId,
-      userId,
-      new Date(),
-    );
+    return new Ticket(TicketId.generate(), eventId, userId, new Date());
   }
 
   static fromPrimitives(data: TicketPrimitives): Ticket {
@@ -44,4 +39,3 @@ export class Ticket {
     };
   }
 }
-

@@ -9,6 +9,7 @@ from src.contexts.core.application.commands.create_event.command_handler import 
     CreateEventCommand,
     CreateEventCommandHandler,
 )
+from src.contexts.shared.domain.event_bus import EventBus
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
 from src.contexts.shared.settings import Settings
 
@@ -26,18 +27,21 @@ def mock_settings():
 
 
 @pytest.fixture
-def handler(mock_repository, mock_settings):
+def event_bus():
+    """Create a mock event bus."""
+    return Mock(spec=EventBus)
+
+
+@pytest.fixture
+def handler(mock_repository, mock_settings, event_bus):
     """Create handler instance."""
-    return CreateEventCommandHandler(
-        event_repository=mock_repository,
-        settings=mock_settings,
-    )
+    return CreateEventCommandHandler(event_repository=mock_repository, settings=mock_settings, event_bus=event_bus)
 
 
 def test_handle_success(handler, mock_repository):
     """Test successful event creation."""
     # Arrange
-    command = CreateEventCommand(event_id="123e4567-e89b-12d3-a456-426614174000", name="Test Event")
+    command = CreateEventCommand(event_id="123e4567-e89b-12d3-a456-426614174000", name="Test Event", capacity=100)
     mock_repository.save.return_value = Success(None)
 
     # Act
@@ -53,7 +57,7 @@ def test_handle_success(handler, mock_repository):
 def test_handle_repository_error(handler, mock_repository):
     """Test handler when repository returns error."""
     # Arrange
-    command = CreateEventCommand(event_id="123e4567-e89b-12d3-a456-426614174000", name="Test Event")
+    command = CreateEventCommand(event_id="123e4567-e89b-12d3-a456-426614174000", name="Test Event", capacity=100)
     error = DatabaseError("Database connection failed")
     mock_repository.save.return_value = Failure(error)
 

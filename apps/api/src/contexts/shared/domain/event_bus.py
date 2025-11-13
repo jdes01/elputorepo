@@ -11,7 +11,5 @@ class EventBus(ABC):
         pass
 
     @abstractmethod
-    def subscribe(
-        self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]
-    ) -> None:
+    def subscribe(self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         pass

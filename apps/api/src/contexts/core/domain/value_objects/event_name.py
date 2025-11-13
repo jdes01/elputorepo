@@ -50,12 +50,8 @@ class EventName:
 
     def _validate_length(self):
         if len(self.value) > 50:
-            raise EventNameTooLongError(
-                "Event name cannot be longer than 50 characters."
-            )
+            raise EventNameTooLongError("Event name cannot be longer than 50 characters.")
 
     def _validate_characters(self):
         if not all(c.isalpha() or c.isspace() or c == "-" for c in self.value):
-            raise EventNameInvalidCharactersError(
-                "Event name can only contain letters, spaces or hyphens."
-            )
+            raise EventNameInvalidCharactersError("Event name can only contain letters, spaces or hyphens.")

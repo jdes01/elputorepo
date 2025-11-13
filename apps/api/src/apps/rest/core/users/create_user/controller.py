@@ -46,4 +46,3 @@ class CreateUserController:
                     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
                 logger.error("Error creating user", extra={"error": str(error)})
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
-

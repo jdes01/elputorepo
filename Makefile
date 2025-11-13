@@ -67,6 +67,22 @@ test: ## Run tests
 		fi; \
 	done
 
+format: ## Format code
+	@for app in $(APPS); do \
+		echo "→ Formatting app: $$app"; \
+		cd apps/$$app >/dev/null 2>&1; \
+		$(MAKE) -s format || true; \
+		cd - >/dev/null 2>&1; \
+	done; \
+
+lint: ## Lint code
+	@for app in $(APPS); do \
+		echo "→ Linting app: $$app"; \
+		cd apps/$$app >/dev/null 2>&1; \
+		$(MAKE) -s lint || true; \
+		cd - >/dev/null 2>&1; \
+	done; \
+
 # Prevent make from treating args as targets
 %:
 	@:

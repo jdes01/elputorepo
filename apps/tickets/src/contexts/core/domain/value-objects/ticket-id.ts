@@ -13,4 +13,3 @@ export class TicketId {
     return new TicketId(crypto.randomUUID());
   }
 }
-

@@ -9,4 +9,3 @@ export class UserId {
     return this.value === other.value;
   }
 }
-

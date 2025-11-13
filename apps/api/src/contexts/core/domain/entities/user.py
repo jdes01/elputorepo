@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from src.contexts.core.domain.events.user_created_domain_event import UserCreated
 from src.contexts.shared.domain.aggregate import Aggregate
 
-from ..value_objects import UserId, UserEmail
+from ..value_objects import UserEmail, UserId
 
 
 class UserPrimitives(BaseModel):
@@ -46,4 +46,3 @@ class User(Aggregate):
             id=self.id.value,
             email=self.email.value,
         )
-

@@ -14,8 +14,5 @@ class CompositeEventBus(EventBus):
         self._in_memory_bus.publish(events)
         self._rabbitmq_bus.publish(events)
 
-    def subscribe(
-        self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]
-    ) -> None:
+    def subscribe(self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         self._in_memory_bus.subscribe(event_type, handler)
-

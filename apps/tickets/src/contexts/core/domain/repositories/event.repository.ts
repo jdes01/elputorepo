@@ -6,4 +6,3 @@ export abstract class EventRepository {
   abstract delete(eventId: EventId): Promise<void>;
   abstract findById(eventId: EventId): Promise<Event | null>;
 }
-

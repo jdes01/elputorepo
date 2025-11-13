@@ -21,9 +21,7 @@ class EventCapacity:
 
     def _validate_positive(self):
         if self.value <= 0:
-            raise EventCapacityInvalidError(
-                f"Event capacity must be greater than 0, got {self.value}"
-            )
+            raise EventCapacityInvalidError(f"Event capacity must be greater than 0, got {self.value}")
 
     @staticmethod
     def try_create(value: int) -> Result["EventCapacity", DomainError]:
@@ -39,4 +37,3 @@ class EventCapacity:
             return True
         except DomainError:
             return False
-

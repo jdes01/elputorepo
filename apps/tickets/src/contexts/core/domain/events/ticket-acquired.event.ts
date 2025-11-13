@@ -8,4 +8,3 @@ export const TicketAcquiredEventSchema = z.object({
 });
 
 export type TicketAcquiredEvent = z.infer<typeof TicketAcquiredEventSchema>;
-

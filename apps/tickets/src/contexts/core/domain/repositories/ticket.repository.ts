@@ -7,4 +7,3 @@ export abstract class TicketRepository {
   abstract findByEventIdAndUserId(eventId: EventId, userId: UserId): Promise<Ticket[]>;
   abstract countByEventId(eventId: EventId): Promise<number>;
 }
-

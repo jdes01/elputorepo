@@ -12,4 +12,3 @@ class UserPostgresSchema(Base):
     user_id = Column(String, nullable=False, unique=True)
     email = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
-

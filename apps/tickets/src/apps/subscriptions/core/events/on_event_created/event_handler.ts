@@ -5,9 +5,7 @@ import { CreateEventProjectionService } from '@/contexts/core/application/servic
 export class OnEventCreatedEventHandler {
   private readonly logger = new Logger(OnEventCreatedEventHandler.name);
 
-  constructor(
-    private readonly createEventProjectionService: CreateEventProjectionService,
-  ) {}
+  constructor(private readonly createEventProjectionService: CreateEventProjectionService) {}
 
   async handle(message: unknown): Promise<void> {
     try {

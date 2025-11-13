@@ -7,4 +7,3 @@ async function bootstrap() {
   console.log('Tickets service is running on port 3000');
 }
 bootstrap();
-

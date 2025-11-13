@@ -13,4 +13,3 @@ class UserRepository(ABC):
     @abstractmethod
     def find_by_id(self, user_id) -> Result[User | None, Exception]:
         pass
-

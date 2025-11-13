@@ -12,11 +12,7 @@ class SharedContainer(DeclarativeContainer):
     # ============================== CONTAINER EXPORTS ===================================
 
     settings: Singleton[Settings] = Singleton(Settings)
-    sqlalchemy_engine: Singleton[Engine] = Singleton(
-        init_sqlalchemy_engine, settings=settings
-    )
-    sqlalchemy_session: Factory[Session] = Factory(
-        init_sqlalchemy_session, engine=sqlalchemy_engine
-    )
+    sqlalchemy_engine: Singleton[Engine] = Singleton(init_sqlalchemy_engine, settings=settings)
+    sqlalchemy_session: Factory[Session] = Factory(init_sqlalchemy_session, engine=sqlalchemy_engine)
 
     # ====================================================================================

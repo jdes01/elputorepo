@@ -12,7 +12,6 @@ from src.contexts.core.infrastructure.repositories.postgres_event_repository imp
 from src.contexts.core.infrastructure.repositories.postgres_user_repository import (
     PostgresUserRepository,
 )
-from src.contexts.shared.domain.event_bus import EventBus
 from src.contexts.shared.infrastructure.composite_event_bus import CompositeEventBus
 from src.contexts.shared.infrastructure.in_memory_event_bus import InMemoryEventBus
 from src.contexts.shared.infrastructure.rabbitmq_event_bus import RabbitMQEventBus
@@ -66,13 +65,9 @@ class CoreContainer(DeclarativeContainer):
         rabbitmq_bus=rabbitmq_event_bus,
     )
 
-    postgres_event_repository: Factory[EventRepository] = Factory(
-        PostgresEventRepository, session=sqlalchemy_session
-    )
+    postgres_event_repository: Factory[EventRepository] = Factory(PostgresEventRepository, session=sqlalchemy_session)
 
-    postgres_user_repository: Factory[UserRepository] = Factory(
-        PostgresUserRepository, session=sqlalchemy_session
-    )
+    postgres_user_repository: Factory[UserRepository] = Factory(PostgresUserRepository, session=sqlalchemy_session)
 
     create_event_command_handler: Factory[CreateEventCommandHandler] = Factory(
         CreateEventCommandHandler,

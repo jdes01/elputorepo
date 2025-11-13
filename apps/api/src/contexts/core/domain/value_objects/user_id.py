@@ -46,4 +46,3 @@ class UserId:
             return True
         except DomainError:
             return False
-

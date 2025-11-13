@@ -31,3 +31,9 @@ migrate-new: ## Genera nueva migración con mensaje MESSAGE="nombre migración"
 
 migrate-downgrade: ## Revierte migraciones VERSIONS=1
 	@alembic downgrade -$(VERSIONS)
+
+format: ## Formatea el código
+	./scripts/format.sh
+
+lint: ## Lint the code
+	./scripts/lint.sh

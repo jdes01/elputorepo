@@ -27,12 +27,8 @@ class DeleteEventController:
             response_model=ResponseSchema[dict],
         )
 
-    def handle_request(
-        self, event_id: str = Path(..., description="Event ID")
-    ) -> ResponseSchema[dict]:
-        result = self.delete_event_command_handler.handle(
-            DeleteEventCommand(event_id=event_id)
-        )
+    def handle_request(self, event_id: str = Path(..., description="Event ID")) -> ResponseSchema[dict]:
+        result = self.delete_event_command_handler.handle(DeleteEventCommand(event_id=event_id))
 
         match result:
             case Success(_):

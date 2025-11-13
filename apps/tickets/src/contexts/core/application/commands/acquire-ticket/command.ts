@@ -6,4 +6,3 @@ export const AcquireTicketCommandSchema = z.object({
 });
 
 export type AcquireTicketCommand = z.infer<typeof AcquireTicketCommandSchema>;
-

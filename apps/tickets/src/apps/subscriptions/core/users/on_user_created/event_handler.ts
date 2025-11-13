@@ -5,9 +5,7 @@ import { CreateUserProjectionService } from '@/contexts/core/application/service
 export class OnUserCreatedEventHandler {
   private readonly logger = new Logger(OnUserCreatedEventHandler.name);
 
-  constructor(
-    private readonly createUserProjectionService: CreateUserProjectionService,
-  ) {}
+  constructor(private readonly createUserProjectionService: CreateUserProjectionService) {}
 
   async handle(message: unknown): Promise<void> {
     try {

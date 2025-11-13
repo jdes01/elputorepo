@@ -22,7 +22,9 @@ export class PrismaTicketRepository extends TicketRepository {
         createdAt: ticket.createdAt,
       },
     });
-    this.logger.log(`Ticket saved: ${ticket.id.value} for event ${ticket.eventId.value} and user ${ticket.userId.value}`);
+    this.logger.log(
+      `Ticket saved: ${ticket.id.value} for event ${ticket.eventId.value} and user ${ticket.userId.value}`,
+    );
   }
 
   async findByEventIdAndUserId(eventId: EventId, userId: UserId): Promise<Ticket[]> {
@@ -33,12 +35,14 @@ export class PrismaTicketRepository extends TicketRepository {
       },
     });
 
-    return tickets.map(t => Ticket.fromPrimitives({
-      id: t.id,
-      eventId: t.eventId,
-      userId: t.userId,
-      createdAt: t.createdAt,
-    }));
+    return tickets.map((t) =>
+      Ticket.fromPrimitives({
+        id: t.id,
+        eventId: t.eventId,
+        userId: t.userId,
+        createdAt: t.createdAt,
+      }),
+    );
   }
 
   async countByEventId(eventId: EventId): Promise<number> {
@@ -49,4 +53,3 @@ export class PrismaTicketRepository extends TicketRepository {
     });
   }
 }
-

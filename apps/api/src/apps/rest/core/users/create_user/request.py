@@ -16,4 +16,3 @@ def create_user_request(
     body: CreateUserBody = Body(...),
 ) -> CreateUserRequest:
     return CreateUserRequest(user_id=user_id, email=body.email)
-

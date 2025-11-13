@@ -5,9 +5,7 @@ import { DeleteEventProjectionService } from '@/contexts/core/application/servic
 export class OnEventDeletedEventHandler {
   private readonly logger = new Logger(OnEventDeletedEventHandler.name);
 
-  constructor(
-    private readonly deleteEventProjectionService: DeleteEventProjectionService,
-  ) {}
+  constructor(private readonly deleteEventProjectionService: DeleteEventProjectionService) {}
 
   async handle(message: unknown): Promise<void> {
     try {
@@ -32,4 +30,3 @@ export class OnEventDeletedEventHandler {
     }
   }
 }
-

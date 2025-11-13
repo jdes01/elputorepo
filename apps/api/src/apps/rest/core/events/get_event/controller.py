@@ -28,12 +28,8 @@ class GetEventController:
             response_model=ResponseSchema[GetEventByIdResult],
         )
 
-    def handle_request(
-        self, event_id: str = Path(..., description="Event ID")
-    ) -> ResponseSchema[GetEventByIdResult]:
-        result = self.get_event_by_id_query_handler.handle(
-            GetEventByIdQuery(event_id=event_id)
-        )
+    def handle_request(self, event_id: str = Path(..., description="Event ID")) -> ResponseSchema[GetEventByIdResult]:
+        result = self.get_event_by_id_query_handler.handle(GetEventByIdQuery(event_id=event_id))
 
         match result:
             case Success(value):

@@ -22,6 +22,9 @@ setup: install migrate ## Instala dependencias y aplica migraciones
 format: ## Formatea el código
 	@sh scripts/format.sh
 
+lint: ## Lint the código
+	@sh scripts/lint.sh
+
 prisma-generate: ## Genera el cliente de Prisma
 	@npm run prisma:generate
 

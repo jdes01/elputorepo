@@ -4,9 +4,7 @@ import { AcquireTicketCommandSchema } from '@/contexts/core/application/commands
 
 @Controller('tickets')
 export class TicketsController {
-  constructor(
-    private readonly acquireTicketCommandHandler: AcquireTicketCommandHandler,
-  ) {}
+  constructor(private readonly acquireTicketCommandHandler: AcquireTicketCommandHandler) {}
 
   @Post('acquire')
   @HttpCode(HttpStatus.OK)
@@ -19,4 +17,3 @@ export class TicketsController {
     };
   }
 }
-

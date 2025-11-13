@@ -9,6 +9,3 @@ import { PrismaService } from './contexts/core/infrastructure/prisma/prisma.serv
   exports: [PrismaService],
 })
 export class AppModule {}
-
-
-

@@ -6,9 +6,7 @@ import { User } from '../../domain/entities/user';
 export class CreateUserProjectionService {
   private readonly logger = new Logger(CreateUserProjectionService.name);
 
-  constructor(
-    private readonly userRepository: UserRepository,
-  ) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async execute(userId: string, email: string): Promise<void> {
     const user = User.fromPrimitives({
@@ -19,4 +17,3 @@ export class CreateUserProjectionService {
     this.logger.log(`User projection created: ${userId} with email ${email}`);
   }
 }
-

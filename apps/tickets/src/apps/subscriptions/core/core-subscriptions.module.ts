@@ -40,4 +40,3 @@ import { RabbitMQService } from '../../../contexts/core/infrastructure/rabbitmq/
   exports: [CoreSubscriptionsRouter, EventsSubscriptionsRouter, UsersSubscriptionsRouter],
 })
 export class CoreSubscriptionsModule {}
-

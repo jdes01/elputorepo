@@ -29,4 +29,3 @@ import { PrismaService } from '../../../contexts/core/infrastructure/prisma/pris
   ],
 })
 export class CoreRestModule {}
-

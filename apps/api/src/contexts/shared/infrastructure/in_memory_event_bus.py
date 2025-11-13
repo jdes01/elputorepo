@@ -7,9 +7,7 @@ from ..domain.event_bus import EventBus
 
 
 class InMemoryEventBus(EventBus):
-    def __init__(
-        self, subscriptions: dict[Type[DomainEvent], list[EventHandler[DomainEvent]]]
-    ):
+    def __init__(self, subscriptions: dict[Type[DomainEvent], list[EventHandler[DomainEvent]]]):
         self._subscriptions = subscriptions
 
     def publish(self, events: list[DomainEvent]) -> None:
@@ -18,7 +16,5 @@ class InMemoryEventBus(EventBus):
             for handler in handlers:
                 handler.handle(event)
 
-    def subscribe(
-        self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]
-    ) -> None:
+    def subscribe(self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         self._subscriptions.setdefault(event_type, []).append(handler)

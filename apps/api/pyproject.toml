@@ -21,6 +21,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "debugpy>=1.8.17",
+    "mypy>=1.18.2",
     "pytest>=8.4.2",
     "ruff>=0.13.2",
     "typer>=0.19.2",

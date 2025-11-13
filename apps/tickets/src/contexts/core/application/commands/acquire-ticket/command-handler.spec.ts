@@ -151,7 +151,9 @@ describe('AcquireTicketCommandHandler', () => {
 
       // Act & Assert
       await expect(handler.handle(command)).rejects.toThrow(BadRequestException);
-      await expect(handler.handle(command)).rejects.toThrow(`No available tickets for event ${mockEventId}`);
+      await expect(handler.handle(command)).rejects.toThrow(
+        `No available tickets for event ${mockEventId}`,
+      );
       expect(userRepository.findById).toHaveBeenCalledWith(new UserId(mockUserId));
       expect(eventRepository.findById).toHaveBeenCalledWith(new EventId(mockEventId));
       expect(ticketRepository.save).not.toHaveBeenCalled();
@@ -213,4 +215,3 @@ describe('AcquireTicketCommandHandler', () => {
     });
   });
 });
-

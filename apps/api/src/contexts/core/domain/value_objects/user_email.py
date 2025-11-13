@@ -39,4 +39,3 @@ class UserEmail:
             return True
         except DomainError:
             return False
-

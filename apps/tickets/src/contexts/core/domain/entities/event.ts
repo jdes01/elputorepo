@@ -26,11 +26,7 @@ export class Event {
   }
 
   static fromPrimitives(data: EventPrimitives): Event {
-    return new Event(
-      new EventId(data.id),
-      data.capacity,
-      data.availableTickets,
-    );
+    return new Event(new EventId(data.id), data.capacity, data.availableTickets);
   }
 
   get availableTickets(): number {
@@ -43,7 +39,9 @@ export class Event {
 
   reserveTickets(quantity: number): void {
     if (!this.hasAvailableTickets(quantity)) {
-      throw new Error(`Not enough available tickets. Available: ${this._availableTickets}, Requested: ${quantity}`);
+      throw new Error(
+        `Not enough available tickets. Available: ${this._availableTickets}, Requested: ${quantity}`,
+      );
     }
     this._availableTickets -= quantity;
   }
@@ -56,4 +54,3 @@ export class Event {
     };
   }
 }
-

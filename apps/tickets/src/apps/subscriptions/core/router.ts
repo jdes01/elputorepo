@@ -14,4 +14,3 @@ export class CoreSubscriptionsRouter {
     await this.usersRouter.subscribe();
   }
 }
-

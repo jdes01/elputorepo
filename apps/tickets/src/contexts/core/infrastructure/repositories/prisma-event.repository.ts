@@ -28,11 +28,13 @@ export class PrismaEventRepository extends EventRepository {
   }
 
   async delete(eventId: EventId): Promise<void> {
-    await this.prisma.eventProjection.delete({
-      where: { id: eventId.value },
-    }).catch(() => {
-      this.logger.warn(`Event not found for deletion: ${eventId.value}`);
-    });
+    await this.prisma.eventProjection
+      .delete({
+        where: { id: eventId.value },
+      })
+      .catch(() => {
+        this.logger.warn(`Event not found for deletion: ${eventId.value}`);
+      });
     this.logger.log(`Event deleted: ${eventId.value}`);
   }
 
@@ -40,18 +42,18 @@ export class PrismaEventRepository extends EventRepository {
     const result = await this.prisma.eventProjection.findUnique({
       where: { id: eventId.value },
     });
-    
+
     if (!result) {
       return null;
     }
-    
+
     // Calculate available tickets: capacity - tickets sold
     const ticketsSold = await this.prisma.ticket.count({
       where: { eventId: eventId.value },
     });
-    
+
     const availableTickets = result.capacity - ticketsSold;
-    
+
     return Event.fromPrimitives({
       id: result.id,
       capacity: result.capacity,
@@ -59,4 +61,3 @@ export class PrismaEventRepository extends EventRepository {
     });
   }
 }
-
