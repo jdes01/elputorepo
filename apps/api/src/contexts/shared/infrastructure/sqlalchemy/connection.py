@@ -6,6 +6,7 @@ from ...settings import Settings
 
 Base = declarative_base()
 
+
 def init_sqlalchemy_engine(settings: Settings) -> Engine:
     return create_engine(
         settings.postgres_uri,

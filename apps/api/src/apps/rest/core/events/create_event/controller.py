@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from logger.main import get_logger
-from returns.result import Failure, Success
+from returns.result import Success
 
 from src.apps.rest.core.events.create_event.request import (
     CreateEventRequest,
@@ -15,6 +15,8 @@ from src.contexts.shared import DomainError
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
 
 logger = get_logger(__name__)
+
+CREATE_EVENT_REQUEST = Depends(create_event_request)
 
 
 class CreateEventController:
@@ -32,17 +34,16 @@ class CreateEventController:
             response_model=ResponseSchema[CreateEventResponse],
         )
 
-    def handle_request(self, request: CreateEventRequest = Depends(create_event_request)) -> ResponseSchema[CreateEventResponse]:
+    def handle_request(self, request: CreateEventRequest = CREATE_EVENT_REQUEST) -> ResponseSchema[CreateEventResponse]:
         result = self.create_event_command_handler.handle(CreateEventCommand(event_id=request.event_id, name=request.name, capacity=request.capacity))
 
-        match result:
-            case Success(value):
-                return ResponseSchema[CreateEventResponse](
-                    data=CreateEventResponse(event=value.event),
-                    metadata=ResponseMetaSchema(count=1),
-                )
-            case Failure(error):
-                if isinstance(error, DomainError):
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
-                logger.error("Error al crear evento", extra={"error": str(error)})
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        if isinstance(result, Success):
+            return ResponseSchema[CreateEventResponse](
+                data=CreateEventResponse(event=result.unwrap().event),
+                metadata=ResponseMetaSchema(count=1),
+            )
+
+        if isinstance(result.failure(), DomainError):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(result.failure()))
+
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

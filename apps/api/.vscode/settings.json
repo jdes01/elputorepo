@@ -1,28 +1,119 @@
 {
-  "python.defaultInterpreterPath": ".venv/bin/python3",
-  "ruff.configurationPreference": "filesystemFirst",
-  "mypy-type-checker.args": ["--config-file=../pyproject.toml"],
-  "mypy-type-checker.cwd": "${workspaceFolder}/",
-  "python.testing.pytestArgs": ["."],
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "cursorpyright.analysis.extraPaths": [
-    "${workspaceFolder}/../../packages/logger/src",
-    "${workspaceFolder}/../../packages/contracts/src"
+  // ===========================
+  // 🔧 GENERAL PYTHON SETUP
+  // ===========================
+  "python.useEnvironmentsExtension": true,
+  "python.languageServer": "Pylance",
+  // ===========================
+  // ⚡ PYLANCE CONFIGURATION
+  // ===========================
+  "python.analysis.languageServerMode": "default",
+  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.diagnosticMode": "workspace",
+  // --- Project structure ---
+  "python.analysis.include": [
+    "${workspaceFolder}/apps/api/src",
+    // "${workspaceFolder}/apps/apitests"
   ],
+  "python.analysis.exclude": [
+    "**/__pycache__",
+    "**/.venv",
+    "**/venv",
+    ".git",
+    "node_modules",
+    "dist",
+    "build"
+  ],
+  "python.analysis.stubPath": "typings",
+  // --- Import resolution ---
+  "python.analysis.autoSearchPaths": true,
   "python.analysis.extraPaths": [
-    "${workspaceFolder}/libs/shared/python"
+    "${workspaceFolder}/packages/logger"
   ],
-  "files.exclude": {
-    "**/__pycache__": true,
-    "**/*.pyc": true
+  // --- Pytest integration ---
+  "python.analysis.enablePytestSupport": true,
+  // --- Auto imports ---
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.showOnlyDirectDependenciesInAutoImport": true,
+  // --- Diagnostics customization ---
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportUnboundVariable": "information",
+    "reportMissingImports": "warning",
+    "reportUnknownVariableType": "information",
+    "reportPrivateUsage": "none"
   },
+  // --- Performance tuning ---
+  "python.analysis.indexing": true,
+  "python.analysis.userFileIndexingLimit": 3000,
+  "python.analysis.persistAllIndices": true,
+  "python.analysis.useLibraryCodeForTypes": true,
+  // --- Misc ---
+  "python.analysis.supportRestructuredText": false,
+  "python.analysis.supportDocstringTemplate": true,
+  "python.analysis.completeFunctionParens": true,
+  // ===========================
+  // 🧠 MYPY CONFIGURATION (matangover.mypy)
+  // ===========================
+  // Enable mypy daemon-based type checking
+  "mypy.enabled": true,
+  // Targets (folders/files to check)
+  "mypy.targets": [
+    "src",
+    // "tests"
+  ],
+  // Use active Python interpreter for dmypy
+  "mypy.runUsingActiveInterpreter": true,
+  // Optional: custom path to dmypy executable (if not global)
+  // "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
+  // Path to your mypy configuration
+  "mypy.configFile": "mypy.ini",
+  // Extra command-line arguments for mypy
+  "mypy.extraArguments": [
+    "--show-error-codes",
+    "--pretty",
+    "--namespace-packages",
+    "--implicit-reexport"
+  ],
+  // Optional: path to env file (e.g., for environment vars like PYTHONPATH)
+  // "mypy.envFile": "${workspaceFolder}/.env",
+  // Environment variables to use when running mypy
+  "mypy.env": {
+    "MYPYPATH": ".env"
+  },
+  // Optional: specify daemon status file to persist state
+  "mypy.statusFile": ".dmypy.json",
+  // Enable debug logging if you need to troubleshoot
+  "mypy.debugLogging": false,
+  // --- Experimental: check Jupyter notebooks too ---
+  "mypy.checkNotebooks": false,
+  // ===========================
+  // 🦀 RUFF CONFIGURATION
+  // ===========================
+  // Use the new Rust-based Ruff server (fast + stable)
+  "ruff.nativeServer": "on",
+  // Link to your Ruff configuration (shared between CLI and VSCode)
+  "ruff.configuration": "${workspaceFolder}/apps/api/ruff.toml",
+  // Enable Ruff logs (optional for debugging)
+  "ruff.logLevel": "info",
+  "ruff.path": [
+    "${workspaceFolder}/apps/api/.venv/bin/ruff"
+  ],
+  // Automatically format and fix issues on save
   "[python]": {
     "editor.formatOnSave": true,
-    "editor.codeActionsOnSave"  : {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
       "source.organizeImports": "explicit"
-    },
-    "editor.defaultFormatter": "charliermarsh.ruff"
-  }
+    }
+  },
+  // For Jupyter Notebooks too
+  "notebook.formatOnSave.enabled": true,
+  "notebook.codeActionsOnSave": {
+    "notebook.source.fixAll": "explicit",
+    "notebook.source.organizeImports": "explicit"
+  },
+  // },
+  // Trace communication between VSCode and Ruff (for debugging)
+  "ruff.trace.server": "off"
 }

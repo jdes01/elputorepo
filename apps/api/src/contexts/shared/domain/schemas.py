@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
@@ -16,7 +16,8 @@ class Schema(BaseModel):
 
     def to_plain_values(self) -> dict[str, Any]:
         payload_json = self.model_dump_json(by_alias=True)
-        return json.loads(payload_json)
+        data = json.loads(payload_json)
+        return cast(dict[str, Any], data)
 
 
 class ResponseErrorSchema(Schema):

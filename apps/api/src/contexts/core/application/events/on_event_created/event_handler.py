@@ -11,8 +11,4 @@ logger = get_logger(__name__)
 @dataclass
 class OnEventCreatedEventHandler(EventHandler[EventCreated]):
     def handle(self, event: EventCreated) -> None:
-        logger.info(
-            f"Event created with ID {event.event_id.value} and name {event.name.value}"
-        )
-
-
+        logger.info(f"Event created with ID {event.event_id.value} and name {event.name.value}")

@@ -1,5 +1,7 @@
 import json
 import time
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from fastapi import Request, Response
 from logger.main import get_logger
@@ -12,7 +14,7 @@ logger = get_logger(__name__)
 class RequestResponseLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware that logs all requests and responses in DEBUG mode."""
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         start_time = time.time()
 
         # Log request
@@ -51,7 +53,7 @@ class RequestResponseLoggingMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    async def _get_body(self, request: Request) -> dict | str | None:
+    async def _get_body(self, request: Request) -> Any:
         """Get request body without consuming it."""
         try:
             if request.method in ("GET", "HEAD", "OPTIONS"):
@@ -63,10 +65,10 @@ class RequestResponseLoggingMiddleware(BaseHTTPMiddleware):
                 return None
 
             # Restore body for FastAPI to read
-            async def receive():
+            async def receive() -> dict[str, str | bytes]:
                 return {"type": "http.request", "body": body_bytes}
 
-            request._receive = receive
+            request._receive = receive  # type: ignore
 
             # Try to parse as JSON
             try:
@@ -76,27 +78,33 @@ class RequestResponseLoggingMiddleware(BaseHTTPMiddleware):
         except Exception:
             return None
 
-    async def _get_response_body(self, response: Response) -> dict | str | None:
+    async def _get_response_body(self, response: Response) -> Any:
         """Get response body."""
         if isinstance(response, StreamingResponse):
+            # Can't log streaming responses
             return None
 
         try:
-            # Read response body
-            body = b""
-            async for chunk in response.body_iterator:
-                body += chunk
+            # Read body
+            body: bytes = b""
 
-            # Restore body for response
-            async def body_iterator():
-                yield body
+            if hasattr(response, "body"):
+                body = response.body
+            elif hasattr(response, "render") and callable(response.render):
+                # Some Response subclasses (like JSONResponse) use render()
+                body = response.render(b"")  # Provide empty bytes to render
+            else:
+                return None
 
-            response.body_iterator = body_iterator()
+            # Convert memoryview to bytes
+            if isinstance(body, memoryview):
+                body = body.tobytes()
 
-            # Try to parse as JSON
+            # Try to parse JSON
             try:
                 return json.loads(body.decode())
             except (json.JSONDecodeError, UnicodeDecodeError):
-                return body.decode()[:500]  # Limit size
+                return body.decode(errors="replace")[:500]  # Limit size
+
         except Exception:
             return None

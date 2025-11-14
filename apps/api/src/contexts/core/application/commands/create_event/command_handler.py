@@ -6,7 +6,14 @@ from returns.result import Failure, Result, Success
 from src.contexts.shared import CommandHandler, DomainError, Schema, Settings
 from src.contexts.shared.domain.event_bus import EventBus
 
-from ....domain import Event, EventCapacity, EventId, EventName, EventPrimitives, EventRepository
+from ....domain import (
+    Event,
+    EventCapacity,
+    EventId,
+    EventName,
+    EventPrimitives,
+    EventRepository,
+)
 
 logger = get_logger(__name__)
 
@@ -40,12 +47,11 @@ class CreateEventCommandHandler(CommandHandler[CreateEventCommand, CreateEventRe
 
         result = self.event_repository.save(event)
 
-        match result:
-            case Failure(error):
-                logger.error("Error creating event", extra={"error": str(error)}, exc_info=True)
-                return Failure(error)
-            case Success(_):
-                domain_events = event.pull_domain_events()
-                self.event_bus.publish(domain_events)
-                logger.info("Event created successfully", extra={"event_id": command.event_id, "name": command.name, "capacity": command.capacity})
-                return Success(CreateEventResult(event=event.to_primitives()))
+        if isinstance(result, Failure):
+            logger.error("Error creating event", extra={"error": str(result.failure())}, exc_info=True)
+            return result
+
+        domain_events = event.pull_domain_events()
+        self.event_bus.publish(domain_events)
+        logger.info("Event created successfully", extra={"event_id": command.event_id, "name": command.name, "capacity": command.capacity})
+        return Success(CreateEventResult(event=event.to_primitives()))

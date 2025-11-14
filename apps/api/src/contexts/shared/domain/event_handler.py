@@ -1,12 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
 
 from .domain_event import DomainEvent
 
-E = TypeVar("E", bound=DomainEvent)
 
-
-class EventHandler(ABC, Generic[E]):
+class EventHandler[E: DomainEvent](ABC):
     @abstractmethod
     def handle(self, event: E) -> None:
         pass

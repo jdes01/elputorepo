@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src.contexts.shared.infrastructure.sqlalchemy.connection import Base
 
@@ -8,8 +8,7 @@ from src.contexts.shared.infrastructure.sqlalchemy.connection import Base
 class UserPostgresSchema(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(String, nullable=False, unique=True)
-    email = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
-
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now, nullable=False)

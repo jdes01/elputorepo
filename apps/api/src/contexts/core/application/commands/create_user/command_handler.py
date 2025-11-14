@@ -38,11 +38,10 @@ class CreateUserCommandHandler(CommandHandler[CreateUserCommand, CreateUserResul
 
         result = self.user_repository.save(user)
 
-        match result:
-            case Failure(error):
-                logger.error("Error creating user", extra={"error": str(error)}, exc_info=True)
-                return Failure(error)
-            case Success(_):
-                self.event_bus.publish(user.pull_domain_events())
-                logger.info("User created successfully", extra={"user_id": command.user_id, "email": command.email})
-                return Success(CreateUserResult(user=user.to_primitives()))
+        if isinstance(result, Failure):
+            logger.error("Error creating user", extra={"error": str(result.failure())}, exc_info=True)
+            return Failure(result.failure())
+
+        self.event_bus.publish(user.pull_domain_events())
+        logger.info("User created successfully", extra={"user_id": command.user_id, "email": command.email})
+        return Success(CreateUserResult(user=user.to_primitives()))

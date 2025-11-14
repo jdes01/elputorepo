@@ -57,7 +57,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    async def _get_request_body(self, request: Request) -> dict | str | None:
+    async def _get_request_body(self, request: Request) -> dict[Any, Any] | str | None:
         """Get request body without consuming it."""
         try:
             if request.method in ("GET", "HEAD", "OPTIONS"):
@@ -69,7 +69,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 return None
 
             # Restore body for FastAPI to read
-            async def receive():
+            async def receive() -> dict[str, Any]:
                 return {"type": "http.request", "body": body_bytes}
 
             request._receive = receive
@@ -82,7 +82,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         except Exception:
             return None
 
-    async def _get_response_body(self, response) -> dict | str | None:
+    async def _get_response_body(self, response) -> dict[str, Any] | str | None:
         """Get response body."""
         if isinstance(response, StreamingResponse):
             return None

@@ -4,5 +4,5 @@ class OperationResult[T]:
         self.data = data
         self.error = error
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<OperationResult success={self.success} data={self.data} error={self.error}>"

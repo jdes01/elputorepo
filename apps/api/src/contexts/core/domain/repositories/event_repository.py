@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
 
 from returns.result import Result
 
@@ -17,7 +16,7 @@ class EventRepository(ABC):
         pass
 
     @abstractmethod
-    def get_all(self) -> Result[List[Event], Exception]:
+    def get_all(self) -> Result[list[Event], Exception]:
         pass
 
     @abstractmethod

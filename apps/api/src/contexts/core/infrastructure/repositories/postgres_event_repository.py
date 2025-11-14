@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
 
 from logger.main import get_logger
 from returns.result import Failure, Result, Success
@@ -109,7 +108,7 @@ class PostgresEventRepository(EventRepository):
                 )
             )
 
-    def get_all(self) -> Result[List[Event], Exception]:
+    def get_all(self) -> Result[list[Event], Exception]:
         try:
             logger.debug("Getting all events from database")
 

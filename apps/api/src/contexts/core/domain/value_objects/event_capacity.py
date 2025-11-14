@@ -13,17 +13,15 @@ class EventCapacityInvalidError(DomainError):
 class EventCapacity:
     value: int
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.validate()
 
-    def validate(self):
+    def validate(self) -> None:
         self._validate_positive()
 
-    def _validate_positive(self):
+    def _validate_positive(self) -> None:
         if self.value <= 0:
-            raise EventCapacityInvalidError(
-                f"Event capacity must be greater than 0, got {self.value}"
-            )
+            raise EventCapacityInvalidError(f"Event capacity must be greater than 0, got {self.value}")
 
     @staticmethod
     def try_create(value: int) -> Result["EventCapacity", DomainError]:
@@ -39,4 +37,3 @@ class EventCapacity:
             return True
         except DomainError:
             return False
-

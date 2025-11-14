@@ -5,4 +5,5 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 
 source "$DIR/../.venv/bin/activate"
 
-pytest tests
+# 🧠 Static type checking with mypy
+mypy --config-file "$DIR/../mypy.ini" "$DIR/../src"

@@ -1,3 +1,3 @@
-from .queries import *
+from .queries import GetAllEventsQuery, GetAllEventsQueryHandler, GetAllEventsResult
 
-__all__ = []
+__all__ = ["GetAllEventsQuery", "GetAllEventsQueryHandler", "GetAllEventsResult"]

@@ -16,4 +16,3 @@ class UsersRouter(Router):
         router = APIRouter(prefix="/users")
         self.create_user_controller.connect(router)
         return router
-

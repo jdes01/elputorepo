@@ -16,7 +16,7 @@ class AppFactory:
     routers: list[Router]
     settings: Settings
 
-    def create(self):
+    def create(self) -> FastAPI:
         # Get log level from settings, default to DEBUG in local, INFO otherwise
         is_local = self.settings.environment.lower() in (
             "local",

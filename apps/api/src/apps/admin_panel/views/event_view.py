@@ -6,4 +6,4 @@ from src.contexts.core.infrastructure.schemas.event_postgres_schema import (
 
 
 class EventView(ModelView, model=EventPostgresSchema):
-    column_list = [EventPostgresSchema.event_id, EventPostgresSchema.name]
+    column_list = ["event_id", "name"]

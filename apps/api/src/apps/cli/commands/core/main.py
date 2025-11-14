@@ -3,6 +3,9 @@ from typing import Annotated
 import typer
 
 from src.contexts.core.domain.entities.event import Event
+from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
+from src.contexts.core.domain.value_objects.event_id import EventId
+from src.contexts.core.domain.value_objects.event_name import EventName
 from src.contexts.core.infrastructure.container import CoreContainer
 from src.contexts.shared.infrastructure.container import SharedContainer
 
@@ -19,10 +22,8 @@ app = typer.Typer()
 
 
 @app.command()
-def save_event(
-    name: Annotated[str, typer.Argument(help="Name of the event")],
-):
-    event = Event(name=name)
+def save_event(name: Annotated[str, typer.Argument(help="Name of the event")], capacity: Annotated[int, typer.Argument(help="Capacity of the event")]) -> None:
+    event = Event(id=EventId.generate(), name=EventName(name), capacity=EventCapacity(capacity))
     result = repository.save(event)
 
     if isinstance(result, Exception):

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path, status
 from logger.main import get_logger
-from returns.result import Failure, Success
+from returns.result import Success
 
 from src.contexts.core.application.queries.get_event_by_id.query_handler import (
     GetEventByIdQuery,
@@ -28,30 +28,27 @@ class GetEventController:
             response_model=ResponseSchema[GetEventByIdResult],
         )
 
-    def handle_request(
-        self, event_id: str = Path(..., description="Event ID")
-    ) -> ResponseSchema[GetEventByIdResult]:
-        result = self.get_event_by_id_query_handler.handle(
-            GetEventByIdQuery(event_id=event_id)
-        )
+    def handle_request(self, event_id: str = Path(..., description="Event ID")) -> ResponseSchema[GetEventByIdResult]:
+        result = self.get_event_by_id_query_handler.handle(GetEventByIdQuery(event_id=event_id))
 
-        match result:
-            case Success(value):
-                return ResponseSchema[GetEventByIdResult](
-                    data=value,
-                    metadata=ResponseMetaSchema(count=1),
-                )
-            case Failure(error):
-                if isinstance(error, EventNotFoundError):
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=error.message,
-                    )
-                logger.error(
-                    "Error al obtener evento",
-                    extra={"error": str(error), "error_type": type(error).__name__},
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Internal server error",
-                )
+        if isinstance(result, Success):
+            return ResponseSchema[GetEventByIdResult](
+                data=result.unwrap(),
+                metadata=ResponseMetaSchema(count=1),
+            )
+
+        error = result.failure()
+
+        if isinstance(error, EventNotFoundError):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=error.message,
+            )
+        logger.error(
+            "Error al obtener evento",
+            extra={"error": str(error), "error_type": type(error).__name__},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        )

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 from logger.main import get_logger
 from returns.result import Failure, Result, Success
@@ -16,7 +15,7 @@ class GetAllEventsQuery(Schema):
 
 
 class GetAllEventsResult(Schema):
-    events: List[EventPrimitives]
+    events: list[EventPrimitives]
 
 
 @dataclass
@@ -26,9 +25,8 @@ class GetAllEventsQueryHandler(QueryHandler[GetAllEventsQuery, GetAllEventsResul
     def _handle(self, query: GetAllEventsQuery) -> Result[GetAllEventsResult, Exception]:
         result = self.event_repository.get_all()
 
-        match result:
-            case Failure(error):
-                logger.error("Error getting all events", extra={"error": str(error)})
-                return Failure(error)
-            case Success(events):
-                return Success(GetAllEventsResult(events=[event.to_primitives() for event in events]))
+        if isinstance(result, Failure):
+            logger.error("Error getting all events", extra={"error": str(result.failure())})
+            return Failure(result.failure())
+
+        return Success(GetAllEventsResult(events=[event.to_primitives() for event in result.unwrap()]))

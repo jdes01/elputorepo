@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo, available_timezones
 class Timezone:
     value: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.value not in available_timezones():
             raise ValueError(f"Invalid timezone: '{self.value}'")
 
@@ -18,7 +18,7 @@ class Timezone:
         return self.value
 
     @classmethod
-    def from_utc_offset(cls, hours: int):
+    def from_utc_offset(cls, hours: int) -> "Timezone":
         if not -12 <= hours <= 14:
             raise ValueError("UTC offset fuera de rango (-12 a +14)")
         sign = "+" if hours >= 0 else "-"

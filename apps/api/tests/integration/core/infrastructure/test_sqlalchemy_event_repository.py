@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.contexts.core.domain.entities.event import Event
 from src.contexts.core.domain.value_objects import EventId, EventName
+from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
 from src.contexts.core.infrastructure.repositories.postgres_event_repository import (
     PostgresEventRepository,
 )
@@ -21,10 +22,7 @@ def repo(postgres_session: Session) -> PostgresEventRepository:
 
 @pytest.fixture
 def event(postgres_session: Session) -> Event:
-    return Event.create(
-        id=EventId.generate(),
-        name=EventName("Alice"),
-    )
+    return Event.create(id=EventId.generate(), name=EventName("Alice"), capacity=EventCapacity(10))
 
 
 @pytest.mark.integration
@@ -42,10 +40,7 @@ def test_save_and_get_all_events(postgres_session: Session):
     postgres_session.commit()
 
     repo = PostgresEventRepository(session=postgres_session)
-    event = Event.create(
-        id=EventId.generate(),
-        name=EventName("Alice"),
-    )
+    event = Event.create(id=EventId.generate(), name=EventName("Alice"), capacity=EventCapacity(10))
 
     # Act
     result = repo.save(event)
@@ -65,10 +60,7 @@ def test_save_and_get_all_events(postgres_session: Session):
 @pytest.mark.integration
 def test_save_handles_sqlalchemy_error_gracefully(monkeypatch: pytest.MonkeyPatch, postgres_session: Session):
     repo = PostgresEventRepository(session=postgres_session)
-    event = Event.create(
-        id=EventId.generate(),
-        name=EventName("Bob"),
-    )
+    event = Event.create(id=EventId.generate(), name=EventName("Bob"), capacity=EventCapacity(10))
 
     def fail_add(_):
         raise SQLAlchemyError("Simulated DB error")
@@ -87,10 +79,7 @@ def test_save_handles_sqlalchemy_error_gracefully(monkeypatch: pytest.MonkeyPatc
 @pytest.mark.integration
 def test_save_returns_exception_without_raising(monkeypatch: pytest.MonkeyPatch, postgres_session: Session):
     repo = PostgresEventRepository(session=postgres_session)
-    event = Event.create(
-        id=EventId.generate(),
-        name=EventName("Charlie"),
-    )
+    event = Event.create(id=EventId.generate(), name=EventName("Charlie"), capacity=EventCapacity(10))
 
     def fail_add(_):
         raise SQLAlchemyError("Simulated DB error")

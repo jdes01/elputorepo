@@ -1,9 +1,11 @@
 import json
 from datetime import datetime
-from typing import Type
+from typing import Any
 
 import pika
 from logger.main import get_logger
+from pika.adapters.blocking_connection import BlockingChannel
+from pika.exchange_type import ExchangeType
 
 from src.contexts.shared.domain.domain_event import DomainEvent
 from src.contexts.shared.domain.event_bus import EventBus
@@ -20,19 +22,15 @@ class RabbitMQEventBus(EventBus):
     def __init__(self, settings: Settings):
         self.settings = settings
         self._connection: pika.BlockingConnection | None = None
-        self._channel: pika.channel.Channel | None = None
+        self._channel: BlockingChannel | None = None
         self._ensure_connection()
 
     def _ensure_connection(self) -> None:
         if self._connection is None or self._connection.is_closed:
             try:
-                self._connection = pika.BlockingConnection(
-                    pika.URLParameters(self.settings.rabbitmq_uri)
-                )
+                self._connection = pika.BlockingConnection(pika.URLParameters(self.settings.rabbitmq_uri))
                 self._channel = self._connection.channel()
-                self._channel.exchange_declare(
-                    exchange=self.EXCHANGE_NAME, exchange_type=self.EXCHANGE_TYPE, durable=True
-                )
+                self._channel.exchange_declare(exchange=self.EXCHANGE_NAME, exchange_type=ExchangeType["topic"], durable=True)
                 logger.info("Connected to RabbitMQ")
             except Exception as e:
                 logger.error("Error connecting to RabbitMQ", extra={"error": str(e)}, exc_info=True)
@@ -45,7 +43,7 @@ class RabbitMQEventBus(EventBus):
         for event in events:
             try:
                 self._ensure_connection()
-                
+
                 event_type = type(event).__name__
                 # Determine prefix based on event type
                 if event_type.startswith("User"):
@@ -54,7 +52,7 @@ class RabbitMQEventBus(EventBus):
                     prefix = "events"
                 else:
                     prefix = "events"  # default
-                
+
                 routing_key = f"{prefix}.{event_type.lower()}"
 
                 event_data = self._serialize_event(event)
@@ -104,8 +102,8 @@ class RabbitMQEventBus(EventBus):
                 except Exception:
                     pass
 
-    def _serialize_event(self, event: DomainEvent) -> dict:
-        event_dict = {}
+    def _serialize_event(self, event: DomainEvent) -> dict[str, Any]:
+        event_dict: dict[str, Any] = {}
         for key, value in event.__dict__.items():
             if hasattr(value, "value"):
                 event_dict[key] = value.value
@@ -115,12 +113,10 @@ class RabbitMQEventBus(EventBus):
                 event_dict[key] = str(value)
         return event_dict
 
-    def _json_serializer(self, obj):
+    def _json_serializer(self, obj: Any) -> str:
         if isinstance(obj, datetime):
             return obj.isoformat()
         raise TypeError(f"Type {type(obj)} not serializable")
 
-    def subscribe(
-        self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]
-    ) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         raise NotImplementedError("RabbitMQEventBus does not support subscriptions")

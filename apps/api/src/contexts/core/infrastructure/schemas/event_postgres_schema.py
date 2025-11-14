@@ -1,4 +1,3 @@
-
 from sqlalchemy import Column, DateTime, Integer, String
 
 from src.contexts.shared.infrastructure.sqlalchemy.connection import Base

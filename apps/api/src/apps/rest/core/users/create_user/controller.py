@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from logger.main import get_logger
-from returns.result import Failure, Success
+from returns.result import Success
 
 from src.apps.rest.core.users.create_user.request import (
     CreateUserRequest,
@@ -15,6 +15,8 @@ from src.contexts.shared import DomainError
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
 
 logger = get_logger(__name__)
+
+CREATE_USER_REQUEST = Depends(create_user_request)
 
 
 class CreateUserController:
@@ -32,18 +34,16 @@ class CreateUserController:
             response_model=ResponseSchema[CreateUserResponse],
         )
 
-    def handle_request(self, request: CreateUserRequest = Depends(create_user_request)) -> ResponseSchema[CreateUserResponse]:
+    def handle_request(self, request: CreateUserRequest = CREATE_USER_REQUEST) -> ResponseSchema[CreateUserResponse]:
         result = self.create_user_command_handler.handle(CreateUserCommand(user_id=request.user_id, email=request.email))
 
-        match result:
-            case Success(value):
-                return ResponseSchema[CreateUserResponse](
-                    data=CreateUserResponse(user=value.user),
-                    metadata=ResponseMetaSchema(count=1),
-                )
-            case Failure(error):
-                if isinstance(error, DomainError):
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
-                logger.error("Error creating user", extra={"error": str(error)})
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        if isinstance(result, Success):
+            return ResponseSchema[CreateUserResponse](
+                data=CreateUserResponse(user=result.unwrap().user),
+                metadata=ResponseMetaSchema(count=1),
+            )
 
+        if isinstance(result.failure(), DomainError):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(result.failure()))
+        logger.error("Error creating user", extra={"error": str(result.failure())})
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

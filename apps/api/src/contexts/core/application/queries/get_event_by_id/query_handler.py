@@ -27,11 +27,10 @@ class GetEventByIdQueryHandler(QueryHandler[GetEventByIdQuery, GetEventByIdResul
 
         result = self.event_repository.get(event_id)
 
-        match result:
-            case Failure(error):
-                logger.error("Error getting event by id", extra={"error": str(error)})
-                return Failure(error)
-            case Success(event):
-                if event is None:
-                    return Success(GetEventByIdResult(event=None))
-                return Success(GetEventByIdResult(event=event.to_primitives()))
+        if isinstance(result, Failure):
+            logger.error("Error getting event by id", extra={"error": str(result.failure())})
+            return Failure(result.failure())
+
+        if (event := result.unwrap()) is None:
+            return Success(GetEventByIdResult(event=None))
+        return Success(GetEventByIdResult(event=event.to_primitives()))

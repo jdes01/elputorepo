@@ -8,4 +8,3 @@ from ..value_objects import EventId
 @dataclass
 class EventDeleted(DomainEvent):
     event_id: EventId
-

@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/ddanier/sub-pre-commit.git
+    rev: v4.4.0
+    hooks:
+      - id: sub-pre-commit
+        alias: api
+        name: "pre-commit for apps/api/"
+        args: ["-p", "apps/api"]
+        files: "^apps/api/.*"
+        stages: ["pre-commit"]

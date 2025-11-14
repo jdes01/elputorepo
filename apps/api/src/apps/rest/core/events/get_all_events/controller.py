@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from logger.main import get_logger
-from returns.result import Failure, Success
+from returns.result import Success
 
 from src.contexts.core.application.queries.get_all_events.query_handler import (
     GetAllEventsQuery,
@@ -30,14 +30,13 @@ class GetAllEventsController:
     def handle_request(self) -> ResponseSchema[GetAllEventsResult]:
         result = self.get_all_events_query_handler.handle(GetAllEventsQuery())
 
-        match result:
-            case Success(value):
-                return ResponseSchema[GetAllEventsResult](
-                    data=value,
-                    metadata=ResponseMetaSchema(count=len(value.events)),
-                )
-            case Failure(error):
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Internal server error",
-                )
+        if isinstance(result, Success):
+            return ResponseSchema[GetAllEventsResult](
+                data=result.unwrap(),
+                metadata=ResponseMetaSchema(count=len(result.unwrap().events)),
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        )

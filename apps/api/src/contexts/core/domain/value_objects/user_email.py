@@ -14,13 +14,13 @@ class UserEmailInvalidError(DomainError):
 class UserEmail:
     value: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.validate()
 
-    def validate(self):
+    def validate(self) -> None:
         self._validate_email_format()
 
-    def _validate_email_format(self):
+    def _validate_email_format(self) -> None:
         email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         if not re.match(email_pattern, self.value):
             raise UserEmailInvalidError(f"Invalid email format: {self.value}")
@@ -39,4 +39,3 @@ class UserEmail:
             return True
         except DomainError:
             return False
-

@@ -14,17 +14,17 @@ class EventIdInvalidError(DomainError):
 class EventId:
     value: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.validate()
 
-    def validate(self):
+    def validate(self) -> None:
         self._validate_valid_uuid()
 
-    def _validate_valid_uuid(self):
+    def _validate_valid_uuid(self) -> None:
         try:
             uuid.UUID(self.value)
         except ValueError as e:
-            raise EventIdInvalidError(f"Invalid event ID format: {str(e)}")
+            raise EventIdInvalidError(f"Invalid event ID format: {str(e)}") from e
 
     @staticmethod
     def generate() -> "EventId":

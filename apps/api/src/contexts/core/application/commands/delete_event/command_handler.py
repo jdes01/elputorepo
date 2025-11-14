@@ -28,27 +28,24 @@ class DeleteEventCommandHandler(CommandHandler[DeleteEventCommand, DeleteEventRe
     def _handle(self, command: DeleteEventCommand) -> Result[DeleteEventResult, Exception]:
         event_id = EventId(command.event_id)
 
-        # Check if event exists first
         get_result = self.event_repository.get(event_id)
-        match get_result:
-            case Failure(error):
-                logger.error("Error getting event for deletion", extra={"error": str(error)}, exc_info=True)
-                return Failure(error)
-            case Success(event):
-                if event is None:
-                    logger.error("Event not found for deletion", extra={"event_id": command.event_id})
-                    return Failure(EventNotFoundError(command.event_id))
 
-                # Use soft_delete to emit domain event
-                event.soft_delete()
-                result = self.event_repository.save(event)
+        if isinstance(get_result, Failure):
+            logger.error("Error getting event for deletion", extra={"error": str(get_result.failure())}, exc_info=True)
+            return Failure(get_result.failure())
 
-                match result:
-                    case Failure(error):
-                        logger.error("Error deleting event", extra={"error": str(error)}, exc_info=True)
-                        return Failure(error)
-                    case Success(_):
-                        domain_events = event.pull_domain_events()
-                        self.event_bus.publish(domain_events)
-                        logger.info("Event deleted successfully", extra={"event_id": command.event_id})
-                        return Success(DeleteEventResult(success=True))
+        if (event := get_result.unwrap()) is None:
+            logger.error("Event not found for deletion", extra={"event_id": command.event_id})
+            return Failure(EventNotFoundError(command.event_id))
+
+        event.soft_delete()
+        result = self.event_repository.save(event)
+
+        if isinstance(result, Failure):
+            logger.error("Error deleting event", extra={"error": str(result.failure())}, exc_info=True)
+            return Failure(result.failure())
+
+        domain_events = event.pull_domain_events()
+        self.event_bus.publish(domain_events)
+        logger.info("Event deleted successfully", extra={"event_id": command.event_id})
+        return Success(DeleteEventResult(success=True))

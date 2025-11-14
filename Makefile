@@ -16,7 +16,6 @@ down: ## Turn down app
 	@echo "→ Stopping docker compose..."
 	@docker compose down
 
-
 restart: ## Restart one or more services: make restart api worker
 	@echo "→ Restarting docker compose service(s): $(filter-out $@,$(MAKECMDGOALS))"
 	@docker compose up --build -d $(filter-out $@,$(MAKECMDGOALS))
@@ -24,6 +23,9 @@ restart: ## Restart one or more services: make restart api worker
 logs: ## Show docker compose logs in real time
 	@echo "→ Attaching to docker compose logs for service(s): $(filter-out $@,$(MAKECMDGOALS))"
 	@docker compose logs -f --tail=100 $(filter-out $@,$(MAKECMDGOALS))
+
+install-pre-commit:
+	@uv run pre-commit install --install-hooks
 
 install: ## Install dependencies
 	@for app in $(APPS); do \

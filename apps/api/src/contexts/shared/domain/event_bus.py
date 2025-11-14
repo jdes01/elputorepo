@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Type
 
 from src.contexts.shared.domain.domain_event import DomainEvent
 from src.contexts.shared.domain.event_handler import EventHandler
@@ -11,7 +10,5 @@ class EventBus(ABC):
         pass
 
     @abstractmethod
-    def subscribe(
-        self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]
-    ) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         pass

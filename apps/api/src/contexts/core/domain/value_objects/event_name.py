@@ -21,10 +21,10 @@ class EventNameInvalidCharactersError(DomainError):
 class EventName:
     value: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.validate()
 
-    def validate(self):
+    def validate(self) -> None:
         self._validate_not_empty()
         self._validate_length()
         self._validate_characters()
@@ -44,18 +44,14 @@ class EventName:
         except DomainError:
             return False
 
-    def _validate_not_empty(self):
+    def _validate_not_empty(self) -> None:
         if not self.value:
             raise EventNameEmptyError("Event name cannot be empty.")
 
-    def _validate_length(self):
+    def _validate_length(self) -> None:
         if len(self.value) > 50:
-            raise EventNameTooLongError(
-                "Event name cannot be longer than 50 characters."
-            )
+            raise EventNameTooLongError("Event name cannot be longer than 50 characters.")
 
-    def _validate_characters(self):
+    def _validate_characters(self) -> None:
         if not all(c.isalpha() or c.isspace() or c == "-" for c in self.value):
-            raise EventNameInvalidCharactersError(
-                "Event name can only contain letters, spaces or hyphens."
-            )
+            raise EventNameInvalidCharactersError("Event name can only contain letters, spaces or hyphens.")

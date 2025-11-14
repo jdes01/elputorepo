@@ -7,4 +7,3 @@ class Router(ABC):
     @abstractmethod
     def connect(self) -> APIRouter:
         pass
-

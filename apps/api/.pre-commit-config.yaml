@@ -1,0 +1,20 @@
+repos:
+  - repo: local
+    hooks:
+      - id: format
+        name: "format (ruff)"
+        entry: bash scripts/format.sh
+        language: system
+        pass_filenames: false
+
+      - id: lint
+        name: "lint (ruff)"
+        entry: bash scripts/lint.sh
+        language: system
+        pass_filenames: false
+
+      - id: typecheck
+        name: "typecheck (mypy)"
+        entry: bash scripts/typecheck.sh
+        language: system
+        pass_filenames: false

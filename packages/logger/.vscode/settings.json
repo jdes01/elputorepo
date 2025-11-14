@@ -4,8 +4,8 @@
     "editor.formatOnSave": true
   },
   "ruff.configurationPreference": "filesystemFirst",
-  "mypy-type-checker.args": ["--config-file=../pyproject.toml"],
-  "mypy-type-checker.cwd": "${workspaceFolder}/src",
+  // "mypy-type-checker.args": ["--config-file=../pyproject.toml"],
+  // "mypy-type-checker.cwd": "${workspaceFolder}/src",
   "python.testing.pytestArgs": ["."],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true

@@ -1,5 +1,3 @@
-from typing import Type
-
 from src.contexts.shared.domain.domain_event import DomainEvent
 from src.contexts.shared.domain.event_bus import EventBus
 from src.contexts.shared.domain.event_handler import EventHandler
@@ -14,8 +12,5 @@ class CompositeEventBus(EventBus):
         self._in_memory_bus.publish(events)
         self._rabbitmq_bus.publish(events)
 
-    def subscribe(
-        self, event_type: Type[DomainEvent], handler: EventHandler[DomainEvent]
-    ) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         self._in_memory_bus.subscribe(event_type, handler)
-

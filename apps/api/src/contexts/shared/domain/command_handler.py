@@ -1,16 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
 
 from returns.result import Result
 
 from ..application.utils.logging import log_handler_start
 from .schemas import Schema
 
-Command = TypeVar("Command", bound=Schema)
-ResultType = TypeVar("ResultType", bound=Schema)
 
-
-class CommandHandler(ABC, Generic[Command, ResultType]):
+class CommandHandler[Command: Schema, ResultType](ABC):
     @abstractmethod
     def _handle(self, command: Command) -> Result[ResultType, Exception]:
         pass

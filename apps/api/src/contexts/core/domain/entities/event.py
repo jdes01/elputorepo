@@ -7,7 +7,7 @@ from src.contexts.core.domain.events.event_created_domain_event import EventCrea
 from src.contexts.core.domain.events.event_deleted_domain_event import EventDeleted
 from src.contexts.shared.domain.aggregate import Aggregate
 
-from ..value_objects import EventId, EventName, EventCapacity
+from ..value_objects import EventCapacity, EventId, EventName
 
 
 class EventPrimitives(BaseModel):

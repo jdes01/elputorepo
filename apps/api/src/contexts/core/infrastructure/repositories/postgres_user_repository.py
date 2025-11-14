@@ -76,4 +76,3 @@ class PostgresUserRepository(UserRepository):
         except Exception as e:
             logger.error("Unexpected error finding user", extra={"error": str(e)}, exc_info=True)
             return Failure(e)
-
