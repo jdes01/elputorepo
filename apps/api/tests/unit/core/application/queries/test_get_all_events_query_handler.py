@@ -10,6 +10,7 @@ from src.contexts.core.application.queries.get_all_events.query_handler import (
     GetAllEventsQueryHandler,
 )
 from src.contexts.core.domain.entities.event import Event
+from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
 from src.contexts.core.domain.value_objects.event_id import EventId
 from src.contexts.core.domain.value_objects.event_name import EventName
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
@@ -32,8 +33,8 @@ def test_handle_success(handler, mock_repository):
     # Arrange
     query = GetAllEventsQuery()
     events = [
-        Event.create(id=EventId.generate(), name=EventName("Event Name aaa")),
-        Event.create(id=EventId.generate(), name=EventName("Event Name bbb")),
+        Event.create(id=EventId.generate(), name=EventName("Event Name aaa"), capacity=EventCapacity(10)),
+        Event.create(id=EventId.generate(), name=EventName("Event Name bbb"), capacity=EventCapacity(10)),
     ]
     mock_repository.get_all.return_value = Success(events)
 

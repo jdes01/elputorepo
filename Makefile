@@ -69,6 +69,24 @@ test: ## Run tests
 		fi; \
 	done
 
+setup: ## Run setups
+	@for app in $(APPS); do \
+		echo "→ Testing app: $$app"; \
+		$(MAKE) -s -C apps/$$app setup || true; \
+	done; \
+	for package in $(PACKAGES); do \
+		if [ -f packages/$$package/Makefile ]; then \
+			if $(MAKE) -q -C packages/$$package setup >/dev/null 2>&1; then \
+				echo "→ Testing package: $$package"; \
+				$(MAKE) -s -C packages/$$package setup; \
+			else \
+				echo "→ Skipping package: $$package (no setup target)"; \
+			fi \
+		else \
+			echo "→ Skipping package: $$package (no Makefile)"; \
+		fi; \
+	done
+
 # Prevent make from treating args as targets
 %:
 	@:

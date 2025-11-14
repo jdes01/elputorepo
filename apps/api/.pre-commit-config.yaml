@@ -18,3 +18,9 @@ repos:
         entry: bash scripts/typecheck.sh
         language: system
         pass_filenames: false
+      
+      - id: test
+        name: "test"
+        entry: bash scripts/test.sh
+        language: system
+        pass_filenames: false

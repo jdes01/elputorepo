@@ -2,8 +2,20 @@
   // ===========================
   // 🔧 GENERAL PYTHON SETUP
   // ===========================
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "python.useEnvironmentsExtension": true,
   "python.languageServer": "Pylance",
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/apps/api/src",
+  ],
+  // ===========================
+  //  PYTHON TESTING SETUP
+  // ===========================
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "tests",
+  ],
   // ===========================
   // ⚡ PYLANCE CONFIGURATION
   // ===========================

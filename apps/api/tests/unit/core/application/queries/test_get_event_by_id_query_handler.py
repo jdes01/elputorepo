@@ -10,7 +10,7 @@ from src.contexts.core.application.queries.get_event_by_id.query_handler import 
     GetEventByIdQueryHandler,
 )
 from src.contexts.core.domain.entities.event import Event
-from src.contexts.core.domain.errors.event_not_found_error import EventNotFoundError
+from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
 from src.contexts.core.domain.value_objects.event_id import EventId
 from src.contexts.core.domain.value_objects.event_name import EventName
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
@@ -32,10 +32,7 @@ def test_handle_success(handler, mock_repository):
     """Test successful event retrieval."""
     # Arrange
     query = GetEventByIdQuery(event_id="123e4567-e89b-12d3-a456-426614174000")
-    event = Event.create(
-        id=EventId("123e4567-e89b-12d3-a456-426614174000"),
-        name=EventName("Test Event"),
-    )
+    event = Event.create(id=EventId("123e4567-e89b-12d3-a456-426614174000"), name=EventName("Test Event"), capacity=EventCapacity(10))
     mock_repository.get.return_value = Success(event)
 
     # Act

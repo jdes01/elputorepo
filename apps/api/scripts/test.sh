@@ -5,4 +5,4 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 
 source "$DIR/../.venv/bin/activate"
 
-pytest tests
+python3 -m pytest tests

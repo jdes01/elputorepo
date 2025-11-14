@@ -30,11 +30,9 @@ def test_save_and_get_all_events(postgres_session: Session):
     # Arrange
     event_id = EventId.generate()
     event_name = EventName("ACME Inc")
+    event_capacity = EventCapacity(10)
 
-    event_schema = EventPostgresSchema(
-        event_id=event_id.value,
-        name=event_name.value,
-    )
+    event_schema = EventPostgresSchema(event_id=event_id.value, name=event_name.value, capacity=event_capacity.value)
 
     postgres_session.add(event_schema)
     postgres_session.commit()
