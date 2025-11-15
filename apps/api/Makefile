@@ -31,3 +31,6 @@ migrate-new: ## Genera nueva migración con mensaje MESSAGE="nombre migración"
 
 migrate-downgrade: ## Revierte migraciones VERSIONS=1
 	@alembic downgrade -$(VERSIONS)
+
+install-pre-commit: ## Instala pre-commit hooks
+	@uv run pre-commit install --install-hooks

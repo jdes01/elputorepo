@@ -8,6 +8,13 @@ wheels/
 
 # Virtual environments
 .venv
+
+# .env files
 .env
+
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 .dmypy.json

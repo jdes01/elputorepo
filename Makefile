@@ -1,3 +1,5 @@
+include common/make/run-command-in-modules.mk
+
 .PHONY: up restart logs install test migrate help
 
 APPS     := $(notdir $(wildcard apps/*))
@@ -24,68 +26,29 @@ logs: ## Show docker compose logs in real time
 	@echo "→ Attaching to docker compose logs for service(s): $(filter-out $@,$(MAKECMDGOALS))"
 	@docker compose logs -f --tail=100 $(filter-out $@,$(MAKECMDGOALS))
 
+install: ## Install dependencies
+	@echo "→ Running install in root"
+	@uv sync --dev
+
+	$(call run-command-in-modules,install,$(APPS),apps)
+	$(call run-command-in-modules,install,$(PACKAGES),packages)
+
+migrate: ## Run migrations for all apps
+	$(call run-command-in-modules,migrate,$(APPS),apps)
+
+test: ## Run tests
+	$(call run-command-in-modules,test,$(APPS),apps)
+	$(call run-command-in-modules,test,$(PACKAGES),packages)
+
+setup: ## Run setups
+	$(call run-command-in-modules,setup,$(APPS),apps)
+	$(call run-command-in-modules,setup,$(PACKAGES),packages)
+
 install-pre-commit:
 	@uv run pre-commit install --install-hooks
 
-install: ## Install dependencies
-	@for app in $(APPS); do \
-		echo "→ Installing app: $$app"; \
-		$(MAKE) -s -C apps/$$app install || true; \
-	done; \
-	for package in $(PACKAGES); do \
-		echo "→ Installing package: $$package"; \
-		$(MAKE) -s -C packages/$$package install || true; \
-	done
-
-migrate: ## Run migrations for all apps
-	@for app in $(APPS); do \
-		if [ -f apps/$$app/Makefile ]; then \
-			if $(MAKE) -q -C apps/$$app migrate >/dev/null 2>&1; then \
-				echo "→ Running migrations for app: $$app"; \
-				$(MAKE) -s -C apps/$$app migrate || true; \
-			else \
-				echo "→ Skipping app: $$app (no migrate target)"; \
-			fi \
-		else \
-			echo "→ Skipping app: $$app (no Makefile)"; \
-		fi; \
-	done
-
-test: ## Run tests
-	@for app in $(APPS); do \
-		echo "→ Testing app: $$app"; \
-		$(MAKE) -s -C apps/$$app test || true; \
-	done; \
-	for package in $(PACKAGES); do \
-		if [ -f packages/$$package/Makefile ]; then \
-			if $(MAKE) -q -C packages/$$package test >/dev/null 2>&1; then \
-				echo "→ Testing package: $$package"; \
-				$(MAKE) -s -C packages/$$package test; \
-			else \
-				echo "→ Skipping package: $$package (no tests target)"; \
-			fi \
-		else \
-			echo "→ Skipping package: $$package (no Makefile)"; \
-		fi; \
-	done
-
-setup: ## Run setups
-	@for app in $(APPS); do \
-		echo "→ Testing app: $$app"; \
-		$(MAKE) -s -C apps/$$app setup || true; \
-	done; \
-	for package in $(PACKAGES); do \
-		if [ -f packages/$$package/Makefile ]; then \
-			if $(MAKE) -q -C packages/$$package setup >/dev/null 2>&1; then \
-				echo "→ Testing package: $$package"; \
-				$(MAKE) -s -C packages/$$package setup; \
-			else \
-				echo "→ Skipping package: $$package (no setup target)"; \
-			fi \
-		else \
-			echo "→ Skipping package: $$package (no Makefile)"; \
-		fi; \
-	done
+	$(call run-command-in-modules,install-pre-commit,$(APPS),apps)
+	$(call run-command-in-modules,install-pre-commit,$(PACKAGES),packages)
 
 # Prevent make from treating args as targets
 %:
