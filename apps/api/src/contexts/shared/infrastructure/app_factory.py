@@ -1,6 +1,7 @@
 import logging
 import sys
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 
 from fastapi import FastAPI
 from logger.fastapi import RequestContextMiddleware
@@ -15,16 +16,19 @@ from .router import Router
 class AppFactory:
     routers: list[Router]
     settings: Settings
+    startup_callbacks: list[Callable] = field(default_factory=list)
+
+    def with_routers(self, routers: list[Router]) -> "AppFactory":
+        self.routers = routers
+        return self
+
+    def on_startup(self, on_startup: list[Callable]) -> "AppFactory":
+        for callback in on_startup:
+            self.startup_callbacks.append(callback)
+        return self
 
     def create(self) -> FastAPI:
-        # Get log level from settings, default to DEBUG in local, INFO otherwise
-        is_local = self.settings.environment.lower() in (
-            "local",
-            "dev",
-            "development",
-        )
-        log_level = self.settings.log_level or ("DEBUG" if is_local else "INFO")
-        configure_logger(level=log_level)
+        configure_logger(level=self.settings.log_level)
 
         app = FastAPI(docs_url="/docs")
 
@@ -38,5 +42,8 @@ class AppFactory:
 
         for router in self.routers:
             app.include_router(router.connect())
+
+        for callback in self.startup_callbacks:
+            app.add_event_handler("startup", callback)
 
         return app

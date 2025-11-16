@@ -8,11 +8,11 @@ class InMemoryEventBus(EventBus):
     def __init__(self, subscriptions: dict[type[DomainEvent], list[EventHandler[DomainEvent]]]):
         self._subscriptions = subscriptions
 
-    def publish(self, events: list[DomainEvent]) -> None:
+    async def publish(self, events: list[DomainEvent]) -> None:
         for event in events:
             handlers = self._subscriptions.get(type(event), [])
             for handler in handlers:
-                handler.handle(event)
+                await handler.handle(event)
 
     def subscribe(self, event_type: type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         self._subscriptions.setdefault(event_type, []).append(handler)

@@ -1,4 +1,19 @@
+from enum import StrEnum
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Environment(StrEnum):
+    DEVELOPMENT = "DEVELOPMENT"
+    TEST = "TEST"
+    PRODUCTION = "PRODUCTION"
+
+
+class LogLevel(StrEnum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
 
 
 class Settings(BaseSettings):
@@ -8,7 +23,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     app_name: str = "PIZZERIA CHULERIA"
-    postgres_uri: str = "postgresql://myuser:mypassword@db:5432/mydatabase"
+    postgres_uri: str = "postgresql://myuser:mypassword@elputorepo-api-postgres:5432/mydatabase"
+    mongodb_uri: str = "mongodb://elputorepo-api-mongodb:27017/database"
+    mongodb_database_name: str = "database"
     rabbitmq_uri: str = "amqp://guest:guest@rabbitmq:5672/"
-    environment: str = "local"
-    log_level: str | None = None
+    environment: str = Environment.DEVELOPMENT
+    log_level: str = LogLevel.DEBUG

@@ -6,7 +6,7 @@ from ..value_objects import EventCapacity, EventId, EventName
 
 
 @dataclass
-class EventCreated(DomainEvent):
+class EventCreatedDomainEvent(DomainEvent):
     event_id: EventId
     name: EventName
     capacity: EventCapacity

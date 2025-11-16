@@ -6,7 +6,7 @@ from src.contexts.shared.domain.event_handler import EventHandler
 
 class EventBus(ABC):
     @abstractmethod
-    def publish(self, events: list[DomainEvent]) -> None:
+    async def publish(self, events: list[DomainEvent]) -> None:
         pass
 
     @abstractmethod

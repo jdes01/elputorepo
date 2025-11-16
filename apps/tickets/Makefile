@@ -22,13 +22,7 @@ setup: install migrate ## Instala dependencias y aplica migraciones
 format: ## Formatea el código
 	@sh scripts/format.sh
 
-prisma-generate: ## Genera el cliente de Prisma
-	@npm run prisma:generate
-
-prisma-migrate: ## Ejecuta migraciones de Prisma
-	@npm run prisma:migrate
-
-migrate: prisma-migrate ## Aplica migraciones de Prisma
-
+migrate: ## Aplica migraciones de Prisma
+	@echo "→ No hay migraciones que aplicar"
 
 

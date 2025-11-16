@@ -8,7 +8,7 @@ from ..value_objects.event_id import EventId
 
 class EventRepository(ABC):
     @abstractmethod
-    def save(self, event: Event) -> Result[None, Exception]:
+    def persist(self, event: Event) -> Result[None, Exception]:
         pass
 
     @abstractmethod
@@ -17,8 +17,4 @@ class EventRepository(ABC):
 
     @abstractmethod
     def get_all(self) -> Result[list[Event], Exception]:
-        pass
-
-    @abstractmethod
-    def delete(self, event_id: EventId) -> Result[None, Exception]:
         pass

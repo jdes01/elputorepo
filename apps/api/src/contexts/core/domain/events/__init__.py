@@ -1,9 +1,9 @@
-from .event_created_domain_event import EventCreated
-from .event_deleted_domain_event import EventDeleted
-from .user_created_domain_event import UserCreated
+from .event_created_domain_event import EventCreatedDomainEvent
+from .event_deleted_domain_event import EventDeletedDomainEvent
+from .user_created_domain_event import UserCreatedDomainEvent
 
 __all__ = [
-    "EventCreated",
-    "EventDeleted",
-    "UserCreated",
+    "EventCreatedDomainEvent",
+    "EventDeletedDomainEvent",
+    "UserCreatedDomainEvent",
 ]

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from src.contexts.core.domain.events.user_created_domain_event import UserCreated
+from src.contexts.core.domain.events.user_created_domain_event import UserCreatedDomainEvent
 from src.contexts.shared.domain.aggregate import Aggregate
 
 from ..value_objects import UserEmail, UserId
@@ -27,7 +27,7 @@ class User(Aggregate):
 
     def __on_user_created(self) -> None:
         self._add_domain_event(
-            UserCreated(
+            UserCreatedDomainEvent(
                 timestamp=datetime.now(),
                 user_id=self.id,
                 email=self.email,

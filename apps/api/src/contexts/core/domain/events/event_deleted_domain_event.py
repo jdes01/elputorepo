@@ -6,5 +6,5 @@ from ..value_objects import EventId
 
 
 @dataclass
-class EventDeleted(DomainEvent):
+class EventDeletedDomainEvent(DomainEvent):
     event_id: EventId

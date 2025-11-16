@@ -23,14 +23,20 @@ install: ## Instala dependencias
 setup: install migrate ## Instala dependencias y aplica migraciones
 
 migrate: ## Aplica todas las migraciones pendientes
-	@alembic upgrade head
+	@uv run alembic upgrade head
 
 migrate-new: ## Genera nueva migración con mensaje MESSAGE="nombre migración"
-	@alembic revision --autogenerate -m "$(MESSAGE)"
-	@alembic upgrade head
+
+	@if [ -z "$(MESSAGE)" ]; then\
+		echo "ERROR: Debes proporcionar un mensaje para la migración con MESSAGE=\"nombre migración\""; \
+		exit 1; \
+    fi
+
+	@uv run alembic revision --autogenerate -m "$(MESSAGE)"
+	@uv run alembic upgrade head
 
 migrate-downgrade: ## Revierte migraciones VERSIONS=1
-	@alembic downgrade -$(VERSIONS)
+	@uv run alembic downgrade -$(VERSIONS)
 
 install-pre-commit: ## Instala pre-commit hooks
 	@uv run pre-commit install --install-hooks

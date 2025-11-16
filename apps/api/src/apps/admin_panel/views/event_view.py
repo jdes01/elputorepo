@@ -1,6 +1,6 @@
 from sqladmin import ModelView
 
-from src.contexts.core.infrastructure.schemas.event_postgres_schema import (
+from src.contexts.core.infrastructure.postgres.schemas.event_postgres_schema import (
     EventPostgresSchema,
 )
 

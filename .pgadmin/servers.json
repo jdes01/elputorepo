@@ -3,7 +3,7 @@
     "1": {
       "Name": "PostgreSQL DB",
       "Group": "Servers",
-      "Host": "db",
+      "Host": "elputorepo-api-postgres",
       "Port": 5432,
       "Username": "myuser",
       "SSLMode": "prefer",

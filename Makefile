@@ -1,13 +1,14 @@
-include common/make/run-command-in-modules.mk
 
 .PHONY: up restart logs install test migrate help
+
+include common/make/run-command-in-modules.mk
 
 APPS     := $(notdir $(wildcard apps/*))
 PACKAGES := $(notdir $(wildcard packages/*))
 
 help:  ## Muestra los comandos disponibles
 	@echo "Comandos disponibles:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | \
 	awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 up: ## Turn up app
@@ -53,5 +54,3 @@ install-pre-commit:
 # Prevent make from treating args as targets
 %:
 	@:
-
-

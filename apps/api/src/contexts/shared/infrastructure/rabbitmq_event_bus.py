@@ -36,7 +36,7 @@ class RabbitMQEventBus(EventBus):
                 logger.error("Error connecting to RabbitMQ", extra={"error": str(e)}, exc_info=True)
                 raise
 
-    def publish(self, events: list[DomainEvent]) -> None:
+    async def publish(self, events: list[DomainEvent]) -> None:
         if not events:
             return
 

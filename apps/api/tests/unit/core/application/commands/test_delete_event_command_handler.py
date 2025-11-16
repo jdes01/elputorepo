@@ -12,7 +12,7 @@ from src.contexts.core.application.commands.delete_event.command_handler import 
     DeleteEventCommandHandler,
 )
 from src.contexts.core.domain.entities.event import Event, EventPrimitives
-from src.contexts.core.domain.events.event_deleted_domain_event import EventDeleted
+from src.contexts.core.domain.events.event_deleted_domain_event import EventDeletedDomainEvent
 from src.contexts.core.domain.value_objects.event_id import EventId
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
 
@@ -21,6 +21,7 @@ from src.contexts.shared.infrastructure.exceptions import DatabaseError
 def mock_repository():
     """Create a mock repository."""
     return Mock()
+
 
 @pytest.fixture
 def event_bus():
@@ -32,6 +33,7 @@ def event_bus():
 def handler(mock_repository: Mock, event_bus: Mock):
     """Create handler instance."""
     return DeleteEventCommandHandler(event_repository=mock_repository, event_bus=event_bus)
+
 
 @pytest.fixture
 def existing_event_id() -> EventId:
@@ -57,7 +59,7 @@ def test_handle_success(handler: Mock, mock_repository: Mock, existing_event: Mo
     # Assert
     assert isinstance(result, Success)
     mock_repository.save.assert_called_once_with(existing_event)
-    event_bus.publish.assert_called_once_with([EventDeleted(datetime.now(), existing_event.id)])
+    event_bus.publish.assert_called_once_with([EventDeletedDomainEvent(datetime.now(), existing_event.id)])
 
 
 def test_handle_repository_error(handler: Mock, mock_repository: Mock):

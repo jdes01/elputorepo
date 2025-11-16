@@ -1,5 +1,6 @@
 services:
-  api:
+  elputorepo-api:
+    container_name: elputorepo-api
     build: 
       context: .
       dockerfile: ./apps/api/Dockerfile
@@ -10,9 +11,8 @@ services:
       - "5678:5678"
     environment:
       PYTHONPATH: /app/api/src
-      POSTGRES_URI: postgresql://myuser:mypassword@db:5432/mydatabase
+      POSTGRES_URI: postgresql://myuser:mypassword@elputorepo-api-postgres:5432/mydatabase
       RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672/
-      
     volumes:
       - ./apps/api/src:/app/api/src
       - ./apps/api/scripts:/app/api/scripts
@@ -21,13 +21,16 @@ services:
     networks:
       - app-network
     depends_on:
-      db:
+      elputorepo-api-postgres:
+        condition: service_healthy
+      elputorepo-api-mongodb:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
-  db:
+  elputorepo-api-postgres:
     image: postgres:15
+    container_name: elputorepo-api-postgres
     restart: always
     environment:
       POSTGRES_USER: myuser
@@ -46,6 +49,43 @@ services:
     networks:
       - app-network
 
+  elputorepo-api-mongodb:
+    image: mongo:7
+    container_name: elputorepo-api-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: database
+      # MONGO_INITDB_ROOT_USERNAME: admin
+      # MONGO_INITDB_ROOT_PASSWORD: admin
+    volumes:
+      - elputorepo-api-mongodb-data:/data/db
+      # - ./apps/api/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - app-network
+
+  elputorepo-api-mongo-express:
+    image: mongo-express:latest
+    container_name: elputorepo-api-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://elputorepo-api-mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    depends_on:
+      elputorepo-api-mongodb:
+        condition: service_healthy
+    networks:
+      - app-network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin4_container
@@ -59,7 +99,7 @@ services:
       - pgadmin-data:/var/lib/pgadmin
       - ./.pgadmin/servers.json:/pgadmin4/servers.json
     depends_on:
-      db:
+      elputorepo-api-postgres:
         condition: service_healthy
     networks:
       - app-network
@@ -174,7 +214,8 @@ services:
     networks:
       - app-network
 
-  tickets:
+  elputorepo-tickets-api:
+    container_name: elputorepo-tickets-api
     build:
       context: .
       dockerfile: ./apps/tickets/Dockerfile
@@ -182,7 +223,7 @@ services:
       - "3001:3000"
     environment:
       NODE_ENV: development
-      MONGODB_URI: mongodb://mongodb:27017/tickets
+      MONGODB_URI: mongodb://elputorepo-tickets-api-mongodb:27017/tickets
       RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672/
     volumes:
       - ./apps/tickets/src:/app/tickets/src
@@ -192,18 +233,17 @@ services:
     networks:
       - app-network
     depends_on:
-      mongodb:
+      elputorepo-tickets-api-mongodb:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
-  mongodb:
+  elputorepo-tickets-api-mongodb:
     image: mongo:7
-    container_name: mongodb
+    container_name: elputorepo-tickets-api-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
-    command: mongod --replSet rs0
+      - "27018:27017"
     environment:
       MONGO_INITDB_DATABASE: tickets
     healthcheck:
@@ -213,23 +253,24 @@ services:
       start_period: 10s
       timeout: 5s
     volumes:
-      - mongodb-data:/data/db
+      - elputorepo-tickets-api-mongodb-data:/data/db
+      # - ./apps/tickets/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - app-network
 
-  mongo-express:
+  elputorepo-tickets-api-mongo-express:
     image: mongo-express:latest
-    container_name: mongo-express
-    restart: unless-stopped
+    container_name: elputorepo-tickets-api-mongo-express
     ports:
-      - "8081:8081"
+      - "8082:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://elputorepo-tickets-api-mongodb:27017/
       ME_CONFIG_BASICAUTH_USERNAME: admin
       ME_CONFIG_BASICAUTH_PASSWORD: admin
     depends_on:
-      mongodb:
+      elputorepo-tickets-api-mongodb:
         condition: service_healthy
+        restart: true
     networks:
       - app-network
 
@@ -244,4 +285,5 @@ volumes:
   grafana-data:
   pgdata-keycloak:
   rabbitmq-data:
-  mongodb-data:
+  elputorepo-api-mongodb-data:
+  elputorepo-tickets-api-mongodb-data:

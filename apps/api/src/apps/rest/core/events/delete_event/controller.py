@@ -26,8 +26,8 @@ class DeleteEventController:
             response_model=ResponseSchema[dict[str, bool]],
         )
 
-    def handle_request(self, event_id: str = Path(..., description="Event ID")) -> ResponseSchema[dict[str, bool]]:
-        result = self.delete_event_command_handler.handle(DeleteEventCommand(event_id=event_id))
+    async def handle_request(self, event_id: str = Path(..., description="Event ID")) -> ResponseSchema[dict[str, bool]]:
+        result = await self.delete_event_command_handler.handle(DeleteEventCommand(event_id=event_id))
 
         if isinstance(result, Success):
             return ResponseSchema[dict[str, bool]](
@@ -37,10 +37,7 @@ class DeleteEventController:
 
         error = result.failure()
 
-        logger.error(
-            "Error al eliminar evento",
-            extra={"error": str(error), "error_type": type(error).__name__},
-        )
+        logger.error("Error Deleting Event", extra={"error": str(error), "error_type": type(error).__name__})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",

@@ -26,7 +26,7 @@ class CreateUserCommandHandler(CommandHandler[CreateUserCommand, CreateUserResul
     settings: Settings
     event_bus: EventBus
 
-    def _handle(self, command: CreateUserCommand) -> Result[CreateUserResult, Exception]:
+    async def _handle(self, command: CreateUserCommand) -> Result[CreateUserResult, Exception]:
         try:
             user_id = UserId(command.user_id)
             user_email = UserEmail(command.email)
@@ -42,6 +42,6 @@ class CreateUserCommandHandler(CommandHandler[CreateUserCommand, CreateUserResul
             logger.error("Error creating user", extra={"error": str(result.failure())}, exc_info=True)
             return Failure(result.failure())
 
-        self.event_bus.publish(user.pull_domain_events())
+        await self.event_bus.publish(user.pull_domain_events())
         logger.info("User created successfully", extra={"user_id": command.user_id, "email": command.email})
         return Success(CreateUserResult(user=user.to_primitives()))

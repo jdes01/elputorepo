@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 from src.contexts.core.domain.entities.event import Event
 from src.contexts.core.domain.value_objects import EventId, EventName
 from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
+from src.contexts.core.infrastructure.postgres.schemas.event_postgres_schema import (
+    EventPostgresSchema,
+)
 from src.contexts.core.infrastructure.repositories.postgres_event_repository import (
     PostgresEventRepository,
-)
-from src.contexts.core.infrastructure.schemas.event_postgres_schema import (
-    EventPostgresSchema,
 )
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
 

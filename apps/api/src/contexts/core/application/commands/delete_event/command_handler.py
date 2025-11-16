@@ -25,7 +25,7 @@ class DeleteEventCommandHandler(CommandHandler[DeleteEventCommand, DeleteEventRe
     event_repository: EventRepository
     event_bus: EventBus
 
-    def _handle(self, command: DeleteEventCommand) -> Result[DeleteEventResult, Exception]:
+    async def _handle(self, command: DeleteEventCommand) -> Result[DeleteEventResult, Exception]:
         event_id = EventId(command.event_id)
 
         get_result = self.event_repository.get(event_id)
@@ -39,13 +39,13 @@ class DeleteEventCommandHandler(CommandHandler[DeleteEventCommand, DeleteEventRe
             return Failure(EventNotFoundError(command.event_id))
 
         event.soft_delete()
-        result = self.event_repository.save(event)
+        result = self.event_repository.persist(event)
 
         if isinstance(result, Failure):
             logger.error("Error deleting event", extra={"error": str(result.failure())}, exc_info=True)
             return Failure(result.failure())
 
         domain_events = event.pull_domain_events()
-        self.event_bus.publish(domain_events)
+        await self.event_bus.publish(domain_events)
         logger.info("Event deleted successfully", extra={"event_id": command.event_id})
         return Success(DeleteEventResult(success=True))

@@ -6,6 +6,6 @@ from ..value_objects import UserEmail, UserId
 
 
 @dataclass
-class UserCreated(DomainEvent):
+class UserCreatedDomainEvent(DomainEvent):
     user_id: UserId
     email: UserEmail

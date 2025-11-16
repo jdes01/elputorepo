@@ -34,8 +34,8 @@ class CreateEventController:
             response_model=ResponseSchema[CreateEventResponse],
         )
 
-    def handle_request(self, request: CreateEventRequest = CREATE_EVENT_REQUEST) -> ResponseSchema[CreateEventResponse]:
-        result = self.create_event_command_handler.handle(CreateEventCommand(event_id=request.event_id, name=request.name, capacity=request.capacity))
+    async def handle_request(self, request: CreateEventRequest = CREATE_EVENT_REQUEST) -> ResponseSchema[CreateEventResponse]:
+        result = await self.create_event_command_handler.handle(CreateEventCommand(event_id=request.event_id, name=request.name, capacity=request.capacity))
 
         if isinstance(result, Success):
             return ResponseSchema[CreateEventResponse](

@@ -8,9 +8,9 @@ class CompositeEventBus(EventBus):
         self._in_memory_bus = in_memory_bus
         self._rabbitmq_bus = rabbitmq_bus
 
-    def publish(self, events: list[DomainEvent]) -> None:
-        self._in_memory_bus.publish(events)
-        self._rabbitmq_bus.publish(events)
+    async def publish(self, events: list[DomainEvent]) -> None:
+        await self._in_memory_bus.publish(events)
+        await self._rabbitmq_bus.publish(events)
 
     def subscribe(self, event_type: type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
         self._in_memory_bus.subscribe(event_type, handler)

@@ -34,7 +34,7 @@ class CreateEventCommandHandler(CommandHandler[CreateEventCommand, CreateEventRe
     settings: Settings
     event_bus: EventBus
 
-    def _handle(self, command: CreateEventCommand) -> Result[CreateEventResult, Exception]:
+    async def _handle(self, command: CreateEventCommand) -> Result[CreateEventResult, Exception]:
         try:
             event_id = EventId(command.event_id)
             event_name = EventName(command.name)
@@ -45,13 +45,14 @@ class CreateEventCommandHandler(CommandHandler[CreateEventCommand, CreateEventRe
 
         event = Event.create(id=event_id, name=event_name, capacity=event_capacity)
 
-        result = self.event_repository.save(event)
+        result = self.event_repository.persist(event)
 
         if isinstance(result, Failure):
             logger.error("Error creating event", extra={"error": str(result.failure())}, exc_info=True)
             return result
 
-        domain_events = event.pull_domain_events()
-        self.event_bus.publish(domain_events)
+        await self.event_bus.publish(event.pull_domain_events())
+
         logger.info("Event created successfully", extra={"event_id": command.event_id, "name": command.name, "capacity": command.capacity})
+
         return Success(CreateEventResult(event=event.to_primitives()))

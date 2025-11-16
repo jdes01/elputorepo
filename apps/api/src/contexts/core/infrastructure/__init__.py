@@ -1,5 +1,5 @@
+from .postgres import EventPostgresSchema
 from .repositories import PostgresEventRepository
-from .schemas import EventPostgresSchema
 
 __all__ = [
     "EventPostgresSchema",

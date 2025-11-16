@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from logger.main import get_logger
 from returns.result import Success
 
@@ -9,7 +9,11 @@ from src.contexts.core.application.queries.get_all_events.query_handler import (
 )
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
 
+from .request import GetAllEventsRequest, get_all_events_request
+
 logger = get_logger(__name__)
+
+GET_ALL_EVENT_REQUEST = Depends(get_all_events_request)
 
 
 class GetAllEventsController:
@@ -27,8 +31,8 @@ class GetAllEventsController:
             response_model=ResponseSchema[GetAllEventsResult],
         )
 
-    def handle_request(self) -> ResponseSchema[GetAllEventsResult]:
-        result = self.get_all_events_query_handler.handle(GetAllEventsQuery())
+    async def handle_request(self, request: GetAllEventsRequest = GET_ALL_EVENT_REQUEST) -> ResponseSchema[GetAllEventsResult]:
+        result = await self.get_all_events_query_handler.handle(GetAllEventsQuery(limit=request.limit, offset=request.offset))
 
         if isinstance(result, Success):
             return ResponseSchema[GetAllEventsResult](
