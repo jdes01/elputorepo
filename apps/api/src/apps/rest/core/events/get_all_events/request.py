@@ -3,9 +3,9 @@ from pydantic import BaseModel
 
 
 class GetAllEventsRequest(BaseModel):
-    limit: int
-    offset: int
+    limit: int | None = None
+    offset: int | None = None
 
 
-def get_all_events_request(limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0)) -> GetAllEventsRequest:
+def get_all_events_request(limit: int | None = Query(None, ge=1, le=100), offset: int = Query(None, ge=0)) -> GetAllEventsRequest:
     return GetAllEventsRequest(limit=limit, offset=offset)

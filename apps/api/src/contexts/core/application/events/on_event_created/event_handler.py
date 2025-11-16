@@ -16,7 +16,7 @@ class OnEventCreatedEventHandler(EventHandler[EventCreatedDomainEvent]):
     async def handle(self, event: EventCreatedDomainEvent) -> None:
         logger.info(f"Updating event projection - adding event {event.event_id.value}")
 
-        self.event_projection_service.add(
+        await self.event_projection_service.add(
             EventProjection(
                 id=event.event_id.value,
                 name=event.name.value,

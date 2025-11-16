@@ -15,17 +15,17 @@ class EventProjection:
 
 class AllEventsProjectionService(ABC):
     @abstractmethod
-    def add(self, event_projection: EventProjection) -> Result[None, Exception]:
+    async def add(self, event_projection: EventProjection) -> Result[None, Exception]:
         pass
 
     @abstractmethod
-    def get(self, event_id: EventId) -> Result[EventProjection | None, Exception]:
+    async def get(self, event_id: EventId) -> Result[EventProjection | None, Exception]:
         pass
 
     @abstractmethod
-    def get_all(self, limit: int | None = None, offset: int | None = None) -> Result[list[EventProjection], Exception]:
+    async def get_all(self, limit: int | None = None, offset: int | None = None) -> Result[list[EventProjection], Exception]:
         pass
 
     @abstractmethod
-    def delete(self, event_id: EventId) -> Result[None, Exception]:
+    async def delete(self, event_id: EventId) -> Result[None, Exception]:
         pass

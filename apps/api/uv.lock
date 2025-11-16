@@ -45,10 +45,11 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
+    { name = "beanie" },
     { name = "dependency-injector" },
     { name = "fastapi", extra = ["standard"] },
     { name = "logger" },
-    { name = "mongoengine" },
+    { name = "motor" },
     { name = "pika" },
     { name = "psycopg2-binary" },
     { name = "pydantic-settings" },
@@ -72,10 +73,11 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.16.5" },
+    { name = "beanie", specifier = ">=2.0.0" },
     { name = "dependency-injector", specifier = ">=4.48.2" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.117.1" },
     { name = "logger", editable = "../../packages/logger" },
-    { name = "mongoengine", specifier = ">=0.29.1" },
+    { name = "motor", specifier = ">=3.7.1" },
     { name = "pika", specifier = ">=1.3.2" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pydantic-settings", specifier = ">=2.11.0" },
@@ -94,6 +96,22 @@ dev = [
     { name = "ruff", specifier = ">=0.13.2" },
     { name = "sqlalchemy", extras = ["mypy"], specifier = ">=2.0.43" },
     { name = "typer", specifier = ">=0.19.2" },
+]
+
+[[package]]
+name = "beanie"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "lazy-model" },
+    { name = "pydantic" },
+    { name = "pymongo" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ff/c3/21152df5974f6b690a74a990a1b706102ad694b56bd2a59f7903b6424696/beanie-2.0.0.tar.gz", hash = "sha256:07982e42618cea01722f62d2b4028514a508a2c2c2c71ff85f07f6009112ffb3", size = 169854, upload-time = "2025-07-20T06:55:27.515Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/47/36/c40577bc8e3564639b89db32aff1e9e8af14c990e3a7ed85a79b74ec4b78/beanie-2.0.0-py3-none-any.whl", hash = "sha256:0d5c0e0de09f2a316c74d17bbba1ceb68ebcbfd3046ae5be69038b2023682372", size = 87051, upload-time = "2025-07-20T06:55:25.944Z" },
 ]
 
 [[package]]
@@ -443,6 +461,18 @@ wheels = [
 ]
 
 [[package]]
+name = "lazy-model"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/15/fa/158a07f8c25c76568534328bf3ab8d16dba92abcb27cc9cfd84bbc652815/lazy-model-0.3.0.tar.gz", hash = "sha256:e425a189897dc926cc79af196a7cb385d1fd3ac7a7bccb4436fc93661f63b811", size = 8172, upload-time = "2025-04-22T17:03:33.923Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/a4/55bb305df9fe0d343ff8f0dd4da25b2cc33ba65f8596238aa7a4ecbe9777/lazy_model-0.3.0-py3-none-any.whl", hash = "sha256:67c112cad3fbc1816d32c070bf3b3ac1f48aefeb4e46e9eb70e12acc92c6859d", size = 13719, upload-time = "2025-04-22T17:03:34.764Z" },
+]
+
+[[package]]
 name = "logger"
 version = "0.1.0"
 source = { editable = "../../packages/logger" }
@@ -547,15 +577,15 @@ wheels = [
 ]
 
 [[package]]
-name = "mongoengine"
-version = "0.29.1"
+name = "motor"
+version = "3.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pymongo" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/32/0b/f0bd3da47c77b2d48103b42b9a38a70de9c41c979dd681a9a6aff43bf2eb/mongoengine-0.29.1.tar.gz", hash = "sha256:3b43abaf2d5f0b7d39efc2b7d9e78f4d4a5dc7ce92b9889ba81a5a9b8dee3cf3", size = 168735, upload-time = "2024-09-19T08:41:22.487Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/ae/96b88362d6a84cb372f7977750ac2a8aed7b2053eed260615df08d5c84f4/motor-3.7.1.tar.gz", hash = "sha256:27b4d46625c87928f331a6ca9d7c51c2f518ba0e270939d395bc1ddc89d64526", size = 280997, upload-time = "2025-05-14T18:56:33.653Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/52/a0788a31f8ec2cfb508e1fb29c321d5082f0aa58bc88ba118c898e72f612/mongoengine-0.29.1-py3-none-any.whl", hash = "sha256:9302ec407dd60f47f62cc07684d9f6cac87f1e93283c54203851788104d33df4", size = 112377, upload-time = "2024-09-19T08:41:20.626Z" },
+    { url = "https://files.pythonhosted.org/packages/01/9a/35e053d4f442addf751ed20e0e922476508ee580786546d699b0567c4c67/motor-3.7.1-py3-none-any.whl", hash = "sha256:8a63b9049e38eeeb56b4fdd57c3312a6d1f25d01db717fe7d82222393c410298", size = 74996, upload-time = "2025-05-14T18:56:31.665Z" },
 ]
 
 [[package]]

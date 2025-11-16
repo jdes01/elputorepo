@@ -17,4 +17,4 @@ class OnEventDeletedEventHandler(EventHandler[EventDeletedDomainEvent]):
     async def handle(self, event: EventDeletedDomainEvent) -> None:
         logger.info(f"Updating event projection - deletting event {event.event_id.value}")
 
-        self.event_projection_service.delete(EventId(event.event_id.value))
+        await self.event_projection_service.delete(EventId(event.event_id.value))

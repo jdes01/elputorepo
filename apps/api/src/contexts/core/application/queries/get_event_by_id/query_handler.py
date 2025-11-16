@@ -26,7 +26,7 @@ class GetEventByIdQueryHandler(QueryHandler[GetEventByIdQuery, GetEventByIdResul
     async def _handle(self, query: GetEventByIdQuery) -> Result[GetEventByIdResult, Exception]:
         event_id = EventId(query.event_id)
 
-        result = self.event_projection_service.get(event_id)
+        result = await self.event_projection_service.get(event_id)
 
         if isinstance(result, Failure):
             logger.error("Error getting event by id", extra={"error": str(result.failure())})

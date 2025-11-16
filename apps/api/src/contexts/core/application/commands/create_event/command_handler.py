@@ -45,7 +45,7 @@ class CreateEventCommandHandler(CommandHandler[CreateEventCommand, CreateEventRe
 
         event = Event.create(id=event_id, name=event_name, capacity=event_capacity)
 
-        result = self.event_repository.persist(event)
+        result = self.event_repository.create(event)
 
         if isinstance(result, Failure):
             logger.error("Error creating event", extra={"error": str(result.failure())}, exc_info=True)

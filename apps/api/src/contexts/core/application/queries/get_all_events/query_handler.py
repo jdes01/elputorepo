@@ -25,7 +25,7 @@ class GetAllEventsQueryHandler(QueryHandler[GetAllEventsQuery, GetAllEventsResul
     event_projection_service: AllEventsProjectionService
 
     async def _handle(self, query: GetAllEventsQuery) -> Result[GetAllEventsResult, Exception]:
-        result = self.event_projection_service.get_all(limit=query.limit, offset=query.offset)
+        result = await self.event_projection_service.get_all(limit=query.limit, offset=query.offset)
 
         if isinstance(result, Failure):
             logger.error("Error getting all events", extra={"error": str(result.failure())})
