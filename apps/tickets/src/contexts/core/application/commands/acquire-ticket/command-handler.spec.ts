@@ -1,4 +1,3 @@
-/// <reference types="jest" />
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { AcquireTicketCommandHandler } from './command-handler';

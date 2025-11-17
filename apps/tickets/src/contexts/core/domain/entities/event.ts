@@ -1,5 +1,4 @@
 import { EventId } from '../value-objects/event-id';
-import { UserId } from '../value-objects/user-id';
 
 export interface EventPrimitives {
   id: string;

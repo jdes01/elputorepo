@@ -223,7 +223,7 @@ services:
       - "3001:3000"
     environment:
       NODE_ENV: development
-      MONGODB_URI: mongodb://elputorepo-tickets-api-mongodb:27017/tickets
+      MONGODB_URI: mongodb://elputorepo-tickets-api-mongodb:27017/tickets?replicaSet=rs0&directConnection=true
       RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672/
     volumes:
       - ./apps/tickets/src:/app/tickets/src
@@ -242,19 +242,32 @@ services:
     image: mongo:7
     container_name: elputorepo-tickets-api-mongodb
     restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27018:27017"
     environment:
       MONGO_INITDB_DATABASE: tickets
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: |
+        mongosh --quiet --eval "
+          try {
+            const status = rs.status();
+            if (status.ok === 1) {
+              const primary = status.members.find(m => m.stateStr === 'PRIMARY');
+              if (primary) { quit(0); }
+            }
+            quit(1);
+          } catch(e) {
+            quit(1);
+          }
+        " || exit 1
       interval: 10s
-      retries: 5
-      start_period: 10s
-      timeout: 5s
+      retries: 10
+      start_period: 40s
+      timeout: 10s
     volumes:
       - elputorepo-tickets-api-mongodb-data:/data/db
-      # - ./apps/tickets/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./apps/tickets/mongodb/init-replica.sh:/docker-entrypoint-initdb.d/init-replica.sh:ro
     networks:
       - app-network
 
@@ -264,7 +277,7 @@ services:
     ports:
       - "8082:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://elputorepo-tickets-api-mongodb:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://elputorepo-tickets-api-mongodb:27017/?replicaSet=rs0&directConnection=true
       ME_CONFIG_BASICAUTH_USERNAME: admin
       ME_CONFIG_BASICAUTH_PASSWORD: admin
     depends_on:

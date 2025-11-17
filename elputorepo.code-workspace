@@ -26,6 +26,7 @@
             "**/__pycache__": true,
             "**/*.pyc": true
         },
-        "makefile.configureOnOpen": false
+        "makefile.configureOnOpen": false,
+        "typescript.tsdk": "Tickets/node_modules/typescript/lib"
     }
 }

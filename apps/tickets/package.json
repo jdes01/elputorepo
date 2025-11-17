@@ -6,14 +6,21 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
+    "start:debug": "nest start --debug 0.0.0.0:9229 --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "prisma:generate": "prisma generate --schema=./src/contexts/core/infrastructure/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=./src/contexts/core/infrastructure/prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema=./src/contexts/core/infrastructure/prisma/schema.prisma",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
@@ -23,6 +30,8 @@
     "@prisma/client": "^5.20.0",
     "amqp-connection-manager": "^4.1.14",
     "amqplib": "^0.10.5",
+    "eslint-plugin-neverthrow": "^1.1.4",
+    "neverthrow": "^8.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "zod": "^3.23.8"
@@ -32,6 +41,8 @@
     "@nestjs/cli": "^10.4.0",
     "@nestjs/schematics": "^10.1.0",
     "@nestjs/testing": "^10.4.20",
+    "@swc/cli": "^0.5.2",
+    "@swc/core": "^1.15.2",
     "@types/amqplib": "^0.10.4",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.14.0",
@@ -51,27 +62,10 @@
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.18.0"
   },
-  "jest": {
-    "preset": "ts-jest",
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "ts-jest",
-        {
-          "tsconfig": "tsconfig.spec.json"
-        }
-      ]
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }

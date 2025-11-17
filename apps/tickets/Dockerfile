@@ -7,7 +7,7 @@ ENV NODE_ENV=development
 RUN apk add --no-cache openssl openssl-dev libc6-compat
 
 WORKDIR /app/tickets
-COPY apps/tickets/package.json apps/tickets/package-lock.json* ./
+COPY apps/tickets/package*.json ./
 RUN npm install
 
 # Copy Prisma schema and generate client BEFORE copying source code

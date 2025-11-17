@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DeleteEventProjectionService } from '@/contexts/core/application/services/delete-event-projection.service';
+import { DeleteEventProjectionService } from '@contexts/core/application/services/delete-event-projection.service';
 
 @Injectable()
 export class OnEventDeletedEventHandler {

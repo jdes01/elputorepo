@@ -1,6 +1,7 @@
 import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
-import { AcquireTicketCommandHandler } from '@/contexts/core/application/commands/acquire-ticket/command-handler';
-import { AcquireTicketCommandSchema } from '@/contexts/core/application/commands/acquire-ticket/command';
+import { AcquireTicketCommandHandler } from '@contexts/core/application/commands/acquire-ticket/command-handler';
+
+import { AcquireTicketCommandSchema } from '@contexts/core/application/commands/acquire-ticket/command';
 
 @Controller('tickets')
 export class TicketsController {

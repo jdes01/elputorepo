@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CreateUserProjectionService } from '@/contexts/core/application/services/create-user-projection.service';
+import { CreateUserProjectionService } from '@contexts/core/application/services/create-user-projection.service';
 
 @Injectable()
 export class OnUserCreatedEventHandler {

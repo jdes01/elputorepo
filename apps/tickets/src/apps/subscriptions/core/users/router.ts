@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OnUserCreatedEventHandler } from './on_user_created/event_handler';
-import { RabbitMQService } from '@/contexts/core/infrastructure/rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@contexts/core/infrastructure/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class UsersSubscriptionsRouter {
@@ -10,7 +10,7 @@ export class UsersSubscriptionsRouter {
   ) {}
 
   async subscribe(): Promise<void> {
-    await this.rabbitMQService.subscribe('users.usercreated', async (message) => {
+    await this.rabbitMQService.subscribe('api.user_created', async (message) => {
       await this.onUserCreatedHandler.handle(message);
     });
   }
