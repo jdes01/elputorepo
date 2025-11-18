@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EventRepository } from '../../domain/repositories/event.repository';
 import { Event } from '../../domain/entities/event';
 import { EventId } from '../../domain/value-objects/event-id';
-import { err, ok, Ok, Result } from 'neverthrow';
+import { err, ok, Result } from 'neverthrow';
 
 @Injectable()
 export class PrismaEventRepository extends EventRepository {

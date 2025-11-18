@@ -23,6 +23,6 @@ format: ## Formatea el código
 	@sh scripts/format.sh
 
 migrate: ## Aplica migraciones de Prisma
-	@echo "→ No hay migraciones que aplicar"
+	@npm run prisma:generate
 
 

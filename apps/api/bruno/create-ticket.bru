@@ -1,0 +1,23 @@
+meta {
+  name: create-ticket
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3001/tickets/acquire
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "eventId": "",
+    "userId": "91176476-8246-49A3-A123-8B0E9B0E2282"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

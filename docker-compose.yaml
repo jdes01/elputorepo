@@ -219,8 +219,11 @@ services:
     build:
       context: .
       dockerfile: ./apps/tickets/Dockerfile
+      args:
+        DEBUG: 1
     ports:
       - "3001:3000"
+      - "9229:9229"
     environment:
       NODE_ENV: development
       MONGODB_URI: mongodb://elputorepo-tickets-api-mongodb:27017/tickets?replicaSet=rs0&directConnection=true
@@ -228,8 +231,10 @@ services:
     volumes:
       - ./apps/tickets/src:/app/tickets/src
       - ./apps/tickets/scripts:/app/tickets/scripts
+      - ./apps/tickets/dist:/app/tickets/dist
       - ./packages/contracts:/packages/contracts
       - /app/node_modules
+
     networks:
       - app-network
     depends_on:

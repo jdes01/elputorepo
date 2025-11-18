@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to nestjs",
+            "request": "attach",
+            "type": "node",
+            "port": 9229,
+            "restart": true,
+            "remoteRoot": "/app/tickets",
+            "localRoot": "${workspaceFolder}",
+            "skipFiles": ["<node_internals>/**"],
+            "sourceMaps": true
+        }
+    ]
+}

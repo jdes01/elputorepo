@@ -1,0 +1,22 @@
+meta {
+  name: create-user
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8000/users/91176476-8246-49A3-A123-8B0E9B0E2282
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "prueba@prueba.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

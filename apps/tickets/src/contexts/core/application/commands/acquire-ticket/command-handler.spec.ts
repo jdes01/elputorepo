@@ -9,6 +9,7 @@ import { User } from '../../../domain/entities/user';
 import { EventId } from '../../../domain/value-objects/event-id';
 import { UserId } from '../../../domain/value-objects/user-id';
 import { AcquireTicketCommand } from './command';
+import { ok } from 'neverthrow';
 
 describe('AcquireTicketCommandHandler', () => {
   let handler: AcquireTicketCommandHandler;
@@ -80,10 +81,10 @@ describe('AcquireTicketCommandHandler', () => {
       });
       const event = Event.create(new EventId(mockEventId), 100);
 
-      userRepository.findById.mockResolvedValue(user);
-      eventRepository.findById.mockResolvedValue(event);
-      ticketRepository.save.mockResolvedValue(undefined);
-      eventRepository.save.mockResolvedValue(undefined);
+      userRepository.findById.mockResolvedValue(ok(user));
+      eventRepository.findById.mockResolvedValue(ok(event));
+      ticketRepository.save.mockResolvedValue(ok(undefined));
+      eventRepository.save.mockResolvedValue(ok(undefined));
 
       // Act
       const result = await handler.handle(command);
@@ -101,7 +102,7 @@ describe('AcquireTicketCommandHandler', () => {
     it('should throw NotFoundException when user does not exist', async () => {
       // Arrange
       const command = createCommand();
-      userRepository.findById.mockResolvedValue(null);
+      userRepository.findById.mockResolvedValue(ok(null));
 
       // Act & Assert
       await expect(handler.handle(command)).rejects.toThrow(NotFoundException);
@@ -120,8 +121,8 @@ describe('AcquireTicketCommandHandler', () => {
         email: 'test@example.com',
       });
 
-      userRepository.findById.mockResolvedValue(user);
-      eventRepository.findById.mockResolvedValue(null);
+      userRepository.findById.mockResolvedValue(ok(user));
+      eventRepository.findById.mockResolvedValue(ok(null));
 
       // Act & Assert
       await expect(handler.handle(command)).rejects.toThrow(NotFoundException);
@@ -145,8 +146,8 @@ describe('AcquireTicketCommandHandler', () => {
         availableTickets: 0,
       });
 
-      userRepository.findById.mockResolvedValue(user);
-      eventRepository.findById.mockResolvedValue(event);
+      userRepository.findById.mockResolvedValue(ok(user));
+      eventRepository.findById.mockResolvedValue(ok(event));
 
       // Act & Assert
       await expect(handler.handle(command)).rejects.toThrow(BadRequestException);
@@ -172,10 +173,10 @@ describe('AcquireTicketCommandHandler', () => {
 
       const initialAvailableTickets = event.availableTickets;
 
-      userRepository.findById.mockResolvedValue(user);
-      eventRepository.findById.mockResolvedValue(event);
-      ticketRepository.save.mockResolvedValue(undefined);
-      eventRepository.save.mockResolvedValue(undefined);
+      userRepository.findById.mockResolvedValue(ok(user));
+      eventRepository.findById.mockResolvedValue(ok(event));
+      ticketRepository.save.mockResolvedValue(ok(undefined));
+      eventRepository.save.mockResolvedValue(ok(undefined));
 
       // Act
       await handler.handle(command);
@@ -194,10 +195,10 @@ describe('AcquireTicketCommandHandler', () => {
       });
       const event = Event.create(new EventId(mockEventId), 100);
 
-      userRepository.findById.mockResolvedValue(user);
-      eventRepository.findById.mockResolvedValue(event);
-      ticketRepository.save.mockResolvedValue(undefined);
-      eventRepository.save.mockResolvedValue(undefined);
+      userRepository.findById.mockResolvedValue(ok(user));
+      eventRepository.findById.mockResolvedValue(ok(event));
+      ticketRepository.save.mockResolvedValue(ok(undefined));
+      eventRepository.save.mockResolvedValue(ok(undefined));
 
       // Act
       await handler.handle(command);

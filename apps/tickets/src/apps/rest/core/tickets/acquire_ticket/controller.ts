@@ -11,9 +11,14 @@ export class TicketsController {
 
   @Post('acquire')
   @HttpCode(HttpStatus.OK)
-  async acquireTicket(@Body() body: unknown) {
-    const command = AcquireTicketCommandSchema.parse(body);
+  async acquireTicket(@Body() body: { userId: string; eventId: string }) {
+    const command = AcquireTicketCommandSchema.parse({
+      userId: body.userId,
+      eventId: body.eventId,
+    });
+
     const result = await this.acquireTicketCommandHandler.handle(command);
+
     return {
       message: 'OK',
       data: result,
