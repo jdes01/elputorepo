@@ -1,4 +1,8 @@
 {
+  "GLOBAL": {
+    "CANCEL": "Cancelar",
+    "SAVE": "Guardar"
+  },
   "SIDEBAR": {
     "TITLE": "Elputofrontend",
     "ITEMS": {

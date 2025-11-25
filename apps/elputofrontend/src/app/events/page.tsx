@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useGetEvents } from '../../hooks/events/useGetEvents'
+import { CreateEventDialog } from './CreateEventDialog'
 
 export function EventsPage() {
   const { t } = useTranslation('events')
@@ -10,9 +11,12 @@ export function EventsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">{t('TITLE')}</h1>
-        <p className="text-sm text-muted-foreground">{t('DESCRIPTION')}</p>
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold">{t('TITLE')}</h1>
+          <p className="text-sm text-muted-foreground">{t('DESCRIPTION')}</p>
+        </div>
+        <CreateEventDialog />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {events?.map((event) => (

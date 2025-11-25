@@ -7,4 +7,9 @@ const getEventsHandler = http.get(getEventsPath, () =>
   HttpResponse.json(getEventsResponse),
 )
 
-export const eventHandlers = [getEventsHandler]
+const createEventPath = `**/events`
+const createEventHandler = http.post(createEventPath, () =>
+  HttpResponse.json({}),
+)
+
+export const eventHandlers = [getEventsHandler, createEventHandler]

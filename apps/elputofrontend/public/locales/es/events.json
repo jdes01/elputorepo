@@ -1,4 +1,15 @@
 {
   "TITLE": "Eventos",
-  "DESCRIPTION": "Aquí puedes ver todos los eventos disponibles"
+  "DESCRIPTION": "Aquí puedes ver todos los eventos disponibles",
+  "CREATE_EVENT_BUTTON": "Crear evento",
+  "CREATE_EVENT_DIALOG": {
+    "TITLE": "Crear evento",
+    "DESCRIPTION": "Aquí puedes crear un nuevo evento",
+    "FIELDS": {
+      "TITLE": "Título",
+      "DESCRIPTION": "Descripción",
+      "TITLE_PLACEHOLDER": "Introduce el título del evento",
+      "DESCRIPTION_PLACEHOLDER": "Introduce la descripción del evento"
+    }
+  }
 }
