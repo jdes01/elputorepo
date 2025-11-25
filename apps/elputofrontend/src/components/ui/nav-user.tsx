@@ -1,6 +1,8 @@
 'use client'
 
-import { EllipsisVertical, LogOutIcon, UserCircle } from 'lucide-react'
+import { EllipsisVertical, LogOutIcon, SettingsIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -17,6 +19,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
+import { ROUTES } from '../../app/constants'
+
 type NavUserProps = {
   user: {
     email: string
@@ -27,6 +31,7 @@ type NavUserProps = {
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
+  const { t } = useTranslation()
 
   const hash = (string: string) => {
     let val = 0
@@ -78,13 +83,15 @@ export function NavUser({ user }: NavUserProps) {
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer">
-                <UserCircle />
-                Mi cuenta
-              </DropdownMenuItem>
+              <Link to={ROUTES.SETTINGS}>
+                <DropdownMenuItem className="cursor-pointer">
+                  <SettingsIcon />
+                  {t('SIDEBAR.ITEMS.SETTINGS')}
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="cursor-pointer">
                 <LogOutIcon />
-                Cerrar sesión
+                {t('SIDEBAR.ITEMS.LOGOUT')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

@@ -2,7 +2,9 @@
   "SIDEBAR": {
     "TITLE": "Elputofrontend",
     "ITEMS": {
-      "EVENTS": "Eventos"
+      "EVENTS": "Eventos",
+      "SETTINGS": "Ajustes",
+      "LOGOUT": "Cerrar sesión"
     }
   }
 }
