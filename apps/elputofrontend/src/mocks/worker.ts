@@ -1,3 +1,5 @@
 import { setupWorker } from 'msw/browser'
 
-export const worker = setupWorker(...[])
+import { eventHandlers } from './handlers/event'
+
+export const worker = setupWorker(...eventHandlers)
