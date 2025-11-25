@@ -10,7 +10,9 @@ export const useGetEvents = () => {
 
   return useQuery({
     queryFn: async () => {
-      const response = await fetch<GetEventsResponse>(`/events`)
+      const response = await fetch<GetEventsResponse>(
+        `${import.meta.env.VITE_API_URL}/events`,
+      )
       return EventsView.fromResponse(response)
     },
     queryKey: eventsQueryKeys.all,

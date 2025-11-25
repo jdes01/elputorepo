@@ -16,7 +16,7 @@ export const useCreateEvent = () => {
 
   return useMutation({
     mutationFn: async (event: CreateEventProps) => {
-      await fetch(`/events/${eventId}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}`, {
         body: JSON.stringify({
           capacity: event.capacity,
           name: event.title,
