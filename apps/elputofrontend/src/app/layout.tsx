@@ -26,8 +26,8 @@ export const Layout = () => {
   const items = [
     {
       icon: Building2Icon,
-      label: t('SIDEBAR.ITEMS.HOME'),
-      url: ROUTES.HOME,
+      label: t('SIDEBAR.ITEMS.EVENTS'),
+      url: ROUTES.EVENTS,
     },
   ]
 

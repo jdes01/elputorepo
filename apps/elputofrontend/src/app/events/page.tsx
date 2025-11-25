@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
-export function HomePage() {
-  const { t } = useTranslation('home')
+export function EventsPage() {
+  const { t } = useTranslation('events')
 
   return <>{t('TITLE')}</>
 }
