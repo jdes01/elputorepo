@@ -24,7 +24,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 
 import { useCreateEvent } from '../../hooks/events/useCreateEvent'
 
@@ -34,13 +33,13 @@ export const CreateEventDialog = () => {
   const [open, setOpen] = useState(false)
 
   const formSchema = z.object({
-    description: z.string().min(2).max(50),
+    capacity: z.coerce.number().min(1).max(1000),
     title: z.string().min(2).max(50),
   })
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     defaultValues: {
-      description: '',
+      capacity: 0,
       title: '',
     },
     resolver: zodResolver(formSchema),
@@ -73,7 +72,6 @@ export const CreateEventDialog = () => {
                 {t('CREATE_EVENT_DIALOG.DESCRIPTION')}
               </DialogDescription>
             </DialogHeader>
-
             <div className="flex flex-col gap-6">
               <FormField
                 control={form.control}
@@ -95,19 +93,20 @@ export const CreateEventDialog = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="description"
+                name="capacity"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t('CREATE_EVENT_DIALOG.FIELDS.DESCRIPTION')}
+                      {t('CREATE_EVENT_DIALOG.FIELDS.CAPACITY')}
                     </FormLabel>
                     <FormControl>
-                      <Textarea
+                      {/* @ts-ignore */}
+                      <Input
+                        type="number"
                         placeholder={t(
-                          'CREATE_EVENT_DIALOG.FIELDS.DESCRIPTION_PLACEHOLDER',
+                          'CREATE_EVENT_DIALOG.FIELDS.CAPACITY_PLACEHOLDER',
                         )}
                         {...field}
                       />
@@ -117,7 +116,6 @@ export const CreateEventDialog = () => {
                 )}
               />
             </div>
-
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline">{t('GLOBAL.CANCEL')}</Button>

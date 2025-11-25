@@ -7,7 +7,7 @@ const getEventsHandler = http.get(getEventsPath, () =>
   HttpResponse.json(getEventsResponse),
 )
 
-const createEventPath = `**/events`
+const createEventPath = `**/events/:eventId`
 const createEventHandler = http.post(createEventPath, () =>
   HttpResponse.json({}),
 )

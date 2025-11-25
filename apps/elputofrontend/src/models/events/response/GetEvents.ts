@@ -1,6 +1,5 @@
 export type GetEventsResponse = {
-  description: string
+  capacity: number
   id: string
-  imageUrl: string
-  title: string
+  name: string
 }[]

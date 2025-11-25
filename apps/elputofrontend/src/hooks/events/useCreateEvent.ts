@@ -5,7 +5,7 @@ import { useFetch } from '../../services/http/fetcher'
 import { eventsQueryKeys } from './queryKeys'
 
 type CreateEventProps = {
-  description: string
+  capacity: number
   title: string
 }
 
@@ -17,7 +17,10 @@ export const useCreateEvent = () => {
   return useMutation({
     mutationFn: async (event: CreateEventProps) => {
       await fetch(`/events/${eventId}`, {
-        body: JSON.stringify(event),
+        body: JSON.stringify({
+          capacity: event.capacity,
+          name: event.title,
+        }),
         method: 'POST',
       })
     },

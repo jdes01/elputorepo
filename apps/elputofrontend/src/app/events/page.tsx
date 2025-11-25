@@ -34,9 +34,12 @@ export function EventsPage() {
                 {event.title}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
               <p className="text-sm text-muted-foreground">
                 {event.description}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {event.capacity} entradas disponibles
               </p>
             </CardContent>
           </Card>

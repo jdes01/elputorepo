@@ -7,9 +7,9 @@
     "DESCRIPTION": "Aquí puedes crear un nuevo evento",
     "FIELDS": {
       "TITLE": "Título",
-      "DESCRIPTION": "Descripción",
+      "CAPACITY": "Capacidad",
       "TITLE_PLACEHOLDER": "Introduce el título del evento",
-      "DESCRIPTION_PLACEHOLDER": "Introduce la descripción del evento"
+      "CAPACITY_PLACEHOLDER": "Introduce la capacidad del evento"
     }
   }
 }
