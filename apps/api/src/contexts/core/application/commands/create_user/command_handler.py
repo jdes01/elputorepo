@@ -6,7 +6,7 @@ from returns.result import Failure, Result, Success
 from src.contexts.shared import CommandHandler, DomainError, Schema, Settings
 from src.contexts.shared.domain.event_bus import EventBus
 
-from ....domain import User, UserEmail, UserId, UserPrimitives, UserRepository
+from ....domain import User, UserEmail,UserAge, UserId, UserPrimitives, UserRepository
 
 logger = get_logger(__name__)
 
@@ -30,11 +30,12 @@ class CreateUserCommandHandler(CommandHandler[CreateUserCommand, CreateUserResul
         try:
             user_id = UserId(command.user_id)
             user_email = UserEmail(command.email)
+            user_age = UserAge(command.age)
         except DomainError as e:
-            logger.warning("Validation error", extra={"error": str(e), "user_id": command.user_id, "email": command.email})
+            logger.warning("Validation error", extra={"error": str(e), "user_id": command.user_id, "email": command.email, "age": command.age})
             return Failure(e)
 
-        user = User.create(id=user_id, email=user_email)
+        user = User.create(id=user_id, email=user_email, age=user_age)
 
         result = self.user_repository.save(user)
 

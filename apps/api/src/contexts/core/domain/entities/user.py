@@ -6,22 +6,23 @@ from pydantic import BaseModel
 from src.contexts.core.domain.events.user_created_domain_event import UserCreatedDomainEvent
 from src.contexts.shared.domain.aggregate import Aggregate
 
-from ..value_objects import UserEmail, UserId
+from ..value_objects import UserEmail, UserId, UserAge
 
 
 class UserPrimitives(BaseModel):
     id: str
     email: str
-
+    age: int
 
 @dataclass
 class User(Aggregate):
     id: UserId
     email: UserEmail
+    age: UserAge
 
     @classmethod
-    def create(cls, id: UserId, email: UserEmail) -> "User":
-        user = User(id=id, email=email)
+    def create(cls, id: UserId, email: UserEmail, age: UserAge) -> "User":
+        user = User(id=id, email=email, age=age)
         user.__on_user_created()
         return user
 
@@ -31,6 +32,7 @@ class User(Aggregate):
                 timestamp=datetime.now(),
                 user_id=self.id,
                 email=self.email,
+                age=self.age,
             )
         )
 
@@ -39,10 +41,12 @@ class User(Aggregate):
         return User(
             id=UserId(data.id),
             email=UserEmail(data.email),
+            age=UserAge(data.age)
         )
 
     def to_primitives(self) -> UserPrimitives:
         return UserPrimitives(
             id=self.id.value,
             email=self.email.value,
+            age=self.age.value,
         )
