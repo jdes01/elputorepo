@@ -39,9 +39,9 @@
   "python.analysis.stubPath": "typings",
   // --- Import resolution ---
   "python.analysis.autoSearchPaths": true,
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/packages/logger"
-  ],
+  // "python.analysis.extraPaths": [
+    // "${workspaceFolder}/packages/logger"
+  // ],
   // --- Pytest integration ---
   "python.analysis.enablePytestSupport": true,
   // --- Auto imports ---

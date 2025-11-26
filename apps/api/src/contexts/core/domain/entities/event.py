@@ -53,7 +53,7 @@ class Event(Aggregate):
             capacity=self.capacity.value,
         )
 
-    def soft_delete(self) -> None:
+    def delete(self) -> None:
         self._deleted_at = datetime.now()
         self.__on_event_deleted()
 

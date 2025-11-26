@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from logger.main import get_logger
 from returns.result import Success
 
 from src.apps.rest.core.events.create_event.request import (
@@ -13,8 +12,6 @@ from src.contexts.core.application.commands.create_event.command_handler import 
 )
 from src.contexts.shared import DomainError
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
-
-logger = get_logger(__name__)
 
 CREATE_EVENT_REQUEST = Depends(create_event_request)
 

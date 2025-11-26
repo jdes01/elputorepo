@@ -9,10 +9,6 @@
             "path": "./apps/tickets"
         },
         {
-            "name": "Logger",
-            "path": "./packages/logger"
-        },
-        {
             "name": "Contracts",
             "path": "./packages/contracts"
         },

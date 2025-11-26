@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from logger.main import get_logger
 from returns.result import Failure, Result, Success
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -12,17 +11,17 @@ from src.contexts.core.infrastructure.postgres.schemas.user_postgres_schema impo
     UserPostgresSchema,
 )
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
-
-logger = get_logger(__name__)
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 
 @dataclass
 class PostgresUserRepository(UserRepository):
     session: Session
+    logger: Logger
 
     def save(self, user: User) -> Result[None, Exception]:
         try:
-            logger.debug(
+            self.logger.debug(
                 "Saving user to database",
                 extra={"user_id": user.id.value, "email": user.email.value},
             )
@@ -31,42 +30,42 @@ class PostgresUserRepository(UserRepository):
                 existing = self.session.query(UserPostgresSchema).filter_by(user_id=user.id.value).one_or_none()
 
                 if existing:
-                    logger.debug("User with same id already exists", extra={"event_id": user.id.value})
+                    self.logger.debug("User with same id already exists", extra={"event_id": user.id.value})
                     return Failure(DatabaseError(f"User with id {user.id.value} already exists"))
 
                 new_user = UserPostgresSchema(user_id=user.id.value, email=user.email.value)
                 self.session.add(new_user)
 
-            logger.debug("User saved successfully", extra={"user_id": user.id.value})
+            self.logger.debug("User saved successfully", extra={"user_id": user.id.value})
             return Success(None)
 
         except SQLAlchemyError as e:
-            logger.warning("Database error saving user", extra={"error": str(e)}, exc_info=True)
+            self.logger.warning("Database error saving user", extra={"error": str(e)})
             return Failure(DatabaseError(f"Database error: {str(e)}"))
 
         except Exception as e:
-            logger.warning("Unexpected error saving user", extra={"error": str(e)}, exc_info=True)
+            self.logger.warning("Unexpected error saving user", extra={"error": str(e)})
             return Failure(e)
 
     def find_by_id(self, user_id: UserId) -> Result[User | None, Exception]:
         try:
-            logger.debug("Finding user by ID", extra={"user_id": user_id.value})
+            self.logger.debug("Finding user by ID", extra={"user_id": user_id.value})
 
             user_schema = self.session.query(UserPostgresSchema).filter_by(user_id=user_id.value).one_or_none()
 
             if not user_schema:
-                logger.debug("User not found", extra={"user_id": user_id.value})
+                self.logger.debug("User not found", extra={"user_id": user_id.value})
                 return Success(None)
 
             user = User.from_primitives(UserPrimitives(id=user_schema.user_id, email=user_schema.email))
 
-            logger.debug("User found", extra={"user_id": user_id.value})
+            self.logger.debug("User found", extra={"user_id": user_id.value})
             return Success(user)
 
         except SQLAlchemyError as e:
-            logger.warning("Database error finding user", extra={"error": str(e)}, exc_info=True)
+            self.logger.warning("Database error finding user", extra={"error": str(e)})
             return Failure(DatabaseError(f"Database error: {str(e)}"))
 
         except Exception as e:
-            logger.warning("Unexpected error finding user", extra={"error": str(e)}, exc_info=True)
+            self.logger.warning("Unexpected error finding user", extra={"error": str(e)})
             return Failure(e)

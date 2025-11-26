@@ -4,26 +4,28 @@ from datetime import datetime
 from typing import Any
 
 import pika
-from logger.main import get_logger
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.exceptions import AMQPConnectionError, ConnectionClosed, StreamLostError
 from pika.exchange_type import ExchangeType
 
-from src.contexts.shared.domain.domain_event import DomainEvent
-from src.contexts.shared.domain.event_bus import EventBus
-from src.contexts.shared.domain.event_handler import EventHandler
-from src.contexts.shared.settings import Settings
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
-logger = get_logger(__name__)
+from ..application.event.event_handler import EventHandler
+from ..domain.domain_event import DomainEvent
+from ..domain.event_bus import EventBus
+from ..settings import Settings
 
 
 class RabbitMQEventBus(EventBus):
+    logger: Logger
+
     EXCHANGE_NAME = "domain_events"
     EXCHANGE_TYPE = "topic"
     HEARTBEAT = 30  # segundos
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, logger: Logger):
         self.settings = settings
+        self.logger = logger
         self._connection: pika.BlockingConnection | None = None
         self._channel: BlockingChannel | None = None
         self._ensure_connection()
@@ -40,9 +42,9 @@ class RabbitMQEventBus(EventBus):
                     exchange_type=ExchangeType.topic,
                     durable=True,
                 )
-                logger.info("Connected to RabbitMQ")
+                self.logger.debug("Connected to RabbitMQ")
             except AMQPConnectionError as e:
-                logger.error("Error connecting to RabbitMQ", extra={"error": str(e)}, exc_info=True)
+                self.logger.warning("Error connecting to RabbitMQ", extra={"error": str(e)}, exc_info=True)
                 raise
 
     async def publish(self, events: list[DomainEvent]) -> None:
@@ -73,13 +75,13 @@ class RabbitMQEventBus(EventBus):
                         content_type="application/json",
                     ),
                 )
-                logger.debug(
+                self.logger.debug(
                     "Event published to RabbitMQ",
                     extra={"routing_key": routing_key},
                 )
                 break  # salió bien, no más reintentos
             except (StreamLostError, ConnectionClosed, AMQPConnectionError) as e:
-                logger.warning(
+                self.logger.warning(
                     f"RabbitMQ connection lost while publishing. Retry {attempt + 1}/{max_retries}",
                     extra={"error": str(e), "event": routing_key},
                     exc_info=True,
@@ -89,7 +91,7 @@ class RabbitMQEventBus(EventBus):
                 self._channel = None
                 time.sleep(1)  # pequeño backoff antes de reconectar
             except Exception as e:
-                logger.error(
+                self.logger.warning(
                     "Unexpected error publishing event",
                     extra={"error": str(e), "event": routing_key},
                     exc_info=True,

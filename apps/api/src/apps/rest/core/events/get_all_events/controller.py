@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from logger.main import get_logger
 from returns.result import Success
 
 from src.contexts.core.application.queries.get_all_events.query_handler import (
@@ -10,8 +9,6 @@ from src.contexts.core.application.queries.get_all_events.query_handler import (
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
 
 from .request import GetAllEventsRequest, get_all_events_request
-
-logger = get_logger(__name__)
 
 GET_ALL_EVENT_REQUEST = Depends(get_all_events_request)
 

@@ -1,34 +1,33 @@
 from dataclasses import dataclass
 
-from logger.main import get_logger
 from returns.result import Failure, Result, Success
 
 from src.contexts.core.application.services.event_projection_service import AllEventsProjectionService
-from src.contexts.shared import QueryHandler, Schema
+from src.contexts.shared import Query, QueryHandler, QueryHandlerResult
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 from ....domain import EventPrimitives
 
-logger = get_logger(__name__)
 
-
-class GetAllEventsQuery(Schema):
+class GetAllEventsQuery(Query):
     limit: int | None = None
     offset: int | None = None
 
 
-class GetAllEventsResult(Schema):
+class GetAllEventsResult(QueryHandlerResult):
     events: list[EventPrimitives]
 
 
 @dataclass
 class GetAllEventsQueryHandler(QueryHandler[GetAllEventsQuery, GetAllEventsResult]):
     event_projection_service: AllEventsProjectionService
+    logger: Logger
 
-    async def _handle(self, query: GetAllEventsQuery) -> Result[GetAllEventsResult, Exception]:
+    async def handle(self, query: GetAllEventsQuery) -> Result[GetAllEventsResult, Exception]:
         result = await self.event_projection_service.get_all(limit=query.limit, offset=query.offset)
 
         if isinstance(result, Failure):
-            logger.error("Error getting all events", extra={"error": str(result.failure())})
+            self.logger.error("Error getting all events", extra={"error": str(result.failure())})
             return Failure(result.failure())
 
         return Success(GetAllEventsResult(events=[EventPrimitives(id=event.id, name=event.name, capacity=event.capacity) for event in result.unwrap()]))

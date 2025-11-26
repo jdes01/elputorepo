@@ -1,6 +1,7 @@
-from src.contexts.shared.domain.domain_event import DomainEvent
-from src.contexts.shared.domain.event_bus import EventBus
-from src.contexts.shared.domain.event_handler import EventHandler
+from dependency_injector.providers import Factory
+
+from ..domain.domain_event import DomainEvent
+from ..domain.event_bus import EventBus
 
 
 class CompositeEventBus(EventBus):
@@ -12,5 +13,5 @@ class CompositeEventBus(EventBus):
         await self._in_memory_bus.publish(events)
         await self._rabbitmq_bus.publish(events)
 
-    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler[DomainEvent]) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: Factory) -> None:
         self._in_memory_bus.subscribe(event_type, handler)

@@ -4,6 +4,7 @@ from pymongo import AsyncMongoClient
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
+from src.contexts.shared.infrastructure.logging.logger_provider import LoggerProvider
 from src.contexts.shared.infrastructure.mongoengine.connection import mongo_engine_connection
 from src.contexts.shared.settings import Settings
 
@@ -18,4 +19,5 @@ class SharedContainer(DeclarativeContainer):
     sqlalchemy_session: Factory[Session] = Factory(init_sqlalchemy_session, engine=sqlalchemy_engine)
     # pymongo_client: Resource[MongoClient] = Resource(mongo_engine_connection, settings=settings)  # type: ignore
     pymongo_client: Resource[AsyncMongoClient] = Resource(mongo_engine_connection, settings=settings)  # type: ignore
+    logger = Singleton(LoggerProvider.provide, settings=settings)
     # ====================================================================================

@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from logger.main import get_logger
 from returns.result import Success
 
 from src.apps.rest.core.users.create_user.request import (
@@ -13,17 +12,18 @@ from src.contexts.core.application.commands.create_user.command_handler import (
 )
 from src.contexts.shared import DomainError
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
-
-logger = get_logger(__name__)
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 CREATE_USER_REQUEST = Depends(create_user_request)
 
 
 class CreateUserController:
     create_user_command_handler: CreateUserCommandHandler
+    logger: Logger
 
-    def __init__(self, create_user_command_handler: CreateUserCommandHandler):
+    def __init__(self, create_user_command_handler: CreateUserCommandHandler, logger: Logger):
         self.create_user_command_handler = create_user_command_handler
+        self.logger = logger
 
     def connect(self, router: APIRouter) -> None:
         router.add_api_route(
@@ -45,5 +45,5 @@ class CreateUserController:
 
         if isinstance(result.failure(), DomainError):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(result.failure()))
-        logger.error("Error creating user", extra={"error": str(result.failure())})
+        self.logger.error("Error creating user", extra={"error": str(result.failure())})
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

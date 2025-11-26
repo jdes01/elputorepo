@@ -25,6 +25,7 @@ class MainContainer(DeclarativeContainer):
         AppFactory,
         routers=lambda: [],  # Will be overridden in main.py
         settings=shared_container.container.settings,
+        logger=shared_container.container.logger,
     )
 
     # ====================================================================================

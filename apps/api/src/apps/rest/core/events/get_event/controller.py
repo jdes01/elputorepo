@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Path, status
-from logger.main import get_logger
 from returns.result import Success
 
 from src.contexts.core.application.queries.get_event_by_id.query_handler import (
@@ -9,15 +8,16 @@ from src.contexts.core.application.queries.get_event_by_id.query_handler import 
 )
 from src.contexts.core.domain.errors.event_not_found_error import EventNotFoundError
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
-
-logger = get_logger(__name__)
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 
 class GetEventController:
     get_event_by_id_query_handler: GetEventByIdQueryHandler
+    logger: Logger
 
-    def __init__(self, get_event_by_id_query_handler: GetEventByIdQueryHandler):
+    def __init__(self, get_event_by_id_query_handler: GetEventByIdQueryHandler, logger: Logger):
         self.get_event_by_id_query_handler = get_event_by_id_query_handler
+        self.logger = logger
 
     def connect(self, router: APIRouter) -> None:
         router.add_api_route(
@@ -44,7 +44,7 @@ class GetEventController:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=error.message,
             )
-        logger.error(
+        self.logger.error(
             "Error al obtener evento",
             extra={"error": str(error), "error_type": type(error).__name__},
         )

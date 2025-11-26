@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from .domain_event import DomainEvent
+from ...domain.domain_event import DomainEvent
 
 
 class EventHandler[E: DomainEvent](ABC):

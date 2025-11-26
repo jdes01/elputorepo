@@ -1,19 +1,10 @@
 import json
-from abc import abstractmethod
-from dataclasses import field
-from datetime import datetime
 from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict
 
 
-class DomainEvent(BaseModel):
-    timestamp: datetime = field(default_factory=datetime.now)
-
-    @property
-    @abstractmethod
-    def EVENT_NAME(self) -> str: ...
-
+class CommandHandlerResult(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         from_attributes=True,

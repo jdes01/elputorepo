@@ -12,9 +12,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 # /packages
 # └── logger
 
-WORKDIR /packages/logger
-COPY packages/logger ./
-RUN uv sync --editable
+# WORKDIR /packages/logger
+# COPY packages/logger ./
+# RUN uv sync --editable
 
 WORKDIR /app/api
 ENV UV_CACHE_DIR=/tmp/uv-cache

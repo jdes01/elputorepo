@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Path, status
-from logger.main import get_logger
 from returns.result import Success
 
 from src.contexts.core.application.commands.delete_event.command_handler import (
@@ -7,15 +6,16 @@ from src.contexts.core.application.commands.delete_event.command_handler import 
     DeleteEventCommandHandler,
 )
 from src.contexts.shared.domain.schemas import ResponseMetaSchema, ResponseSchema
-
-logger = get_logger(__name__)
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 
 class DeleteEventController:
     delete_event_command_handler: DeleteEventCommandHandler
+    logger: Logger
 
-    def __init__(self, delete_event_command_handler: DeleteEventCommandHandler):
+    def __init__(self, delete_event_command_handler: DeleteEventCommandHandler, logger: Logger):
         self.delete_event_command_handler = delete_event_command_handler
+        self.logger = logger
 
     def connect(self, router: APIRouter) -> None:
         router.add_api_route(
@@ -37,7 +37,7 @@ class DeleteEventController:
 
         error = result.failure()
 
-        logger.error("Error Deleting Event", extra={"error": str(error), "error_type": type(error).__name__})
+        self.logger.error("Error Deleting Event", extra={"error": str(error), "error_type": type(error).__name__})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",

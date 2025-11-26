@@ -1,5 +1,5 @@
 from dependency_injector.containers import DeclarativeContainer
-from dependency_injector.providers import Container, Dependency, Factory
+from dependency_injector.providers import Container, Dependency, Factory, Singleton
 from sqlalchemy.orm import Session
 
 from src.apps.rest.core.events.create_event.controller import CreateEventController
@@ -11,6 +11,7 @@ from src.apps.rest.core.router import CoreRouter
 from src.apps.rest.core.users.create_user.controller import CreateUserController
 from src.apps.rest.core.users.router import UsersRouter
 from src.contexts.core.infrastructure.container import CoreContainer
+from src.contexts.shared.infrastructure.logging.logger_provider import LoggerProvider
 from src.contexts.shared.settings import Settings
 
 
@@ -19,6 +20,7 @@ class CoreAPIContainer(DeclarativeContainer):
 
     settings = Dependency(instance_of=Settings)
     sqlalchemy_session = Dependency(instance_of=Session)
+    logger = Singleton(LoggerProvider.provide, settings=settings)
 
     # ====================================================================================
 
@@ -29,15 +31,9 @@ class CoreAPIContainer(DeclarativeContainer):
         create_event_command_handler=core_container.container.create_event_command_handler,
     )
 
-    delete_event_controller = Factory(
-        DeleteEventController,
-        delete_event_command_handler=core_container.container.delete_event_command_handler,
-    )
+    delete_event_controller = Factory(DeleteEventController, delete_event_command_handler=core_container.container.delete_event_command_handler, logger=logger)
 
-    get_event_controller = Factory(
-        GetEventController,
-        get_event_by_id_query_handler=core_container.container.get_event_by_id_query_handler,
-    )
+    get_event_controller = Factory(GetEventController, get_event_by_id_query_handler=core_container.container.get_event_by_id_query_handler, logger=logger)
 
     get_all_events_controller = Factory(
         GetAllEventsController,
@@ -52,10 +48,7 @@ class CoreAPIContainer(DeclarativeContainer):
         get_all_events_controller=get_all_events_controller,
     )
 
-    create_user_controller = Factory(
-        CreateUserController,
-        create_user_command_handler=core_container.container.create_user_command_handler,
-    )
+    create_user_controller = Factory(CreateUserController, create_user_command_handler=core_container.container.create_user_command_handler, logger=logger)
 
     users_router: Factory[UsersRouter] = Factory(
         UsersRouter,

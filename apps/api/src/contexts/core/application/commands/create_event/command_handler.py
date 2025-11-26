@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from logger.main import get_logger
 from returns.result import Failure, Result, Success
 
-from src.contexts.shared import CommandHandler, DomainError, Schema, Settings
+from src.contexts.shared import Command, CommandHandler, CommandHandlerResult, DomainError, Settings
 from src.contexts.shared.domain.event_bus import EventBus
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 from ....domain import (
     Event,
@@ -15,16 +15,14 @@ from ....domain import (
     EventRepository,
 )
 
-logger = get_logger(__name__)
 
-
-class CreateEventCommand(Schema):
+class CreateEventCommand(Command):
     event_id: str
     name: str
     capacity: int
 
 
-class CreateEventResult(Schema):
+class CreateEventResult(CommandHandlerResult):
     event: EventPrimitives
 
 
@@ -33,14 +31,16 @@ class CreateEventCommandHandler(CommandHandler[CreateEventCommand, CreateEventRe
     event_repository: EventRepository
     settings: Settings
     event_bus: EventBus
+    logger: Logger
 
-    async def _handle(self, command: CreateEventCommand) -> Result[CreateEventResult, Exception]:
+    async def handle(self, command: CreateEventCommand) -> Result[CreateEventResult, Exception]:
+        self.logger.debug("Processing CreateEventCommand command", extra={"command": command.to_plain_values()})
         try:
             event_id = EventId(command.event_id)
             event_name = EventName(command.name)
             event_capacity = EventCapacity(command.capacity)
         except DomainError as e:
-            logger.warning("Validation error", extra={"error": str(e), "event_id": command.event_id, "name": command.name, "capacity": command.capacity})
+            self.logger.warning("Validation error", extra={"error": str(e), "event_id": command.event_id, "name": command.name, "capacity": command.capacity})
             return Failure(e)
 
         event = Event.create(id=event_id, name=event_name, capacity=event_capacity)
@@ -48,11 +48,11 @@ class CreateEventCommandHandler(CommandHandler[CreateEventCommand, CreateEventRe
         result = self.event_repository.create(event)
 
         if isinstance(result, Failure):
-            logger.error("Error creating event", extra={"error": str(result.failure())}, exc_info=True)
+            self.logger.error("Error creating event", extra={"error": str(result.failure())})
             return result
 
         await self.event_bus.publish(event.pull_domain_events())
 
-        logger.info("Event created successfully", extra={"event_id": command.event_id, "name": command.name, "capacity": command.capacity})
+        self.logger.info("Event created successfully", extra={"event_id": command.event_id, "name": command.name, "capacity": command.capacity})
 
         return Success(CreateEventResult(event=event.to_primitives()))
