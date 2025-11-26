@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 class CreateUserCommand(Schema):
     user_id: str
     email: str
-
+    age: int
 
 class CreateUserResult(Schema):
     user: UserPrimitives
