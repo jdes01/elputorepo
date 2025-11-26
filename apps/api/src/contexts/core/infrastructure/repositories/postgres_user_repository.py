@@ -24,7 +24,7 @@ class PostgresUserRepository(UserRepository):
         try:
             logger.debug(
                 "Saving user to database",
-                extra={"user_id": user.id.value, "email": user.email.value},
+                extra={"user_id": user.id.value, "email": user.email.value, "age": user.age.value},
             )
 
             with self.session.begin():
@@ -34,7 +34,7 @@ class PostgresUserRepository(UserRepository):
                     logger.debug("User with same id already exists", extra={"event_id": user.id.value})
                     return Failure(DatabaseError(f"User with id {user.id.value} already exists"))
 
-                new_user = UserPostgresSchema(user_id=user.id.value, email=user.email.value)
+                new_user = UserPostgresSchema(user_id=user.id.value, email=user.email.value, age=user.age.value)
                 self.session.add(new_user)
 
             logger.debug("User saved successfully", extra={"user_id": user.id.value})

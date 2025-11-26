@@ -18,6 +18,7 @@ class UserPrimitives(BaseModel):
 class User(Aggregate):
     id: UserId
     email: UserEmail
+    age: UserAge
 
     @classmethod
     def create(cls, id: UserId, email: UserEmail, age: UserAge) -> "User":
@@ -31,6 +32,7 @@ class User(Aggregate):
                 timestamp=datetime.now(),
                 user_id=self.id,
                 email=self.email,
+                age=self.age,
             )
         )
 
@@ -39,10 +41,12 @@ class User(Aggregate):
         return User(
             id=UserId(data.id),
             email=UserEmail(data.email),
+            age=UserAge(data.age)
         )
 
     def to_primitives(self) -> UserPrimitives:
         return UserPrimitives(
             id=self.id.value,
             email=self.email.value,
+            age=self.age.value,
         )
