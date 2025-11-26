@@ -34,8 +34,8 @@ class CreateUserController:
             response_model=ResponseSchema[CreateUserResponse],
         )
 
-    async def handle_request(self, request: CreateUserRequest = CREATE_USER_REQUEST) -> ResponseSchema[CreateUserResponse]:
-        result = await self.create_user_command_handler.handle(CreateUserCommand(user_id=request.user_id, email=request.email))
+    def handle_request(self, request: CreateUserRequest = CREATE_USER_REQUEST) -> ResponseSchema[CreateUserResponse]:
+        result = self.create_user_command_handler.handle(CreateUserCommand(user_id=request.user_id, email=request.email, age=request.age))
 
         if isinstance(result, Success):
             return ResponseSchema[CreateUserResponse](
