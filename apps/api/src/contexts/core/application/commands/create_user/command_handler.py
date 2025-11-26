@@ -6,7 +6,7 @@ from returns.result import Failure, Result, Success
 from src.contexts.shared import CommandHandler, DomainError, Schema, Settings
 from src.contexts.shared.domain.event_bus import EventBus
 
-from ....domain import User, UserEmail, UserAge, UserId, UserPrimitives, UserRepository
+from ....domain import User, UserEmail,UserAge, UserId, UserPrimitives, UserRepository
 
 logger = get_logger(__name__)
 
