@@ -19,11 +19,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 WORKDIR /app/api
 ENV UV_CACHE_DIR=/tmp/uv-cache
 
-COPY apps/api/pyproject.toml apps/api/uv.lock* ./
+COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-editable
 
-COPY apps/api/src ./src
-COPY apps/api/scripts ./scripts
+COPY src ./src
+COPY scripts ./scripts
 
 EXPOSE 8000
 

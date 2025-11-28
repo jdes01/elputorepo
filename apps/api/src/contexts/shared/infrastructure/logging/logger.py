@@ -48,14 +48,14 @@ class Logger(ABC):
     def log(self, entry: LogEntry) -> None:
         raise NotImplementedError
 
-    def debug(self, message: str, extra: LogEntryExtra = {}) -> None:
+    def debug(self, message: str, extra: LogEntryExtra | None = None) -> None:
         self.log(LogEntry(severity=LogEntrySeverity.DEBUG, message=message, extra=extra))
 
-    def info(self, message: str, extra: LogEntryExtra = {}) -> None:
+    def info(self, message: str, extra: LogEntryExtra | None = None) -> None:
         self.log(LogEntry(severity=LogEntrySeverity.INFO, message=message, extra=extra))
 
-    def warning(self, message: str, extra: LogEntryExtra = {}) -> None:
+    def warning(self, message: str, extra: LogEntryExtra | None = None) -> None:
         self.log(LogEntry(severity=LogEntrySeverity.WARNING, message=message, extra=extra))
 
-    def error(self, message: str, extra: LogEntryExtra = {}) -> None:
+    def error(self, message: str, extra: LogEntryExtra | None = None) -> None:
         self.log(LogEntry(severity=LogEntrySeverity.ERROR, message=message, extra=extra))

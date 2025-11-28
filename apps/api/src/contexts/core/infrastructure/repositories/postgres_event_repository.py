@@ -11,7 +11,6 @@ from src.contexts.core.domain.value_objects.event_id import EventId
 from src.contexts.core.infrastructure.postgres.schemas.event_postgres_schema import (
     EventPostgresSchema,
 )
-from src.contexts.shared.domain.exceptions.domain_error import DomainError
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
 from src.contexts.shared.infrastructure.logging.logger import Logger
 
@@ -20,28 +19,6 @@ from src.contexts.shared.infrastructure.logging.logger import Logger
 class PostgresEventRepository(EventRepository):
     session: Session
     logger: Logger
-
-    def create(self, event: Event) -> Result[None, Exception]:
-        try:
-            with self.session.begin():
-                existing = self.session.query(EventPostgresSchema).filter_by(event_id=event.id.value).one_or_none()
-                if existing:
-                    return Failure(DomainError(f"Event with ID {event.id.value} already exists"))
-
-                new_event = EventPostgresSchema(
-                    event_id=event.id.value,
-                    name=event.name.value,
-                    capacity=event.capacity.value,
-                )
-                self.session.add(new_event)
-                self.session.commit()
-
-            return Success(None)
-
-        except SQLAlchemyError as e:
-            return Failure(DatabaseError(f"Error creating event: {str(e)}", original_error=e))
-        except Exception as e:
-            return Failure(e)
 
     def persist(self, event: Event) -> Result[None, Exception]:
         try:
@@ -89,7 +66,7 @@ class PostgresEventRepository(EventRepository):
                     return Success(None)
 
                 self.logger.debug("Event retrieved successfully", extra={"event_id": event_id.value})
-                return Success(Event.from_primitives(EventPrimitives(id=event.event_id, name=event.name, capacity=event.capacity)))
+                return Success(Event.from_primitives(EventPrimitives(id=event.event_id, name=event.name, capacity=event.capacity, deleted_at=None)))
 
         except SQLAlchemyError as e:
             self.logger.warning("Error getting event from database", extra={"event_id": event_id.value, "error": str(e)})

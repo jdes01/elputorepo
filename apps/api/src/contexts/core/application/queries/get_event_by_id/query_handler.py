@@ -5,8 +5,8 @@ from returns.result import Failure, Result, Success
 from src.contexts.shared import Query, QueryHandler, QueryHandlerResult
 from src.contexts.shared.infrastructure.logging.logger import Logger
 
-from ....application.services.event_projection_service import AllEventsProjectionService
-from ....domain import EventId, EventPrimitives
+from ....application.services.event_projection_service import AllEventsProjectionService, EventProjection
+from ....domain import EventId
 
 
 class GetEventByIdQuery(Query):
@@ -14,7 +14,7 @@ class GetEventByIdQuery(Query):
 
 
 class GetEventByIdResult(QueryHandlerResult):
-    event: EventPrimitives | None
+    event: EventProjection | None
 
 
 @dataclass
@@ -29,9 +29,9 @@ class GetEventByIdQueryHandler(QueryHandler[GetEventByIdQuery, GetEventByIdResul
 
         if isinstance(result, Failure):
             self.logger.error("Error getting event by id", extra={"error": str(result.failure())})
-            return Failure(result.failure())
+            return result
 
         if (event := result.unwrap()) is None:
             return Success(GetEventByIdResult(event=None))
 
-        return Success(GetEventByIdResult(event=EventPrimitives(id=event.id, name=event.name, capacity=event.capacity)))
+        return Success(GetEventByIdResult(event=event))

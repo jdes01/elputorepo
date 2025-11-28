@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.contexts.shared.infrastructure.logging.log_entry import LogEntry, LogEntrySeverity
 from src.contexts.shared.infrastructure.logging.logger import Logger
@@ -68,5 +69,15 @@ class AppFactory:
 
         for callback in self.startup_callbacks:
             app.add_event_handler("startup", callback)
+
+        origins = ["*"]
+
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,  # orígenes permitidos
+            allow_credentials=True,
+            allow_methods=["*"],  # GET, POST, PUT, DELETE, etc
+            allow_headers=["*"],  # Headers que permites
+        )
 
         return app

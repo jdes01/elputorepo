@@ -1,6 +1,6 @@
 """Tests for GetAllEventsQueryHandler."""
 
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 
 import pytest
 from returns.result import Failure, Success
@@ -9,70 +9,77 @@ from src.contexts.core.application.queries.get_all_events.query_handler import (
     GetAllEventsQuery,
     GetAllEventsQueryHandler,
 )
-from src.contexts.core.domain.entities.event import Event
-from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
+from src.contexts.core.application.services.event_projection_service import AllEventsProjectionService, EventProjection
 from src.contexts.core.domain.value_objects.event_id import EventId
-from src.contexts.core.domain.value_objects.event_name import EventName
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 
 @pytest.fixture
-def mock_repository():
+def mock_event_projection_service() -> AsyncMock:
     """Create a mock repository."""
-    return Mock()
+    return AsyncMock()
 
 
 @pytest.fixture
-def handler(mock_repository):
+def logger() -> AsyncMock:
+    return AsyncMock(spec=Logger)
+
+
+@pytest.fixture
+def handler(mock_event_projection_service: AllEventsProjectionService, logger: Logger) -> GetAllEventsQueryHandler:
     """Create handler instance."""
-    return GetAllEventsQueryHandler(event_repository=mock_repository)
+    return GetAllEventsQueryHandler(event_projection_service=mock_event_projection_service, logger=logger)
 
 
-def test_handle_success(handler, mock_repository):
+@pytest.mark.asyncio
+async def test_handle_success(handler: GetAllEventsQueryHandler, mock_event_projection_service: AllEventsProjectionService) -> None:
     """Test successful events retrieval."""
     # Arrange
     query = GetAllEventsQuery()
     events = [
-        Event.create(id=EventId.generate(), name=EventName("Event Name aaa"), capacity=EventCapacity(10)),
-        Event.create(id=EventId.generate(), name=EventName("Event Name bbb"), capacity=EventCapacity(10)),
+        EventProjection(id=EventId.generate().value, name="Event Name aaa", capacity=10),
+        EventProjection(id=EventId.generate().value, name="Event Name bbb", capacity=10),
     ]
-    mock_repository.get_all.return_value = Success(events)
+    mock_event_projection_service.get_all.return_value = Success(events)
 
     # Act
-    result = handler.handle(query)
+    result = await handler.handle(query)
 
     # Assert
     assert isinstance(result, Success)
     assert len(result.unwrap().events) == 2
-    mock_repository.get_all.assert_called_once()
+    mock_event_projection_service.get_all.assert_called_once()
 
 
-def test_handle_empty_list(handler, mock_repository):
+@pytest.mark.asyncio
+async def test_handle_empty_list(handler: GetAllEventsQueryHandler, mock_event_projection_service: AllEventsProjectionService) -> None:
     """Test handler when no events exist."""
     # Arrange
     query = GetAllEventsQuery()
-    mock_repository.get_all.return_value = Success([])
+    mock_event_projection_service.get_all.return_value = Success([])
 
     # Act
-    result = handler.handle(query)
+    result = await handler.handle(query)
 
     # Assert
     assert isinstance(result, Success)
     assert len(result.unwrap().events) == 0
-    mock_repository.get_all.assert_called_once()
+    mock_event_projection_service.get_all.assert_called_once()
 
 
-def test_handle_repository_error(handler, mock_repository):
+@pytest.mark.asyncio
+async def test_handle_repository_error(handler: GetAllEventsQueryHandler, mock_event_projection_service: AllEventsProjectionService) -> None:
     """Test handler when repository returns error."""
     # Arrange
     query = GetAllEventsQuery()
     error = DatabaseError("Database connection failed")
-    mock_repository.get_all.return_value = Failure(error)
+    mock_event_projection_service.get_all.return_value = Failure(error)
 
     # Act
-    result = handler.handle(query)
+    result = await handler.handle(query)
 
     # Assert
     assert isinstance(result, Failure)
     assert result.failure() == error
-    mock_repository.get_all.assert_called_once()
+    mock_event_projection_service.get_all.assert_called_once()

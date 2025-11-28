@@ -8,10 +8,6 @@ from ..value_objects.event_id import EventId
 
 class EventRepository(ABC):
     @abstractmethod
-    def create(self, event: Event) -> Result[None, Exception]:
-        pass
-
-    @abstractmethod
     def persist(self, event: Event) -> Result[None, Exception]:
         pass
 

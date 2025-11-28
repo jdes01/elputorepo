@@ -1,5 +1,9 @@
-export type GetEventsResponse = {
-  capacity: number
-  id: string
-  name: string
-}[]
+import { ApiResponse } from '../../common/ApiResponse'
+
+export type GetEventsResponse = ApiResponse<{
+  events: {
+    id: string
+    name: string
+    capacity: number
+  }[]
+}>

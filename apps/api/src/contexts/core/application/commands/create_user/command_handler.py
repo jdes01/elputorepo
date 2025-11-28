@@ -14,6 +14,7 @@ class CreateUserCommand(Command):
     email: str
     age: int
 
+
 class CreateUserResult(CommandHandlerResult):
     user: UserPrimitives
 

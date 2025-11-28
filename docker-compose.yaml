@@ -1,9 +1,25 @@
 services:
+
+  elputofrontend:
+    container_name: elputofrontend
+    build:
+      context: ./apps/elputofrontend
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3000"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./apps/elputofrontend:/app/elputofrontend
+      - /app/node_modules
+    networks:
+      - app-network
+
   elputorepo-api:
     container_name: elputorepo-api
     build: 
-      context: .
-      dockerfile: ./apps/api/Dockerfile
+      context: ./apps/api
+      dockerfile: Dockerfile
       args:
         DEBUG: 1
     ports:  
@@ -217,8 +233,8 @@ services:
   elputorepo-tickets-api:
     container_name: elputorepo-tickets-api
     build:
-      context: .
-      dockerfile: ./apps/tickets/Dockerfile
+      context: ./apps/tickets
+      dockerfile: Dockerfile
       args:
         DEBUG: 1
     ports:

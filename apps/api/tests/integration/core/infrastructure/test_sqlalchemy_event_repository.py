@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 from returns.result import Failure, Success
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,11 +15,17 @@ from src.contexts.core.infrastructure.repositories.postgres_event_repository imp
     PostgresEventRepository,
 )
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 
 @pytest.fixture
-def repo(postgres_session: Session) -> PostgresEventRepository:
-    return PostgresEventRepository(session=postgres_session)
+def logger() -> Mock:
+    return Mock(spec=Logger)
+
+
+@pytest.fixture
+def repo(postgres_session: Session, logger: Logger) -> PostgresEventRepository:
+    return PostgresEventRepository(session=postgres_session, logger=logger)
 
 
 @pytest.fixture
@@ -26,7 +34,7 @@ def event(postgres_session: Session) -> Event:
 
 
 @pytest.mark.integration
-def test_save_and_get_all_events(postgres_session: Session):
+def test_save_and_get_all_events(postgres_session: Session, logger: Logger) -> None:
     # Arrange
     event_id = EventId.generate()
     event_name = EventName("ACME Inc")
@@ -37,12 +45,12 @@ def test_save_and_get_all_events(postgres_session: Session):
     postgres_session.add(event_schema)
     postgres_session.commit()
 
-    repo = PostgresEventRepository(session=postgres_session)
+    repo = PostgresEventRepository(session=postgres_session, logger=logger)
     event = Event.create(id=EventId.generate(), name=EventName("Alice"), capacity=EventCapacity(10))
 
     # Act
-    result = repo.save(event)
-    assert isinstance(result, Success), "Expected save() to return Success on success"
+    result = repo.persist(event)
+    assert isinstance(result, Success), "Expected persist() to return Success on success"
     assert result.unwrap() is None
 
     event_result = repo.get(event_id)
@@ -56,16 +64,16 @@ def test_save_and_get_all_events(postgres_session: Session):
 
 
 @pytest.mark.integration
-def test_save_handles_sqlalchemy_error_gracefully(monkeypatch: pytest.MonkeyPatch, postgres_session: Session):
-    repo = PostgresEventRepository(session=postgres_session)
+def test_save_handles_sqlalchemy_error_gracefully(monkeypatch: pytest.MonkeyPatch, postgres_session: Session, logger: Logger) -> None:
+    repo = PostgresEventRepository(session=postgres_session, logger=logger)
     event = Event.create(id=EventId.generate(), name=EventName("Bob"), capacity=EventCapacity(10))
 
-    def fail_add(_):
+    def fail_add(_) -> None:
         raise SQLAlchemyError("Simulated DB error")
 
     monkeypatch.setattr(postgres_session, "add", fail_add)  # type: ignore
 
-    result = repo.save(event)
+    result = repo.persist(event)
 
     assert isinstance(result, Failure)
     error = result.failure()
@@ -75,16 +83,16 @@ def test_save_handles_sqlalchemy_error_gracefully(monkeypatch: pytest.MonkeyPatc
 
 
 @pytest.mark.integration
-def test_save_returns_exception_without_raising(monkeypatch: pytest.MonkeyPatch, postgres_session: Session):
-    repo = PostgresEventRepository(session=postgres_session)
+def test_save_returns_exception_without_raising(monkeypatch: pytest.MonkeyPatch, postgres_session: Session, logger: Logger) -> None:
+    repo = PostgresEventRepository(session=postgres_session, logger=logger)
     event = Event.create(id=EventId.generate(), name=EventName("Charlie"), capacity=EventCapacity(10))
 
-    def fail_add(_):
+    def fail_add(_) -> None:
         raise SQLAlchemyError("Simulated DB error")
 
     monkeypatch.setattr(postgres_session, "add", fail_add)  # type: ignore
 
-    result = repo.save(event)
+    result = repo.persist(event)
 
     # No debería lanzarse, sino devolverse
     assert isinstance(result, Failure)
@@ -95,11 +103,11 @@ def test_save_returns_exception_without_raising(monkeypatch: pytest.MonkeyPatch,
 
 
 @pytest.mark.integration
-def test_get_handles_sqlalchemy_error_gracefully(monkeypatch: pytest.MonkeyPatch, postgres_session: Session):
-    repo = PostgresEventRepository(session=postgres_session)
+def test_get_handles_sqlalchemy_error_gracefully(monkeypatch: pytest.MonkeyPatch, postgres_session: Session, logger: Logger) -> None:
+    repo = PostgresEventRepository(session=postgres_session, logger=logger)
     event_id = EventId.generate()
 
-    def fail_query(_):
+    def fail_query(_) -> None:
         raise SQLAlchemyError("Simulated DB error")
 
     monkeypatch.setattr(postgres_session, "query", fail_query)  # type: ignore

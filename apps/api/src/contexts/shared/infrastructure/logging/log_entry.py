@@ -15,10 +15,10 @@ LogEntryExtra = dict[str, Any]
 class LogEntry:
     _severity: LogEntrySeverity
     _message: str
-    _extra: LogEntryExtra
+    _extra: LogEntryExtra | None = None
     _correlation_id: str | None
 
-    def __init__(self, severity: LogEntrySeverity, message: str, extra: LogEntryExtra = {}, correlation_id: str | None = None) -> None:
+    def __init__(self, severity: LogEntrySeverity, message: str, extra: LogEntryExtra | None = None, correlation_id: str | None = None) -> None:
         self._severity = severity
         self._message = message
         self._extra = extra
@@ -42,7 +42,7 @@ class LogEntry:
         return self._message
 
     @property
-    def extra(self) -> LogEntryExtra:
+    def extra(self) -> LogEntryExtra | None:
         return self._extra
 
     @property

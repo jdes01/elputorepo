@@ -23,7 +23,7 @@ app = typer.Typer()
 
 @app.command()
 def save_event(name: Annotated[str, typer.Argument(help="Name of the event")], capacity: Annotated[int, typer.Argument(help="Capacity of the event")]) -> None:
-    event = Event(id=EventId.generate(), name=EventName(name), capacity=EventCapacity(capacity))
+    event = Event(id=EventId.generate(), name=EventName(name), capacity=EventCapacity(capacity), deleted_at=None)
     result = repository.persist(event)
 
     if isinstance(result, Exception):

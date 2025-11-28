@@ -7,9 +7,11 @@ class CreateUserRequest(BaseModel):
     email: str
     age: int
 
+
 class CreateUserBody(BaseModel):
     email: str
     age: int
+
 
 CREATE_USER_DEFAULT_BODY = Body(...)
 
@@ -18,7 +20,4 @@ def create_user_request(
     user_id: str = Path(..., description="User ID from the URL"),
     body: CreateUserBody = CREATE_USER_DEFAULT_BODY,
 ) -> CreateUserRequest:
-    return CreateUserRequest(
-        user_id=user_id,
-        email=body.email,
-        age=body.age)
+    return CreateUserRequest(user_id=user_id, email=body.email, age=body.age)

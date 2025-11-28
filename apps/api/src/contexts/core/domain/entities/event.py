@@ -14,6 +14,7 @@ class EventPrimitives(BaseModel):
     id: str
     name: str
     capacity: int
+    deleted_at: datetime | None
 
 
 @dataclass
@@ -21,10 +22,11 @@ class Event(Aggregate):
     id: EventId
     name: EventName
     capacity: EventCapacity
+    deleted_at: datetime | None
 
     @classmethod
     def create(cls, id: EventId, name: EventName, capacity: EventCapacity) -> "Event":
-        event = Event(id=id, name=name, capacity=capacity)
+        event = Event(id=id, name=name, capacity=capacity, deleted_at=None)
         event.__on_event_created()
         return event
 
@@ -40,18 +42,10 @@ class Event(Aggregate):
 
     @classmethod
     def from_primitives(cls, data: EventPrimitives) -> "Event":
-        return Event(
-            id=EventId(data.id),
-            name=EventName(data.name),
-            capacity=EventCapacity(data.capacity),
-        )
+        return Event(id=EventId(data.id), name=EventName(data.name), capacity=EventCapacity(data.capacity), deleted_at=data.deleted_at)
 
     def to_primitives(self) -> EventPrimitives:
-        return EventPrimitives(
-            id=self.id.value,
-            name=self.name.value,
-            capacity=self.capacity.value,
-        )
+        return EventPrimitives(id=self.id.value, name=self.name.value, capacity=self.capacity.value, deleted_at=self.deleted_at)
 
     def delete(self) -> None:
         self._deleted_at = datetime.now()

@@ -9,68 +9,75 @@ from src.contexts.core.application.queries.get_event_by_id.query_handler import 
     GetEventByIdQuery,
     GetEventByIdQueryHandler,
 )
-from src.contexts.core.domain.entities.event import Event
-from src.contexts.core.domain.value_objects.event_capacity import EventCapacity
+from src.contexts.core.application.services.event_projection_service import AllEventsProjectionService, EventProjection
 from src.contexts.core.domain.value_objects.event_id import EventId
-from src.contexts.core.domain.value_objects.event_name import EventName
 from src.contexts.shared.infrastructure.exceptions import DatabaseError
+from src.contexts.shared.infrastructure.logging.logger import Logger
 
 
 @pytest.fixture
-def mock_repository():
+def logger() -> Mock:
+    return Mock(spec=Logger)
+
+
+@pytest.fixture
+def event_projection_service() -> Mock:
     """Create a mock repository."""
-    return Mock()
+    return Mock(spec=AllEventsProjectionService)
 
 
 @pytest.fixture
-def handler(mock_repository):
+def handler(event_projection_service: AllEventsProjectionService, logger: Logger) -> GetEventByIdQueryHandler:
     """Create handler instance."""
-    return GetEventByIdQueryHandler(event_repository=mock_repository)
+    return GetEventByIdQueryHandler(event_projection_service=event_projection_service, logger=logger)
 
 
-def test_handle_success(handler, mock_repository):
+@pytest.mark.asyncio
+async def test_handle_success(handler: GetEventByIdQueryHandler, event_projection_service: AllEventsProjectionService) -> None:
     """Test successful event retrieval."""
     # Arrange
     query = GetEventByIdQuery(event_id="123e4567-e89b-12d3-a456-426614174000")
-    event = Event.create(id=EventId("123e4567-e89b-12d3-a456-426614174000"), name=EventName("Test Event"), capacity=EventCapacity(10))
-    mock_repository.get.return_value = Success(event)
+    event_projection = EventProjection(id="123e4567-e89b-12d3-a456-426614174000", name="Test Event", capacity=10)
+    event_projection_service.get.return_value = Success(event_projection)
 
     # Act
-    result = handler.handle(query)
+    result = await handler.handle(query)
 
     # Assert
     assert isinstance(result, Success)
     assert result.unwrap().event.id == "123e4567-e89b-12d3-a456-426614174000"
     assert result.unwrap().event.name == "Test Event"
-    mock_repository.get.assert_called_once_with(EventId(query.event_id))
+    event_projection_service.get.assert_called_once_with(EventId(query.event_id))
 
 
-def test_handle_event_not_found(handler, mock_repository):
+@pytest.mark.asyncio
+async def test_handle_event_not_found(handler: GetEventByIdQueryHandler, event_projection_service: AllEventsProjectionService) -> None:
     """Test handler when event is not found."""
     # Arrange
     query = GetEventByIdQuery(event_id="123e4567-e89b-12d3-a456-426614174000")
-    mock_repository.get.return_value = Success(None)
+    event_projection_service.get.return_value = Success(None)
 
     # Act
-    result = handler.handle(query)
+    result = await handler.handle(query)
 
     # Assert
     assert isinstance(result, Success)
     assert result.unwrap().event is None
-    mock_repository.get.assert_called_once()
+    event_projection_service.get.assert_called_once()
 
 
-def test_handle_repository_error(handler, mock_repository):
+@pytest.mark.asyncio
+async def test_handle_repository_error(handler: GetEventByIdQueryHandler, event_projection_service: AllEventsProjectionService) -> None:
     """Test handler when repository returns error."""
     # Arrange
     query = GetEventByIdQuery(event_id="123e4567-e89b-12d3-a456-426614174000")
     error = DatabaseError("Database connection failed")
-    mock_repository.get.return_value = Failure(error)
+    event_projection_service.get.return_value = Failure(error)
 
     # Act
-    result = handler.handle(query)
+    result = await handler.handle(query)
 
     # Assert
     assert isinstance(result, Failure)
     assert result.failure() == error
-    mock_repository.get.assert_called_once()
+    event_projection_service.get.assert_called_once()

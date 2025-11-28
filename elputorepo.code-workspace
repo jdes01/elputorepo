@@ -13,6 +13,10 @@
             "path": "./packages/contracts"
         },
         {
+            "name": "Front",
+            "path": "./apps/elputofrontend"
+        },
+        {
             "name": "Monorepo",
             "path": "."
         },
