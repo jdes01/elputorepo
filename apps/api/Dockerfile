@@ -6,6 +6,8 @@ ENV DEBUG=${DEBUG:-0}
 # Traemos uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
+RUN apt-get update && apt-get install -y awscli
+
 # Estructura dentro del contenedor:
 # /app
 # └── api

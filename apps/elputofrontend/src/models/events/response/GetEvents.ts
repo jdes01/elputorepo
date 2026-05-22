@@ -1,9 +1,12 @@
 import { ApiResponse } from '../../common/ApiResponse'
 
+
+
 export type GetEventsResponse = ApiResponse<{
-  events: {
+  events: Array<{
     id: string
     name: string
     capacity: number
-  }[]
+    imageUrl: string
+  }>
 }>

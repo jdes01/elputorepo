@@ -7,6 +7,7 @@ import { eventsQueryKeys } from './queryKeys'
 type CreateEventProps = {
   capacity: number
   title: string
+  imageUrl: string
 }
 
 export const useCreateEvent = () => {
@@ -20,6 +21,7 @@ export const useCreateEvent = () => {
         body: JSON.stringify({
           capacity: event.capacity,
           name: event.title,
+          imageUrl: event.imageUrl,
         }),
         method: 'POST',
       })
