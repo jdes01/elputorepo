@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { TimeOfDay } from '../../../shared/domain/value-objects/time-of-day.value-object';
-import { TimeSlot } from '../../../shared/domain/value-objects/time-slot.value-object';
 import { Club } from './club.entity';
 import { SlotOutsideOpeningHours } from '../errors/club.errors';
 import { Court } from './court.entity';
@@ -25,16 +24,5 @@ describe('Court', () => {
 
   it.each(['10:00', '08:00', '15:00'])('no tiene franja a las %s', (start) => {
     expect(() => court.slotAt(at(start))).toThrow(SlotOutsideOpeningHours);
-  });
-
-  it('marca como ocupadas las franjas que pisa una reserva', () => {
-    const availability = court.availability([TimeSlot.startingAt(at('10:30'))]);
-
-    expect(availability.map(({ slot, free }) => `${slot.start} ${free ? 'libre' : 'ocupada'}`)).toEqual([
-      '09:00 libre',
-      '10:30 ocupada',
-      '12:00 libre',
-      '13:30 libre',
-    ]);
   });
 });

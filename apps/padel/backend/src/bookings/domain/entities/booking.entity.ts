@@ -1,7 +1,5 @@
 import type { Court } from '../../../clubs/domain/entities/court.entity';
-import type { ClubName } from '../../../clubs/domain/value-objects/club-name.value-object';
 import type { CourtId } from '../../../clubs/domain/value-objects/court-id.value-object';
-import type { CourtName } from '../../../clubs/domain/value-objects/court-name.value-object';
 import { CLUBS_TIME_ZONE } from '../../../shared/domain/time-zone';
 import type { CalendarDate } from '../../../shared/domain/value-objects/calendar-date.value-object';
 import type { TimeOfDay } from '../../../shared/domain/value-objects/time-of-day.value-object';
@@ -13,10 +11,6 @@ import type { UserId } from '../value-objects/user-id.value-object';
 const CANCELLATION_NOTICE_MS = 24 * 60 * 60 * 1000;
 
 export class Booking {
-  // Solo en "mis reservas".
-  courtName?: CourtName;
-  clubName?: ClubName;
-
   private constructor(
     readonly id: BookingId,
     readonly courtId: CourtId,

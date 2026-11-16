@@ -2,6 +2,11 @@ import { InvalidValueError } from '../../../shared/domain/errors/invalid-value.e
 import type { TimeOfDay } from '../../../shared/domain/value-objects/time-of-day.value-object';
 import { TimeSlot } from '../../../shared/domain/value-objects/time-slot.value-object';
 
+export interface SlotAvailability {
+  slot: TimeSlot;
+  free: boolean;
+}
+
 // El horario de una pista: abre y cierra el mismo dia.
 export class OpeningHours {
   private constructor(
@@ -29,6 +34,11 @@ export class OpeningHours {
       start = slot.end;
     }
     return slots;
+  }
+
+  // La rejilla del dia con cada franja libre u ocupada por alguna de `taken`.
+  availability(taken: TimeSlot[]): SlotAvailability[] {
+    return this.slots().map((slot) => ({ slot, free: !taken.some((t) => t.overlaps(slot)) }));
   }
 
   equals(other: OpeningHours): boolean {

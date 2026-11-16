@@ -31,6 +31,17 @@ describe('OpeningHours', () => {
     expect(slots.map((s) => s.start.toString())).toEqual(['09:00', '10:30', '12:00', '13:30']);
   });
 
+  it('marca como ocupadas las franjas que pisa una reserva', () => {
+    const availability = hours('09:00', '15:00').availability([slotAt('10:30')]);
+
+    expect(availability.map(({ slot, free }) => `${slot.start} ${free ? 'libre' : 'ocupada'}`)).toEqual([
+      '09:00 libre',
+      '10:30 ocupada',
+      '12:00 libre',
+      '13:30 libre',
+    ]);
+  });
+
   it('deja fuera la franja que no cabe antes del cierre', () => {
     const slots = hours('09:00', '11:59').slots();
 

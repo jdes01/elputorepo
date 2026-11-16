@@ -8,5 +8,4 @@ export abstract class ClubRepository {
   abstract nextId(): Promise<ClubId>;
   abstract save(club: Club): Promise<void>;
   abstract findById(id: ClubId): Promise<Club | undefined>;
-  abstract findAll(): Promise<Club[]>;
 }

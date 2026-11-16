@@ -59,16 +59,4 @@ describe('DrizzleCourtRepository', () => {
     expect(found?.equals(court)).toBe(true);
     expect(found?.openingHours.equals(court.openingHours)).toBe(true);
   });
-
-  it('lista solo las pistas del club, en orden de alta', async () => {
-    const club = await givenClub();
-    const first = await givenCourt(club, 'Pista 1');
-    const second = await givenCourt(club, 'Pista 2');
-    await givenCourt(await givenClub('Otro club'));
-
-    const found = await courts.findByClub(club.id);
-
-    expect(found.map((c) => c.name.toString())).toEqual(['Pista 1', 'Pista 2']);
-    expect(found[0]?.equals(first) && found[1]?.equals(second)).toBe(true);
-  });
 });

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { CourtId } from '../../../clubs/domain/value-objects/court-id.value-object';
 import { DATABASE, type Database } from '../../../shared/infrastructure/database.module';
 import { bookings } from '../../../schema';
@@ -49,15 +49,6 @@ export class DrizzleBookingRepository extends BookingRepository {
       .select()
       .from(bookings)
       .where(and(eq(bookings.courtId, courtId.toNumber()), eq(bookings.date, date.toString())));
-    return rows.map(toBooking);
-  }
-
-  async findByUser(userId: UserId): Promise<Booking[]> {
-    const rows = await this.db
-      .select()
-      .from(bookings)
-      .where(eq(bookings.userId, userId.toString()))
-      .orderBy(asc(bookings.date), asc(bookings.start));
     return rows.map(toBooking);
   }
 }

@@ -3,9 +3,6 @@ import type { CalendarDate } from '../../../shared/domain/value-objects/calendar
 import type { Booking } from '../../domain/entities/booking.entity';
 import { BookingRepository } from '../../domain/repositories/booking.repository';
 import { BookingId } from '../../domain/value-objects/booking-id.value-object';
-import type { UserId } from '../../domain/value-objects/user-id.value-object';
-
-const startOf = (b: Booking) => `${b.date} ${b.slot.start}`;
 
 export class InMemoryBookingRepository extends BookingRepository {
   private readonly bookings = new Map<number, Booking>();
@@ -29,11 +26,5 @@ export class InMemoryBookingRepository extends BookingRepository {
 
   async findByCourtAndDate(courtId: CourtId, date: CalendarDate): Promise<Booking[]> {
     return [...this.bookings.values()].filter((b) => b.courtId.equals(courtId) && b.date.equals(date));
-  }
-
-  async findByUser(userId: UserId): Promise<Booking[]> {
-    return [...this.bookings.values()]
-      .filter((b) => b.userId.equals(userId))
-      .toSorted((a, b) => startOf(a).localeCompare(startOf(b)));
   }
 }

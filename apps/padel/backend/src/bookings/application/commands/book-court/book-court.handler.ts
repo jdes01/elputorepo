@@ -1,17 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CourtNotFound } from '../../clubs/domain/errors/club.errors';
-import { ClubRepository } from '../../clubs/domain/repositories/club.repository';
-import { CourtRepository } from '../../clubs/domain/repositories/court.repository';
-import type { CourtId } from '../../clubs/domain/value-objects/court-id.value-object';
-import { Mailer } from '../../shared/application/mailer';
-import type { CalendarDate } from '../../shared/domain/value-objects/calendar-date.value-object';
-import type { TimeOfDay } from '../../shared/domain/value-objects/time-of-day.value-object';
-import { Booking } from '../domain/entities/booking.entity';
-import { BookingRepository } from '../domain/repositories/booking.repository';
-import type { UserId } from '../domain/value-objects/user-id.value-object';
+import { CourtNotFound } from '../../../../clubs/domain/errors/club.errors';
+import { ClubRepository } from '../../../../clubs/domain/repositories/club.repository';
+import { CourtRepository } from '../../../../clubs/domain/repositories/court.repository';
+import { Mailer } from '../../../../shared/application/mailer';
+import { Booking } from '../../../domain/entities/booking.entity';
+import { BookingRepository } from '../../../domain/repositories/booking.repository';
+import type { BookCourtCommand } from './book-court.command';
 
 @Injectable()
-export class BookCourt {
+export class BookCourtHandler {
   constructor(
     private readonly bookings: BookingRepository,
     private readonly courts: CourtRepository,
@@ -19,7 +16,7 @@ export class BookCourt {
     private readonly mailer: Mailer,
   ) {}
 
-  async execute(userId: UserId, courtId: CourtId, date: CalendarDate, start: TimeOfDay): Promise<Booking> {
+  async execute({ userId, courtId, date, start }: BookCourtCommand): Promise<Booking> {
     const court = await this.courts.findById(courtId);
     if (!court) throw new CourtNotFound();
 

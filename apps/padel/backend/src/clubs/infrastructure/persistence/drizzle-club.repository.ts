@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { asc, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { DATABASE, type Database } from '../../../shared/infrastructure/database.module';
 import { clubs } from '../../../schema';
 import { Club } from '../../domain/entities/club.entity';
@@ -29,10 +29,6 @@ export class DrizzleClubRepository extends ClubRepository {
   async findById(id: ClubId): Promise<Club | undefined> {
     const [row] = await this.db.select().from(clubs).where(eq(clubs.id, id.toNumber()));
     return row && toClub(row);
-  }
-
-  async findAll(): Promise<Club[]> {
-    return (await this.db.select().from(clubs).orderBy(asc(clubs.id))).map(toClub);
   }
 }
 

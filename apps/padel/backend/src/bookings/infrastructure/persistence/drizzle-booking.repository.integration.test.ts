@@ -71,18 +71,6 @@ describe('DrizzleBookingRepository', () => {
     expect(found.map((b) => b.id.toNumber())).toEqual([mine.id.toNumber()]);
   });
 
-  it('por usuario, solo las suyas, por fecha y hora', async () => {
-    const user = someUser();
-    const later = await givenBooking({ by: user, on: '2099-03-02', at: '09:00' });
-    const sameDayLate = await givenBooking({ by: user, on: '2099-03-01', at: '12:00' });
-    const sameDayEarly = await givenBooking({ by: user, on: '2099-03-01', at: '10:30' });
-    await givenBooking({ on: '2099-03-01', at: '13:30' });
-
-    const found = await bookings.findByUser(user);
-
-    expect(found.map((b) => b.id.toNumber())).toEqual([sameDayEarly, sameDayLate, later].map((b) => b.id.toNumber()));
-  });
-
   it('una reserva quitada ya no esta', async () => {
     const booking = await givenBooking();
 

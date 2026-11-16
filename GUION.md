@@ -714,3 +714,70 @@ solo del dominio, y la infraestructura de todo.
   y escribir con el mismo modelo es el próximo capítulo.
 - Pizarra: **25 e2e, 52 unitarios, 9 integración. e2e ~6 s, integración
   ~5 s, unitarios ~0,5 s.**
+
+---
+
+## Capítulo 11. Escribir y leer por caminos distintos
+
+**Tag:** `cap-11` · **Idea:** escribir y leer son problemas distintos.
+Escribir necesita reglas: cargar la entity, que decida, guardarla. Leer
+necesita forma: dar a cada pantalla exactamente lo que pide, en una consulta.
+Las dos cosas contra el mismo Postgres, pero por caminos separados (CQRS).
+
+### Qué enseñar
+
+1. **La estructura** de `application/`:
+   ```
+   commands/book-court/      book-court.command.ts   book-court.handler.ts
+   commands/cancel-booking/  ...
+   queries/get-availability/ get-availability.query.ts  get-availability.handler.ts  court-day.finder.ts
+   queries/list-my-bookings/ list-my-bookings.query.ts  list-my-bookings.handler.ts  my-bookings.finder.ts
+   ```
+2. **Escritura** (`commands/`): un command con lo que se pide, en value objects,
+   y un handler que usa repositorios y entities. Es lo que antes era el caso de
+   uso, con otro nombre y su mensaje explícito.
+3. **Lectura** (`queries/`): un query handler sobre un **finder**. El finder es
+   un puerto que devuelve **vistas**: objetos planos con la forma de la
+   respuesta, sin entities. Su adaptador lee de Postgres directamente
+   (`drizzle-my-bookings.finder.ts`): un JOIN y listo.
+4. **Lo que desaparece:**
+   - El N+1 de "mis reservas": ahora es una consulta, y el `oxlint-disable` se
+     va con él.
+   - `courtName?` y `clubName?` de la entity `Booking`: la entity vuelve a ser
+     solo de escritura.
+   - Los métodos de lectura de los repositorios (`findAll`, `findByClub`,
+     `findByUser`). Un repositorio solo sirve para escribir.
+5. **Un controller por caso de uso** (`infrastructure/controllers/`): ocho
+   ficheros pequeños, cada uno con su ruta, su contrato y su handler.
+6. **La disponibilidad se calcula en el dominio, también al leer.** La rejilla
+   pasa de `Court` a `OpeningHours.availability`, y el query handler la usa con
+   los datos del finder. El lado de lectura no carga entities, pero sí usa
+   value objects: la rejilla es la misma al reservar y al consultar.
+
+### El momento clave: los tests
+
+- **Los 25 e2e no cambian.** Escritura, lectura y controllers se han
+  reorganizado por completo y la API responde igual:
+  ```sh
+  git diff cap-10 cap-11 --stat -- apps/padel/backend/e2e     # vacío
+  ```
+- **Los tests de integración siguen a la lectura.** "Por usuario, por fecha y
+  hora" ya no prueba un repositorio: prueba `DrizzleMyBookingsFinder`, con el
+  nombre de la pista y del club en una sola consulta.
+
+### Qué discutir
+
+- **¿Un command handler puede devolver algo?** `BookCourtHandler` devuelve la
+  reserva creada, porque la API responde con ella. En un CQRS estricto
+  devolvería solo el id y la respuesta se leería con una query. Aquí se elige
+  lo práctico y se dice.
+- **Las vistas tienen primitivos.** En el capítulo 7 quitamos todos los
+  primitivos del dominio. Las vistas no son dominio: son la respuesta a una
+  pregunta, y su trabajo es tener la forma que pide quien pregunta.
+- **Mismo Postgres, dos caminos.** No hay base de datos de lectura ni
+  proyecciones: los finders leen las mismas tablas que escriben los
+  repositorios. Proyectar tablas de lectura es otro paso, que solo
+  merece la pena cuando una consulta se vuelve demasiado cara.
+- **Ocho controllers que se parecen mucho.** Con un controller por caso de uso,
+  cada uno se puede probar solo. Eso es lo que hace el capítulo 12.
+- Pizarra: **25 e2e, 52 unitarios, 12 integración.**

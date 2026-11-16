@@ -7,11 +7,6 @@ import type { CourtId } from '../value-objects/court-id.value-object';
 import type { CourtName } from '../value-objects/court-name.value-object';
 import type { OpeningHours } from '../value-objects/opening-hours.value-object';
 
-export interface SlotAvailability {
-  slot: TimeSlot;
-  free: boolean;
-}
-
 export class Court {
   private constructor(
     readonly id: CourtId,
@@ -34,10 +29,6 @@ export class Court {
     const slot = this.openingHours.slots().find((s) => s.start.equals(start));
     if (!slot) throw new SlotOutsideOpeningHours(start);
     return slot;
-  }
-
-  availability(taken: TimeSlot[]): SlotAvailability[] {
-    return this.openingHours.slots().map((slot) => ({ slot, free: !taken.some((t) => t.overlaps(slot)) }));
   }
 
   equals(other: Court): boolean {
