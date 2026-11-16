@@ -1287,3 +1287,88 @@ leída queda en su Redis. Con `docker compose ps -a` se ve `migrate` en
   escanearla.
 - Pizarra: **1 e2e, 70 unitarios, 25 controllers, 22 integración.** No cambia:
   el capítulo no toca la app.
+
+---
+
+## Capítulo 19. CI/CD en GitHub Actions llamando a los mismos `task`
+
+**Tag:** `cap-19` · **Idea:** una CI que define sus propios comandos es una
+segunda definición de "qué es estar bien", y tarde o temprano discrepa de la
+primera. Aquí la CI no sabe nada: cada paso es un `task` que ya existía. El
+workflow solo decide **dónde** y **cuándo** se ejecutan.
+
+### Qué enseñar
+
+1. **CI** (`.github/workflows/ci.yml`), en cada push y cada PR. El job `check`
+   llama, uno por paso, a `task lint`, `format:check`, `typecheck`, `deps:check`,
+   `build`, `test:unit`, `test:http`, `test:integration` y `test:e2e`: los mismos
+   nombres que en el Makefile y en lefthook. Un paso por task, y no un solo
+   `task test`, para que la lista de pasos de GitHub diga cuál ha fallado. Los
+   runners de GitHub traen docker, así que integración y e2e levantan sus
+   Postgres, Mongo, Redis y Mailpit (testcontainers) igual que en local. La CI
+   no declara ningún servicio: cada suite trae los suyos.
+2. **Las mismas versiones que en el portátil** (`jdx/mise-action`). Instala lo
+   que dicen `mise.toml` (node) y `package.json` (pnpm, su `packageManager`):
+   subir una versión sigue siendo una edición, y CI no tiene una copia que
+   olvidar. `actionlint` entra por el mismo camino (`mise.toml`).
+3. **Un job `images` en CI**: `make app`, el mismo comando del capítulo 18.
+   Construye las dos imágenes y levanta el perfil entero (Postgres, Mongo,
+   Redis, Mailpit, migraciones, api y front), esperando a los healthchecks. Un
+   Dockerfile roto, o una api que no arranca porque no llega a Mongo o a Redis,
+   se ve en el PR y no al hacer merge.
+4. **CD** (`.github/workflows/cd.yml`), en cada push a `main`: construye las
+   dos imágenes (una `matrix` backend/frontend), hace login en GHCR con el
+   `GITHUB_TOKEN` y las publica. `docker/metadata-action` calcula el nombre (en
+   minúsculas, como exige GHCR) y el tag: el **sha completo** del commit. Nada
+   de `latest`: cada imagen publicada se corresponde con un commit y se puede
+   volver a él.
+5. **Permisos mínimos.** El workflow entero es `contents: read`; solo el job de
+   publicar sube a `packages: write`.
+6. **Los workflows también se lintean** (`task lint:workflows`, actionlint,
+   enganchado a `task lint`): una expresión mal escrita o una action sin versión
+   falla en el commit, no tras esperar a un runner. Las actions se fijan por
+   versión mayor (`actions/checkout@v4`), y la de terceros que no es de
+   GitHub/Docker (`jdx/mise-action`) por **sha** del commit, con la versión en un
+   comentario: un tag se puede mover, un sha no.
+
+### El momento clave: cómo se valida sin remoto
+
+No hay remoto: nada de esto se ha visto correr en GitHub. Lo que sí:
+
+- **`actionlint`** (`make lint`): los dos workflows pasan; y un workflow con
+  `github.evnt.name` y un `uses: actions/checkout` sin versión falla con los dos
+  errores, que es lo que se espera de un linter.
+- **`act`** corre el workflow en un contenedor con la imagen de un runner de
+  Ubuntu. El job `check` pasó **entero**, e2e incluidos (el runner instala mise,
+  mise instala node, pnpm y actionlint, y los tests levantan sus propios
+  Postgres, Mongo, Redis y Mailpit contra el docker de la máquina): 70
+  unitarios, 25 de controllers, 22 de integración y el e2e.
+- El job `images` es `make app`, y ese comando ya se vio funcionar en el
+  capítulo 18. Con `act` publica los puertos del compose en la máquina, así que
+  solo se puede correr con esos puertos libres.
+- Lo que **no se pudo probar**: el job de CD. Hace login y `push` a ghcr.io con
+  el `GITHUB_TOKEN` de un repositorio real, y sin remoto no hay ni token ni
+  paquete. Tampoco se ha visto que los permisos se comporten igual en un runner
+  de GitHub: `act` no los imita del todo.
+
+### Qué discutir
+
+- **"Mismos `task`" no es "mismo entorno".** Cierra la brecha de los comandos y
+  la de las versiones (mise), pero no la del sistema (un runner no es tu
+  portátil). Los tests que levantan sus contenedores son lo que menos depende
+  de eso.
+- **CD no espera a CI.** Se publica lo que llega a `main`, y a `main` solo llega
+  lo que ya pasó por un PR verde (se exige en la protección de la rama). Si no
+  se quiere fiar de eso, se une CD a CI con `needs`, o con `workflow_run`.
+- **Push y PR a la vez.** Un push a una rama con PR abierto dispara CI dos veces
+  (una por `push`, otra por `pull_request`). `concurrency` cancela las
+  repetidas de la misma rama, no las de los dos eventos. Es el precio de
+  "en cada push y PR".
+- **Esta CI es lenta a propósito**: un job, todo en serie, sin caché de pnpm. Es
+  la versión más fácil de leer y de depurar; paralelizarla y cachearla es el
+  capítulo 22.
+- **Los secretos.** Aquí no hay ninguno: el `GITHUB_TOKEN` lo da GitHub a cada
+  ejecución. Cuando un workflow necesite uno de verdad, vivirá en `secrets`,
+  nunca en el repositorio.
+- Pizarra: **1 e2e, 70 unitarios, 25 controllers, 22 integración.** No cambia:
+  el capítulo no toca la app.

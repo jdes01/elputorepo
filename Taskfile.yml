@@ -4,8 +4,8 @@
 #   lefthook  ─┼─>  ESTE FICHERO  ──>  Taskfile de cada paquete
 #   (CI)      ─┘    (el grafo)         (sus tasks y el comando real)
 #
-# Makefile, lefthook y (mas adelante) CI son formas distintas de llamar aqui, no
-# definiciones distintas de lo mismo. Ninguno sabe que herramienta hay debajo, y
+# Makefile, lefthook y CI (.github/workflows) son formas distintas de llamar aqui,
+# no definiciones distintas de lo mismo. Ninguno sabe que herramienta hay debajo, y
 # por eso "en mi maquina pasaba" deja de ser una explicacion posible.
 #
 #   - Taskfile de cada paquete -> sus tareas y el comando real, por
@@ -51,8 +51,14 @@ tasks:
     cmds: [node_modules/.bin/depcruise apps/padel/backend/src --config configs/dependency-cruiser.cjs]
 
   lint:
-    desc: oxlint en todos los paquetes
-    deps: [contracts:lint, backend:lint, frontend:lint]
+    desc: oxlint en todos los paquetes y actionlint en los workflows
+    deps: [contracts:lint, backend:lint, frontend:lint, lint:workflows]
+
+  lint:workflows:
+    desc: actionlint sobre .github/workflows
+    # Por mise: actionlint no esta en node_modules, y asi tambien lo encuentra un
+    # git hook, que no hereda el PATH de mise.
+    cmds: [mise exec -- actionlint]
 
   format:
     desc: oxfmt en todos los paquetes (ESCRIBE)

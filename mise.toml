@@ -8,3 +8,5 @@ idiomatic_version_file_enable_tools = ["pnpm"]
 
 [tools]
 node = "26.12.0"
+# Lint de .github/workflows (`task lint:workflows`); CI lo instala igual que el resto.
+"aqua:rhysd/actionlint" = "1.7.12"

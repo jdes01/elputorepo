@@ -1,0 +1,44 @@
+# Lo mismo que lefthook y el Makefile: cada paso llama a un `task`. Si algo falla
+# aqui, falla igual en local con ese mismo comando.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # node, pnpm y actionlint, de mise.toml y package.json: las versiones de
+      # un portatil con `make setup`.
+      - uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde # v5.2.1
+      - run: pnpm install --frozen-lockfile
+      - run: node_modules/.bin/task lint
+      - run: node_modules/.bin/task format:check
+      - run: node_modules/.bin/task typecheck
+      - run: node_modules/.bin/task deps:check
+      - run: node_modules/.bin/task build
+      # Los runners de GitHub traen docker: integracion y e2e levantan sus
+      # Postgres, Mongo, Redis y Mailpit aqui igual que en local.
+      - run: node_modules/.bin/task --output interleaved test:unit
+      - run: node_modules/.bin/task --output interleaved test:http
+      - run: node_modules/.bin/task --output interleaved test:integration
+      - run: node_modules/.bin/task --output interleaved test:e2e
+
+  # Construye las imagenes y levanta el perfil `app` entero (postgres, mongo,
+  # redis, mailpit, migraciones, api y front) esperando a que este sano: un
+  # Dockerfile roto o una api que no arranca se ve en el PR, no al publicar.
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make app
