@@ -27,6 +27,10 @@ tasks:
     desc: Unitarios (sin BD ni red)
     cmds: [node_modules/.bin/vitest run --config vitest.config.mts]
 
+  test:http:
+    desc: Los controllers por HTTP, con la app en memoria (sin docker)
+    cmds: [node_modules/.bin/vitest run --config vitest.http.config.mts]
+
   test:integration:
     desc: Repositorios contra un postgres de usar y tirar (necesita docker)
     cmds: [node_modules/.bin/vitest run --config vitest.integration.config.mts]

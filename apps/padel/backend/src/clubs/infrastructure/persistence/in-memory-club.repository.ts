@@ -18,4 +18,9 @@ export class InMemoryClubRepository extends ClubRepository {
   async findById(id: ClubId): Promise<Club | undefined> {
     return this.clubs.get(id.toNumber());
   }
+
+  // Fuera del puerto: lo leen los finders en memoria.
+  all(): Club[] {
+    return [...this.clubs.values()];
+  }
 }

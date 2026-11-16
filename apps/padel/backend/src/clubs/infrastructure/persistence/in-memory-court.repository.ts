@@ -17,4 +17,9 @@ export class InMemoryCourtRepository extends CourtRepository {
   async findById(id: CourtId): Promise<Court | undefined> {
     return this.courts.get(id.toNumber());
   }
+
+  // Fuera del puerto: lo leen los finders en memoria.
+  all(): Court[] {
+    return [...this.courts.values()];
+  }
 }

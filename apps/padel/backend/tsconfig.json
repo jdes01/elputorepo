@@ -11,9 +11,11 @@
   },
   "include": [
     "src",
+    "http",
     "e2e",
     "integration",
     "vitest.config.mts",
+    "vitest.http.config.mts",
     "vitest.integration.config.mts",
     "vitest.e2e.config.mts",
     "drizzle.config.ts"

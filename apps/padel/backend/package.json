@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@swc/cli": "0.8.1",
     "@swc/core": "1.16.1",
     "@testcontainers/postgresql": "12.1.0",
@@ -27,6 +28,7 @@
     "oxlint": "catalog:",
     "testcontainers": "12.1.0",
     "typescript": "catalog:",
+    "unplugin-swc": "1.5.11",
     "vitest": "catalog:"
   }
 }

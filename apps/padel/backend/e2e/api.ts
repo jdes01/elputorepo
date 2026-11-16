@@ -28,19 +28,6 @@ export async function mailsTo(to: string) {
   return messages;
 }
 
-export async function givenClub(name = 'Club Norte') {
-  return (await api('POST', '/clubs', { body: { name } })).body;
-}
-
-export async function givenCourt({ opens = '09:00', closes = '22:30' } = {}) {
-  const club = await givenClub();
-  return (await api('POST', `/clubs/${club.id}/courts`, { body: { name: 'Pista 1', opens, closes } })).body;
-}
-
-export async function givenBooking(courtId: number, user: string, date: string, start: string) {
-  return (await api('POST', '/bookings', { user, body: { courtId, date, start } })).body;
-}
-
 // Fechas en hora LOCAL, igual que las interpreta el backend.
 export function daysFromNow(days: number) {
   const d = new Date();

@@ -24,6 +24,11 @@ export class InMemoryBookingRepository extends BookingRepository {
     return this.bookings.get(id.toNumber());
   }
 
+  // Fuera del puerto: lo leen los finders en memoria.
+  all(): Booking[] {
+    return [...this.bookings.values()];
+  }
+
   async findByCourtAndDate(courtId: CourtId, date: CalendarDate): Promise<Booking[]> {
     return [...this.bookings.values()].filter((b) => b.courtId.equals(courtId) && b.date.equals(date));
   }

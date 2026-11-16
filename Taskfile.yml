@@ -68,11 +68,15 @@ tasks:
 
   test:
     desc: Todos los tests
-    deps: [test:unit, test:integration, test:e2e]
+    deps: [test:unit, test:http, test:integration, test:e2e]
 
   test:unit:
     desc: Unitarios (sin BD ni red)
     deps: [backend:test:unit]
+
+  test:http:
+    desc: Los controllers por HTTP, con la app en memoria (sin docker)
+    deps: [backend:test:http]
 
   test:integration:
     desc: Integracion (necesita docker)

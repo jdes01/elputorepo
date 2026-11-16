@@ -11,7 +11,7 @@ MISE := $(shell command -v mise 2>/dev/null || echo $(HOME)/.local/bin/mise)
 TASK := $(MISE) exec -- node_modules/.bin/task
 PSQL := docker compose exec postgres psql -U postgres padel
 
-.PHONY: help setup up down logs psql reset migrate dev lint format format\:check typecheck deps\:check build test test\:unit test\:integration test\:e2e
+.PHONY: help setup up down logs psql reset migrate dev lint format format\:check typecheck deps\:check build test test\:unit test\:http test\:integration test\:e2e
 
 help: ## Esta lista
 	@sed -nE 's/^([a-zA-Z_-]+(\\:[a-zA-Z_-]+)?):[^#]*## (.*)/\1\t\3/p' $(MAKEFILE_LIST) | sed 's/\\//' | awk -F'\t' '{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -67,6 +67,9 @@ test: ## task test
 
 test\:unit: ## task test:unit
 	$(TASK) --output interleaved test:unit
+
+test\:http: ## task test:http (controllers, sin docker)
+	$(TASK) --output interleaved test:http
 
 test\:integration: ## task test:integration (necesita docker)
 	$(TASK) --output interleaved test:integration

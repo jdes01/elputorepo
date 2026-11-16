@@ -781,3 +781,67 @@ Las dos cosas contra el mismo Postgres, pero por caminos separados (CQRS).
 - **Ocho controllers que se parecen mucho.** Con un controller por caso de uso,
   cada uno se puede probar solo. Eso es lo que hace el capítulo 12.
 - Pizarra: **25 e2e, 52 unitarios, 12 integración.**
+
+---
+
+## Capítulo 12. La pirámide se da la vuelta
+
+**Tag:** `cap-12` · **Idea:** al principio la única red posible eran los e2e:
+lentos, con docker y frágiles. Ahora cada capa tiene su test, y casi todo lo que
+probaban los e2e se puede probar más abajo, más rápido y con más precisión. Los
+e2e se quedan en uno: el flujo que da sentido a la app.
+
+### Qué enseñar
+
+1. **Tests de los controllers** (`http/*.http.test.ts`): la app de Nest de
+   verdad (`AppModule`, con sus controllers, handlers, validación y filtro de
+   errores) con cada puerto en memoria (`http/http-app.ts`). Se le habla por
+   HTTP y no necesita docker:
+   ```sh
+   make test:http     # 22 tests en ~2 s
+   ```
+   Prueban lo que es de HTTP: rutas, códigos de estado, validación, el 401 y la
+   forma del JSON.
+2. **Finders en memoria** (`in-memory-*.finders.ts`): leen lo que guardan los
+   repositorios en memoria. Una reserva hecha por HTTP aparece después en "mis
+   reservas", igual que con Postgres.
+3. **`src/http.ts`**: CORS y el filtro de errores, en una función que usan
+   `main.ts` y los tests. La app que se prueba es la que se despliega.
+4. **Un solo e2e** (`e2e/reservar.e2e.test.ts`): crear club y pista, reservar,
+   ver la franja ocupada, verla en "mis reservas" y recibir el correo. Con la
+   app compilada, Postgres y SMTP de verdad.
+
+### El momento clave: la pizarra
+
+Pon al lado la pizarra del capítulo 3 y la de ahora:
+
+|                               | Capítulo 3 | Capítulo 12 |
+| ----------------------------- | ---------- | ----------- |
+| Unitarios                     | 0          | 52 · ~1 s   |
+| Controllers (HTTP en memoria) | 0          | 22 · ~2 s   |
+| Integración (Postgres)        | 0          | 12 · ~5 s   |
+| e2e                           | 20 · ~8 s  | 1 · ~6 s    |
+
+Hay cuatro veces más tests, y lo que no necesita docker tarda unos 3 s. Cuando
+falla uno, su nombre dice qué capa se ha roto: "409 si la franja ya está
+reservada" es la traducción a HTTP; "no en una franja que ya está reservada" es
+la regla del dominio.
+
+Demo: en `domain-error.filter.ts`, cambia el 409 de `SlotAlreadyTaken` por un 400. Falla un test de controllers en milisegundos, y ninguno de dominio. Antes
+lo habría encontrado un e2e después de levantar dos contenedores.
+
+### Qué discutir
+
+- **¿Qué cubre cada capa?**
+  - Unitarios: las reglas (value objects, entities y command handlers con
+    adaptadores en memoria).
+  - Controllers: la traducción entre HTTP y la aplicación.
+  - Integración: que los adaptadores de verdad hablan bien con Postgres.
+  - e2e: que todo junto, compilado y con la infraestructura real, funciona.
+- **¿Por qué no quitar también el e2e?** Porque es lo único que prueba el
+  cableado real: la app compilada, las migraciones aplicadas y el SMTP de
+  verdad. Un e2e que pase vale más que veinte que repiten lo que ya se prueba
+  abajo.
+- **Lo que ningún test de esta pirámide ve:** la carrera. Dos reservas a la vez
+  siguen pudiendo pasar las dos (capítulo 14).
+- Pizarra: **1 e2e, 52 unitarios, 22 controllers, 12 integración.**
