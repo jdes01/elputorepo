@@ -1,4 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
+import { CourtWasOpenedEvent } from '../../clubs/domain/events/court-was-opened.event';
 import { ClubsModule } from '../../clubs/infrastructure/clubs.module';
 import { InProcessEventBus } from '../../shared/infrastructure/in-process-event-bus';
 import { BookCourtHandler } from '../application/commands/book-court/book-court.handler';
@@ -17,8 +18,9 @@ import { CancelBookingController } from './controllers/cancel-booking.controller
 import { GetAvailabilityController } from './controllers/get-availability.controller';
 import { ListMyBookingsController } from './controllers/list-my-bookings.controller';
 import { DrizzleCourtDayRepository } from './persistence/drizzle-court-day.repository';
-import { DrizzleCourtDayFinder } from './persistence/drizzle-court-day.finder';
-import { DrizzleMyBookingsFinder } from './persistence/drizzle-my-bookings.finder';
+import { MongoCourtDayFinder } from './read-model/mongo-court-day.finder';
+import { MongoMyBookingsFinder } from './read-model/mongo-my-bookings.finder';
+import { MongoReadModelProjector } from './read-model/mongo-read-model.projector';
 
 @Module({
   imports: [ClubsModule],
@@ -31,11 +33,12 @@ import { DrizzleMyBookingsFinder } from './persistence/drizzle-my-bookings.finde
     // Lectura: query handlers sobre finders.
     GetAvailabilityHandler,
     ListMyBookingsHandler,
-    { provide: CourtDayFinder, useClass: DrizzleCourtDayFinder },
-    { provide: MyBookingsFinder, useClass: DrizzleMyBookingsFinder },
+    { provide: CourtDayFinder, useClass: MongoCourtDayFinder },
+    { provide: MyBookingsFinder, useClass: MongoMyBookingsFinder },
     // Reacciones a eventos.
     SendBookingConfirmationHandler,
     SendCancellationConfirmationHandler,
+    MongoReadModelProjector,
   ],
 })
 export class BookingsModule implements OnModuleInit {
@@ -43,10 +46,15 @@ export class BookingsModule implements OnModuleInit {
     private readonly bus: InProcessEventBus,
     private readonly sendBookingConfirmation: SendBookingConfirmationHandler,
     private readonly sendCancellationConfirmation: SendCancellationConfirmationHandler,
+    private readonly readModel: MongoReadModelProjector,
   ) {}
 
   onModuleInit(): void {
     this.bus.subscribe(CourtWasBookedEvent, this.sendBookingConfirmation);
     this.bus.subscribe(BookingWasCancelledEvent, this.sendCancellationConfirmation);
+    // El modelo de lectura se alimenta de los mismos eventos.
+    this.bus.subscribe(CourtWasOpenedEvent, { handle: (e) => this.readModel.courtWasOpened(e) });
+    this.bus.subscribe(CourtWasBookedEvent, { handle: (e) => this.readModel.courtWasBooked(e) });
+    this.bus.subscribe(BookingWasCancelledEvent, { handle: (e) => this.readModel.bookingWasCancelled(e) });
   }
 }

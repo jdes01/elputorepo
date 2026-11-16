@@ -7,6 +7,10 @@ services:
       POSTGRES_DB: padel
     ports:
       - '5433:5432'
+  mongo:
+    image: mongo:8.0
+    ports:
+      - '27017:27017'
   mailpit:
     image: axllent/mailpit:v1.27
     ports:

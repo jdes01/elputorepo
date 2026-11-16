@@ -2,11 +2,12 @@
 # vive en el Taskfile de la raiz.
 version: '3'
 
-# La BD y el correo del docker-compose.yml, vistos desde el host. Literal a proposito: en
+# La BD, el correo y el modelo de lectura del docker-compose.yml, vistos desde el host. Literal a proposito: en
 # local siempre vale lo mismo y no es un secreto.
 env:
   DATABASE_URL: postgres://postgres:postgres@localhost:5433/padel
   SMTP_URL: smtp://localhost:1025
+  MONGO_URL: mongodb://localhost:27017/padel
 
 tasks:
   dev:
@@ -39,6 +40,11 @@ tasks:
     desc: e2e de API contra la app compilada y un postgres de usar y tirar (necesita docker)
     deps: [build]
     cmds: [node_modules/.bin/vitest run --config vitest.e2e.config.mts]
+
+  read-model:rebuild:
+    desc: Rehace el modelo de lectura de Mongo desde Postgres
+    deps: [build]
+    cmds: [node dist/src/rebuild-read-model.js]
 
   migration:generate:
     desc: 'Genera la migracion del diff entre src/schema.ts y la ultima. Ej: task backend:migration:generate -- --name add-x'

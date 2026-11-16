@@ -21,6 +21,8 @@
     "prefer-const": "error",
     "no-debugger": "error",
     "no-console": "warn",
+    // `_id` es la clave de cada documento de Mongo: el nombre lo pone Mongo, no nosotros.
+    "no-underscore-dangle": ["warn", { "allow": ["_id"] }],
     // Obsoleta desde el JSX transform automatico: "jsx": "react-jsx".
     "react/react-in-jsx-scope": "off",
     // Los @Module de Nest son clases vacias a proposito: el decorador ES el contenido.

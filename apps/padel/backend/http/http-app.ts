@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
 import { AppModule } from '../src/app.module';
 import { CourtDayFinder } from '../src/bookings/application/queries/get-availability/court-day.finder';
@@ -21,7 +22,9 @@ import {
 import { InMemoryCourtRepository } from '../src/clubs/infrastructure/persistence/in-memory-court.repository';
 import { configureHttp } from '../src/http';
 import { Mailer } from '../src/shared/application/mailer';
+import { MongoReadModelProjector } from '../src/bookings/infrastructure/read-model/mongo-read-model.projector';
 import { DATABASE } from '../src/shared/infrastructure/database.module';
+import { MONGO } from '../src/shared/infrastructure/mongo.module';
 import { RecordingMailer } from '../src/shared/infrastructure/recording-mailer';
 
 type Options = { body?: unknown; user?: string };
@@ -39,6 +42,13 @@ export async function startHttpApp() {
     .useValue({})
     .overrideProvider(DATABASE)
     .useValue({})
+    .overrideProvider(MongoClient)
+    .useValue({ close: async () => {} })
+    .overrideProvider(MONGO)
+    .useValue({})
+    // La lectura la hacen los finders en memoria: el proyector no tiene nada que hacer.
+    .overrideProvider(MongoReadModelProjector)
+    .useValue({ courtWasOpened: async () => {}, courtWasBooked: async () => {}, bookingWasCancelled: async () => {} })
     .overrideProvider(Mailer)
     .useValue(mailer)
     .overrideProvider(ClubRepository)

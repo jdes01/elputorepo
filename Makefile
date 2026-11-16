@@ -11,7 +11,7 @@ MISE := $(shell command -v mise 2>/dev/null || echo $(HOME)/.local/bin/mise)
 TASK := $(MISE) exec -- node_modules/.bin/task
 PSQL := docker compose exec postgres psql -U postgres padel
 
-.PHONY: help setup up down logs psql reset migrate dev lint format format\:check typecheck deps\:check build test test\:unit test\:http test\:integration test\:e2e
+.PHONY: help setup up down logs psql reset migrate read-model dev lint format format\:check typecheck deps\:check build test test\:unit test\:http test\:integration test\:e2e
 
 help: ## Esta lista
 	@sed -nE 's/^([a-zA-Z_-]+(\\:[a-zA-Z_-]+)?):[^#]*## (.*)/\1\t\3/p' $(MAKEFILE_LIST) | sed 's/\\//' | awk -F'\t' '{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -40,6 +40,9 @@ reset: ## Borra la BD, la levanta vacia y la migra
 
 migrate: up ## Aplica las migraciones pendientes
 	$(TASK) migrate
+
+read-model: up ## Rehace el modelo de lectura de Mongo desde Postgres
+	$(TASK) backend:read-model:rebuild
 
 dev: migrate ## Postgres (migrado), backend y frontend en watch
 	$(TASK) --output prefixed dev

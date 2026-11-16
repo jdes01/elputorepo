@@ -1044,3 +1044,85 @@ siempre).
   solo las activas. Un "historial" sería un finder nuevo, sin tocar la
   escritura.
 - Pizarra: **1 e2e, 65 unitarios, 25 controllers, 15 integración.**
+
+---
+
+## Capítulo 16. El modelo de lectura en Mongo
+
+**Tag:** `cap-16` · **Idea:** en el capítulo 11 separamos escribir y leer en el
+código, pero las dos cosas seguían leyendo las mismas tablas. Ahora la lectura
+tiene **su propia base de datos**, con documentos que ya tienen la forma de cada
+pantalla, y se mantiene al día escuchando los eventos que publica la escritura.
+Postgres sigue siendo la fuente de verdad; Mongo es una copia pensada para leer.
+
+### Qué enseñar
+
+1. **Mongo en el compose** y `MONGO_URL` en la config, igual que la BD y el
+   correo.
+2. **Los documentos** (`bookings/infrastructure/read-model/read-model.ts`):
+   - `courts`: el horario y los nombres de cada pista.
+   - `court_days`: las franjas reservadas de una pista un día.
+   - `my_bookings`: una fila por reserva, ya con el nombre de la pista y del
+     club. Desnormalizado a propósito: leer no necesita ni un JOIN.
+3. **Un evento nuevo**, `CourtWasOpenedEvent`: abrir una pista también es algo
+   que pasa, y la lectura necesita saberlo para conocer su horario.
+4. **El proyector** (`mongo-read-model.projector.ts`): escucha
+   `CourtWasOpenedEvent`, `CourtWasBookedEvent` y `BookingWasCancelledEvent`, y
+   actualiza los documentos. Cada escritura es idempotente (upsert,
+   `$addToSet`, `$pull`): recibir el mismo evento dos veces deja lo mismo.
+5. **Los finders cambian de adaptador**, nada más. `MongoCourtDayFinder` y
+   `MongoMyBookingsFinder` implementan los mismos puertos del capítulo 11. Los
+   query handlers, los controllers y los tests de controllers no se enteran.
+6. **Reconstruir** (`rebuild-read-model.ts`):
+   ```sh
+   make read-model
+   ```
+   Tira las colecciones y vuelve a pasar por el proyector un evento por cada
+   pista y cada reserva activa de Postgres. Para cuando se pierde un evento, se
+   cambia la forma de una vista o se arranca con datos que ya existían.
+
+### El momento clave: la grieta
+
+```sh
+make dev
+docker compose stop mongo
+# reserva desde la web: 201, en unos 2 s. La reserva está en Postgres.
+docker compose start mongo
+# la disponibilidad dice que esa franja está libre
+make read-model
+# ahora sí está ocupada
+```
+
+La escritura funcionó, pero el evento llegó a un Mongo caído: el proyector
+falló, el bus lo apuntó en el log y siguió. El modelo de lectura se quedó
+desfasado y **nadie lo va a arreglar solo**. Es el precio de tener dos bases de
+datos sin una transacción que las una: consistencia eventual, y eventual a
+veces significa "cuando alguien lo rehaga".
+
+En los tests:
+
+- Integración (`mongo-read-model.integration.test.ts`), contra un Mongo de usar
+  y tirar: proyectar, cancelar, el mismo evento dos veces y la reconstrucción
+  entera desde Postgres.
+- El e2e no cambia y pasa: reserva y lee la disponibilidad y "mis reservas" de
+  Mongo.
+
+### Qué discutir
+
+- **¿Por qué no lo arreglamos?** Porque arreglarlo bien es guardar el evento en
+  la misma transacción que la reserva y entregarlo después hasta que entre (un
+  outbox), y eso ya es otra pieza. Aquí se elige ver la grieta y tener con qué
+  taparla (`make read-model`).
+- **Los 2 s.** Con Mongo caído, la reserva tarda lo que el cliente de Mongo
+  espera antes de rendirse (`serverSelectionTimeoutMS` en `mongo.module.ts`).
+  Con el valor por defecto, 30 s: la petición se quedaba colgada y, si Mongo
+  volvía a tiempo, la escritura acababa entrando. Preparando esta demo pasó
+  justo eso. La petición espera a la lectura igual que esperaba al correo.
+- **Consistencia eventual en la misma petición.** El bus es en proceso: cuando
+  la API responde, el proyector ya ha escrito en Mongo. Con una cola de por
+  medio no sería así, y "acabo de reservar y no la veo" sería un problema de
+  producto, no de código.
+- **¿Qué se proyecta y qué no?** Los listados de clubs y pistas siguen leyendo
+  de Postgres: no les hace falta otra cosa. Se proyecta lo que se lee mucho o
+  tiene una forma muy distinta de cómo se guarda.
+- Pizarra: **1 e2e, 67 unitarios, 25 controllers, 18 integración.**
