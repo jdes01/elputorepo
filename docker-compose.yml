@@ -1,3 +1,13 @@
+# Sin perfil levanta lo que necesita el desarrollo (postgres, mongo, redis y
+# mailpit), y la app corre en el host (`make dev`). Con el perfil `app` levanta
+# ademas las imagenes de produccion: migraciones, api y front (`make app`).
+# La config que valida config.ts: la misma para migrate y para la api.
+x-backend-env: &backend-env
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/padel
+  SMTP_URL: smtp://mailpit:1025
+  MONGO_URL: mongodb://mongo:27017/padel
+  REDIS_URL: redis://redis:6379
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -7,16 +17,65 @@ services:
       POSTGRES_DB: padel
     ports:
       - '5433:5432'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres', '-d', 'padel']
+      interval: 2s
+      retries: 15
   mongo:
     image: mongo:8.0
     ports:
       - '27017:27017'
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 })']
+      interval: 2s
+      retries: 15
   redis:
     image: redis:7.4-alpine
     ports:
       - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      retries: 15
   mailpit:
     image: axllent/mailpit:v1.27
     ports:
       - '1025:1025'
       - '8025:8025'
+
+  # Aplica las migraciones y sale. La api no arranca hasta que termina bien: la
+  # app asume que la BD esta al dia.
+  migrate:
+    profiles: [app]
+    build: { context: ., dockerfile: apps/padel/backend/Dockerfile }
+    image: padel-backend:local
+    command: ['node', 'dist/src/migrate.js']
+    environment: *backend-env
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  # La api se conecta a Mongo y a Redis al arrancar: los espera sanos.
+  api:
+    profiles: [app]
+    image: padel-backend:local
+    environment: *backend-env
+    ports:
+      - '3000:3000'
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      mongo: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      mailpit: { condition: service_started }
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/clubs']
+      interval: 2s
+      retries: 15
+
+  front:
+    profiles: [app]
+    build: { context: ., dockerfile: apps/padel/frontend/Dockerfile }
+    image: padel-frontend:local
+    ports:
+      - '8080:8080'
+    depends_on:
+      api: { condition: service_healthy }

@@ -1,0 +1,10 @@
+# El contexto de build de las imagenes es la RAIZ del repo (el lockfile y
+# apps/padel/contracts tienen que entrar). Este es el unico .dockerignore.
+.git
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+.task
+# Un .env suelto no debe llegar nunca a una imagen.
+**/.env
+**/.env.*

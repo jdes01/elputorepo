@@ -1197,3 +1197,93 @@ En los tests:
   una medida dice que la lectura duele, no antes. Aquí se pone para ver el
   patrón y lo que cuesta mantenerlo coherente.
 - Pizarra: **1 e2e, 70 unitarios, 25 controllers, 22 integración.**
+
+---
+
+## Capítulo 18. Dockerizar backend y frontend
+
+**Tag:** `cap-18` · **Idea:** hasta aquí la app solo corre en una máquina con
+mise, pnpm y el repo entero. Una imagen es la app **y** lo que necesita para
+correr, y nada más: lo mismo en el portátil, en CI y en un servidor. El
+capítulo no cambia ni una línea de la app, salvo un script de migraciones.
+
+### Qué enseñar
+
+1. **Multi-stage** (`apps/padel/backend/Dockerfile`). Un stage `builder`
+   instala todo (con devDependencies) y compila con `task backend:build`: pesa
+   **1,2 GB**. La imagen final no hereda de él, solo **copia** lo compilado
+   (`COPY --from=builder`). Pesa **343 MB**, de los cuales 251 son node.
+2. **Sin devDependencies.** Un stage `prod-deps` hace
+   `pnpm install --prod --filter "@padel/backend..."`: solo lo que el backend
+   necesita en runtime (unos 80 MB, con los clientes de Mongo y Redis). Sin
+   swc, sin drizzle-kit, sin vitest, sin testcontainers.
+3. **`contracts` se consume como fuente**, así que aquí no sirve `pnpm deploy`:
+   copia los paquetes del workspace dentro de `node_modules`, y node no quita
+   los tipos de un `.ts` que cuelga de `node_modules`. Con `--filter` los
+   paquetes siguen siendo enlaces a `apps/padel/contracts/src`, que se copia
+   tal cual.
+4. **Caché de capas.** Un stage `manifests` solo con el lockfile y los
+   `package.json`: tocar código no repite `pnpm install`. Hacen falta los
+   `package.json` de **todo** el workspace, no solo los del backend, o
+   `--frozen-lockfile` aborta.
+5. **Sin root y sin ruido.** `USER node` en el backend; el frontend usa
+   `nginx-unprivileged`, que escucha en el 8080. `.dockerignore` en la raíz deja
+   fuera `node_modules`, `dist`, `.git` y cualquier `.env`. El contexto de build
+   es la **raíz** del repo (el lockfile y `contracts` tienen que entrar), por
+   eso los Dockerfiles viven en cada app pero se construyen desde arriba.
+6. **El front** (`apps/padel/frontend/Dockerfile`): vite construye el bundle y
+   nginx lo sirve estático. De todo el build solo viaja una carpeta de HTML y
+   JS: **82 MB**, casi todo nginx.
+7. **Las migraciones** (`src/migrate.ts`): un servicio one-shot del compose,
+   `migrate`, que usa **la misma imagen** que la api con otro comando
+   (`node dist/src/migrate.js`), aplica las migraciones y sale. La api tiene
+   `depends_on: migrate: service_completed_successfully`: no arranca hasta que
+   termina bien. No se usa `drizzle-kit migrate` porque es una devDependency y
+   no viaja en la imagen; el migrador de `drizzle-orm` lee las mismas
+   carpetas SQL (es el que ya usan los e2e).
+8. **Un perfil del compose.** `postgres`, `mongo`, `redis` y `mailpit` no
+   llevan perfil: `docker compose up` sigue levantando solo eso (`make up`,
+   `make dev`). `migrate`, `api` y `front` llevan `profiles: [app]`, y las
+   URLs que valida `config.ts` (las cuatro) se escriben una vez en un ancla
+   YAML que comparten `migrate` y `api`. `make app` lo levanta todo y espera a
+   que esté sano; `make images` solo construye. `make down` ahora pasa el
+   perfil, porque un `down` sin él no para lo que lo lleva.
+9. **Healthchecks donde alguien espera.** La api se conecta a Mongo y a Redis
+   al arrancar, así que los espera `service_healthy` (un `ping` en cada uno),
+   igual que a Postgres a través de `migrate`. El front espera a la api.
+
+### El momento clave: en vivo
+
+```sh
+make app                       # construye, migra y levanta, esperando
+curl -XPOST :3000/clubs ...    # club, pista y reserva contra la api en docker
+docker compose exec redis redis-cli keys '*'   # court-day:1:... tras leer
+```
+
+Abrir Mailpit (:8025): ahí está "Reserva confirmada". Abrir :8080: el front.
+La disponibilidad y "mis reservas" salen del Mongo del compose, y la agenda
+leída queda en su Redis. Con `docker compose ps -a` se ve `migrate` en
+`Exited (0)`: no es un fallo, es un servicio que hizo su trabajo.
+
+### Qué discutir
+
+- **¿Dónde se migra?** Un one-shot al levantar es lo más simple y vale con una
+  sola réplica de la api. Con varias, dos arranques simultáneos migrarían a la
+  vez; ahí se migra como un paso del despliegue, antes de levantar las réplicas.
+- **¿Y el modelo de lectura?** Postgres y Mongo nacen vacíos a la vez, así que
+  no hay nada que rehacer. Si se levantara contra un Postgres con datos y un
+  Mongo nuevo, haría falta el `rebuild-read-model` del capítulo 16, que también
+  viaja en la imagen.
+- **Alpine y los binarios nativos.** pnpm resuelve los binarios opcionales según
+  la libc de donde instala. Aquí se instala **dentro** del contenedor, así que
+  todo es musl y es coherente. Si se instalara en el host y se montara en el
+  contenedor, no cargarían: por eso la regla es una sola libc por flujo.
+- **La URL del api del front está en el código** (`http://localhost:3000`): sirve
+  porque el navegador está en la misma máquina que el compose. En un servidor
+  real no, y se arregla con configuración en runtime.
+- **Las credenciales del compose siguen en claro.** Es el entorno de
+  desarrollo; en un despliegue de verdad las pone quien despliega.
+- **Qué falta:** versionar la imagen (se hará en el 19, con el sha del commit) y
+  escanearla.
+- Pizarra: **1 e2e, 70 unitarios, 25 controllers, 22 integración.** No cambia:
+  el capítulo no toca la app.
