@@ -23,6 +23,10 @@ tasks:
     desc: Arranca lo ya compilado
     cmds: [node dist/src/main.js]
 
+  test:unit:
+    desc: Unitarios (sin BD ni red)
+    cmds: [node_modules/.bin/vitest run --config vitest.config.mts]
+
   test:e2e:
     desc: e2e de API contra la app compilada y un postgres de usar y tirar (necesita docker)
     deps: [build]

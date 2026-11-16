@@ -432,3 +432,72 @@ dirá que sí. Después, busca con ellos estos errores (la tabla completa está 
 - Pizarra: **29 e2e, 0 unitarios, 0 integración, ~5 s.** Sigue sin aparecer
   ninguna capa de tests por debajo: con las reglas pegadas al SQL, no hay nada
   que se pueda probar sin BD.
+
+---
+
+## Capítulo 7. Value objects: ningún primitivo
+
+**Tag:** `cap-07` · **Idea:** un `string` puede ser cualquier cosa; una
+`TimeOfDay` solo puede ser una hora válida. Si cada valor del dominio es un
+objeto que no puede existir en un estado inválido, las reglas de ese valor
+viven en un solo sitio y se prueban sin BD.
+
+### Qué enseñar
+
+1. Los value objects (`*.value-object.ts`):
+   ```
+   shared/    TimeOfDay  CalendarDate  TimeSlot
+   clubs/     ClubId  ClubName  CourtId  CourtName  OpeningHours
+   bookings/  BookingId  UserId
+   ```
+   Todos igual: constructor privado, una factoría que valida (`of`, `parse`)
+   y lanza `InvalidValueError` si el valor no puede existir, y `equals`.
+2. **Las reglas de los valores se mudan a su VO:**
+   - "una franja dura 90 minutos" → `TimeSlot.startingAt`
+   - "dos franjas se solapan" → `TimeSlot.overlaps`
+   - "la pista cierra después de abrir" → `OpeningHours.of`
+   - "la franja cabe en el horario" → `OpeningHours.contains`
+   - "las franjas del día" → `OpeningHours.slots()`. El cálculo de franjas
+     que estaba duplicado (al reservar y en la disponibilidad) desaparece.
+3. **Los modelos ya no tienen primitivos** (`booking.model.ts`,
+   `club.model.ts`). Por eso ya no pueden ser la fila de la tabla ni el JSON de
+   la respuesta: aparecen `bookingFromRow` (fila → modelo) y
+   `toBookingResponse` (modelo → JSON). Cambiar una columna ya no rompe el
+   contrato.
+4. `InvalidValueFilter`: un valor inválido viene de lo que mandó el cliente, así
+   que es un 400.
+5. Los **primeros unitarios**:
+   ```sh
+   make test:unit     # 29 tests en ~250 ms, sin docker
+   ```
+
+### El momento clave: los tests
+
+- **Unitarios.** Rompe `TimeSlot.overlaps`: cambia `isBefore` por `!isAfter`.
+  `make test:unit` falla en milisegundos, y dice qué caso se rompe ("no se
+  solapa con la que empieza justo cuando acaba"). El e2e equivalente tarda 5
+  segundos y necesita docker.
+- **e2e: cambia uno solo, y a propósito.** "La pista cierra antes de abrir"
+  pasa de 500 (lo paraba el `CHECK` de la BD) a 400 (lo para `OpeningHours`).
+  ```sh
+  git diff cap-06 cap-07 -- apps/padel/backend/e2e
+  ```
+  La regla ha subido de la BD al dominio, y el test lo cuenta.
+
+### Qué discutir
+
+- **¿Por qué no basta con el contrato?** zod ya valida `HH:MM`. Pero el
+  contrato protege la frontera HTTP, y un VO protege el dominio venga de
+  donde venga el valor: HTTP, una fila de la BD, un test o una cola. Además,
+  `OpeningHours` valida algo que el contrato no puede: la relación entre dos
+  campos.
+- **`UserId` no puede estar vacío.** Así que "falta la cabecera" ya no lo puede
+  decidir el service, que solo recibe `UserId`. El 401 se muda al controller
+  (`userIdFrom`), que es donde vive HTTP.
+- **Lo que no ha cambiado.** El service sigue gordo: decide si la pista
+  existe, si es el pasado, si hay solape y si se puede cancelar, y lanza
+  `HttpException`. `Booking` sigue teniendo `courtName?` y `clubName?` para
+  "mis reservas". Los VOs saben de valores; quién puede hacer qué con ellos es
+  cosa de las entities (capítulo 8).
+- Pizarra: **29 e2e, 29 unitarios, 0 integración. e2e ~5 s, unitarios
+  ~0,25 s.** Por primera vez la pirámide tiene base.

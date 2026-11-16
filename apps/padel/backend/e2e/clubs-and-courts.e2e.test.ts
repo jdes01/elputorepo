@@ -47,14 +47,14 @@ describe('crear pista', () => {
     expect(res.status).toBe(400);
   });
 
-  it('revienta con 500 si la pista cierra antes de abrir', async () => {
+  it('responde 400 si la pista cierra antes de abrir', async () => {
     const club = await givenClub();
 
     const res = await api('POST', `/clubs/${club.id}/courts`, {
       body: { name: 'Pista', opens: '22:00', closes: '09:00' },
     });
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 
   it('revienta con 500 si el club no existe', async () => {

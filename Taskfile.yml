@@ -63,8 +63,12 @@ tasks:
     deps: [contracts:typecheck, backend:typecheck, frontend:typecheck]
 
   test:
-    desc: Todos los tests (de momento, solo hay e2e)
-    deps: [test:e2e]
+    desc: Todos los tests
+    deps: [test:unit, test:e2e]
+
+  test:unit:
+    desc: Unitarios (sin BD ni red)
+    deps: [backend:test:unit]
 
   test:e2e:
     desc: e2e de API (necesita docker)

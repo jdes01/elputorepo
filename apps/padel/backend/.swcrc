@@ -23,5 +23,5 @@
   },
   "sourceMaps": true,
   "minify": false,
-  "exclude": ["\\.d\\.ts$"]
+  "exclude": ["\\.d\\.ts$", "\\.test\\.ts$"]
 }

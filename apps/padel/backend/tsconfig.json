@@ -4,9 +4,10 @@
     // Nest compila a CommonJS: sin "type": "module" en package.json, nodenext emite CJS.
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "lib": ["ES2023", "esnext.temporal"],
     "types": ["node"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src", "e2e", "vitest.e2e.config.mts", "drizzle.config.ts"]
+  "include": ["src", "e2e", "vitest.config.mts", "vitest.e2e.config.mts", "drizzle.config.ts"]
 }
