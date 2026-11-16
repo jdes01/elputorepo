@@ -46,6 +46,10 @@ tasks:
     desc: Aplica las migraciones pendientes a la BD local
     deps: [backend:migrate]
 
+  deps:check:
+    desc: Las capas de cada modulo (dependency-cruiser)
+    cmds: [node_modules/.bin/depcruise apps/padel/backend/src --config configs/dependency-cruiser.cjs]
+
   lint:
     desc: oxlint en todos los paquetes
     deps: [contracts:lint, backend:lint, frontend:lint]

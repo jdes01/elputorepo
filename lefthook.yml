@@ -22,5 +22,7 @@ pre-push:
   jobs:
     - name: typecheck
       run: node_modules/.bin/task typecheck
+    - name: boundaries
+      run: node_modules/.bin/task deps:check
     - name: build
       run: node_modules/.bin/task build

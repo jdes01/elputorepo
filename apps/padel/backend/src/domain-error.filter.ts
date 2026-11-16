@@ -1,8 +1,8 @@
 import { type ArgumentsHost, Catch, type ExceptionFilter } from '@nestjs/common';
 import type { Response } from 'express';
-import { BookingNotFound, NotBookingOwner, SlotAlreadyTaken } from './bookings/booking.errors';
-import { ClubNotFound, CourtNotFound } from './clubs/club.errors';
-import { DomainError } from './shared/domain-error';
+import { BookingNotFound, NotBookingOwner, SlotAlreadyTaken } from './bookings/domain/errors/booking.errors';
+import { ClubNotFound, CourtNotFound } from './clubs/domain/errors/club.errors';
+import { DomainError } from './shared/domain/errors/domain-error';
 
 // El unico sitio que traduce errores de dominio a HTTP. Lo que no esta aqui es
 // algo que el cliente pidio y no se puede hacer: un 400.

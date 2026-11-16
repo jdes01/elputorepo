@@ -649,3 +649,68 @@ saber que existe SQL.
   la misma clase. Eso es el capítulo 10.
 - Pizarra: **25 e2e, 46 unitarios, 9 integración. e2e ~6 s, integración
   ~5 s, unitarios ~0,35 s.**
+
+---
+
+## Capítulo 10. Casos de uso y capas
+
+**Tag:** `cap-10` · **Idea:** cada cosa que la app sabe hacer es una clase con
+nombre propio: un caso de uso. Y cada fichero vive en su capa, con una regla
+que se comprueba en cada push: el dominio no depende de nada, la aplicación
+solo del dominio, y la infraestructura de todo.
+
+### Qué enseñar
+
+1. **La estructura** de cada módulo:
+   ```
+   clubs/
+     domain/          entities/  value-objects/  errors/  repositories/   (puertos)
+     application/     register-club  open-court  list-clubs  list-courts  (casos de uso)
+     infrastructure/  controllers/  persistence/  clubs.module.ts        (adaptadores)
+   ```
+   El diff es sobre todo renombrados: `git show cap-10 --stat`.
+2. **Los casos de uso** (`application/*.use-case.ts`): una clase y un
+   `execute`. `BookCourt`, `CancelBooking`, `GetAvailability`,
+   `ListMyBookings`... Los services desaparecen; los controllers piden casos de
+   uso.
+3. **El correo también es un puerto** (`shared/application/mailer.ts`). El
+   adaptador de nodemailer vive en `shared/infrastructure/mail.module.ts`. El
+   caso de uso no sabe qué es SMTP.
+4. **Adaptadores en memoria** (`in-memory-*.repository.ts`, `RecordingMailer`):
+   los mismos puertos, sin BD. Con ellos, los casos de uso se prueban sin
+   docker (`book-court.use-case.test.ts`): "si la franja ya está reservada, ni
+   reserva ni correo".
+5. **Las capas se comprueban** (`configs/dependency-cruiser.cjs`):
+   ```sh
+   make deps:check     # también en el pre-push
+   ```
+   Demo: importa `drizzle-orm` en `booking.entity.ts`, o el `NodemailerMailer`
+   en `book-court.use-case.ts`, y lánzalo:
+   ```
+   error domain-sin-paquetes: .../booking.entity.ts → .../drizzle-orm/...
+   error application-sin-adaptadores: .../book-court.use-case.ts → .../mail.module.ts
+   ```
+
+### El momento clave: los tests
+
+- **Refactor puro.** Los 25 e2e y los 9 de integración no cambian. Sin red,
+  mover 40 ficheros de sitio habría sido imposible de revisar.
+- **Fakes, no mocks.** Un test con mocks de este caso de uso diría "se llama a
+  `findByCourtAndDate` con estos argumentos". Este dice "después de reservar,
+  la reserva está guardada y hay un correo". Si mañana el caso de uso consulta
+  de otra forma, este test sigue en verde; el de mocks se rompería sin que
+  nada fallara de verdad.
+
+### Qué discutir
+
+- **`@Injectable()` en la capa de aplicación.** Es lo único de Nest que se
+  permite ahí, y dependency-cruiser lo dice explícitamente. Es un pacto: un
+  decorador a cambio de no escribir el cableado a mano.
+- **`BookCourt` hace dos cosas:** reservar y mandar el correo. El correo no es
+  parte de reservar; es algo que pasa **porque** se ha reservado. Eso es un
+  evento (capítulo 13).
+- **Los casos de uso de lectura devuelven entities.** `ListMyBookings` devuelve
+  `Booking` con `courtName?` y `clubName?` colgando, y sigue haciendo N+1. Leer
+  y escribir con el mismo modelo es el próximo capítulo.
+- Pizarra: **25 e2e, 52 unitarios, 9 integración. e2e ~6 s, integración
+  ~5 s, unitarios ~0,5 s.**
