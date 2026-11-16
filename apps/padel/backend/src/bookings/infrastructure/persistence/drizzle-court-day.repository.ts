@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { Court } from '../../../clubs/domain/entities/court.entity';
 import { CourtId } from '../../../clubs/domain/value-objects/court-id.value-object';
 import { toCourt } from '../../../clubs/infrastructure/persistence/drizzle-court.repository';
@@ -37,7 +37,13 @@ export class DrizzleCourtDayRepository extends CourtDayRepository {
     const rows = await this.db
       .select()
       .from(bookings)
-      .where(and(eq(bookings.courtId, court.id.toNumber()), eq(bookings.date, date.toString())));
+      .where(
+        and(
+          eq(bookings.courtId, court.id.toNumber()),
+          eq(bookings.date, date.toString()),
+          isNull(bookings.cancelledAt),
+        ),
+      );
     return CourtDay.open(court, date, rows.map(toBooking), day?.version ?? 0);
   }
 
@@ -69,8 +75,17 @@ export class DrizzleCourtDayRepository extends CourtDayRepository {
 
       const booked = day.newBookings();
       if (booked.length > 0) await tx.insert(bookings).values(booked.map(toBookingRow));
-      const cancelled = day.cancelledBookings().map((b) => b.id.toNumber());
-      if (cancelled.length > 0) await tx.delete(bookings).where(inArray(bookings.id, cancelled));
+      // Las canceladas no se borran: se marcan.
+      await Promise.all(
+        day
+          .cancelledBookings()
+          .map((cancelled) =>
+            tx
+              .update(bookings)
+              .set({ cancelledAt: cancelled.cancelledOn() })
+              .where(eq(bookings.id, cancelled.id.toNumber())),
+          ),
+      );
     });
   }
 }
@@ -82,6 +97,7 @@ function toBooking(row: typeof bookings.$inferSelect): Booking {
     UserId.of(row.userId),
     CalendarDate.parse(row.date),
     TimeSlot.startingAt(TimeOfDay.parse(row.start)),
+    row.cancelledAt ?? undefined,
   );
 }
 

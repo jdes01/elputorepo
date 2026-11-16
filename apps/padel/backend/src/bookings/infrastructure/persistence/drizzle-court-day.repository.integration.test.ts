@@ -1,6 +1,8 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import { testDatabase } from '../../../../integration/database';
 import { seed } from '../../../../integration/seed';
+import { bookings } from '../../../schema';
 import { CalendarDate } from '../../../shared/domain/value-objects/calendar-date.value-object';
 import { TimeOfDay } from '../../../shared/domain/value-objects/time-of-day.value-object';
 import { CourtDayChangedMeanwhile, SlotAlreadyTaken } from '../../domain/errors/booking.errors';
@@ -44,7 +46,7 @@ describe('DrizzleCourtDayRepository', () => {
     expect(await courtDays.loadContaining(BookingId.of(999_999))).toBeUndefined();
   });
 
-  it('cancelar y guardar quita la reserva', async () => {
+  it('cancelar y guardar no borra la reserva: la marca y libera su franja', async () => {
     const court = await given.court(await given.club());
     const user = given.someUser();
     const booking = await given.booking(court, user, '2099-02-06', '10:30');
@@ -53,7 +55,10 @@ describe('DrizzleCourtDayRepository', () => {
     day.cancel(booking.id, user, now);
     await courtDays.save(day);
 
-    expect(await courtDays.loadContaining(booking.id)).toBeUndefined();
+    const [row] = await db.select().from(bookings).where(eq(bookings.id, booking.id.toNumber()));
+    expect(row?.cancelledAt).toEqual(now);
+    const reloaded = await courtDays.load(court, booking.date);
+    expect(() => reloaded.book({ id: BookingId.of(2), userId: user, start: at('10:30'), now })).not.toThrow();
   });
 
   it('dos agendas leidas a la vez: la primera se guarda, la segunda no', async () => {
@@ -72,6 +77,7 @@ describe('DrizzleCourtDayRepository', () => {
     await courtDays.save(first);
 
     await expect(courtDays.save(second)).rejects.toThrow(CourtDayChangedMeanwhile);
-    expect(await courtDays.loadContaining(lost.id)).toBeUndefined();
+    const [row] = await db.select().from(bookings).where(eq(bookings.id, lost.id.toNumber()));
+    expect(row).toBeUndefined();
   });
 });

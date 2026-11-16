@@ -14,6 +14,6 @@ nueva aparece en una conversación sobre reservas, va aquí antes que al código
 | Reserva        | `Booking`              | Una franja de una pista, un día, para un usuario.                                                                                                                   |
 | Reservar       | `CourtDay.book()`      | Ocupar una franja libre de la agenda del día. Nunca en el pasado.                                                                                                   |
 | Agenda del día | `CourtDay`             | La rejilla de una pista en un día, con cada franja libre u ocupada por su reserva. Es por donde se reserva y se cancela, también cuando llegan peticiones a la vez. |
-| Cancelar       | `CourtDay.cancel()`    | Liberar la franja. Solo quien reservó, y con 24 h de antelación como mínimo.                                                                                        |
+| Cancelar       | `CourtDay.cancel()`    | Liberar la franja. La reserva no se borra: se queda, marcada como cancelada. Solo quien reservó, y con 24 h de antelación como mínimo.                              |
 | Usuario        | `UserId`               | Quien reserva. Se identifica por su email.                                                                                                                          |
 | Hora del club  | `CLUBS_TIME_ZONE`      | Las horas de las reservas son de Madrid, esté donde esté el servidor.                                                                                               |

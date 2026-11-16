@@ -994,3 +994,53 @@ make test:integration
 - **La lectura no pasa por el aggregate.** La disponibilidad sigue saliendo de
   su finder (capítulo 11): la rejilla existe para decidir, no para listar.
 - Pizarra: **1 e2e, 60 unitarios, 23 controllers, 15 integración.**
+
+---
+
+## Capítulo 15. Cancelar deja de borrar
+
+**Tag:** `cap-15` · **Idea:** desde el capítulo 0, cancelar hacía `DELETE`. La
+reserva desaparecía, y con ella cualquier forma de saber que existió. Borrar es
+perder información; el histórico es un requisito que nadie pide hasta el día
+que hace falta (una reclamación, una estadística, un cliente que cancela
+siempre).
+
+### Qué enseñar
+
+1. **La columna** (`migrations/0002_cancelled-at.sql`): `bookings.cancelled_at`.
+2. **La reserva sabe que está cancelada** (`booking.entity.ts`):
+   `booking.cancel(by, now)` comprueba las reglas y se marca. Una cancelada no
+   se puede cancelar otra vez (`BookingAlreadyCancelled`).
+3. **La agenda distingue "existe" de "ocupa"** (`court-day.aggregate.ts`):
+   `CourtDay.open` solo coloca en la rejilla las reservas activas, y
+   `day.cancel` devuelve la reserva cancelada.
+4. **Guardar marca, no borra** (`drizzle-court-day.repository.ts`): un
+   `UPDATE ... SET cancelled_at`. Las lecturas (los dos finders y la agenda)
+   leen solo las activas.
+5. **El evento** (`booking-was-cancelled.event.ts`): `CancelBookingHandler`
+   publica `BookingWasCancelledEvent`, y un handler nuevo
+   (`send-cancellation-confirmation.handler.ts`) manda el correo de
+   cancelación.
+
+### El momento clave: los tests
+
+- En los de controllers: "la cancelada deja de salir en mis reservas, y llega el
+  correo de cancelación". Los asuntos de los correos de ese usuario son
+  `['Reserva confirmada', 'Reserva cancelada']`.
+- En integración: después de cancelar, la fila **sigue ahí** con su
+  `cancelled_at`, y la franja vuelve a estar libre.
+- Cancelar dos veces es un 404: para la agenda, una reserva cancelada ya no
+  ocupa nada que cancelar.
+
+### Qué discutir
+
+- **Añadir el correo de cancelación no ha tocado cancelar.** Un handler nuevo y
+  una línea en `onModuleInit`, la promesa del capítulo 13 cumplida.
+- **Soft delete tiene un precio.** Cada consulta que lee reservas tiene que
+  acordarse de `cancelled_at IS NULL`. Aquí son tres sitios, y los tres tienen
+  test. En una app grande es una fuente clásica de bugs; por eso conviene que
+  pocas piezas lean la tabla directamente.
+- **El histórico está, pero nadie lo enseña.** "Mis reservas" sigue mostrando
+  solo las activas. Un "historial" sería un finder nuevo, sin tocar la
+  escritura.
+- Pizarra: **1 e2e, 65 unitarios, 25 controllers, 15 integración.**

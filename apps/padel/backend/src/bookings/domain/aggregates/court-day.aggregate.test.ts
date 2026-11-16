@@ -91,6 +91,16 @@ describe('CourtDay: cancelar', () => {
     expect(() => day.cancel(booking.id, ana, new Date('2099-01-10T08:00:00Z'))).toThrow(CancellationTooLate);
   });
 
+  it('una reserva cancelada no ocupa su franja al abrir la agenda', () => {
+    const day = emptyDay();
+    const booking = bookIn(day, '10:30');
+    day.cancel(booking.id, ana, now);
+
+    const reopened = CourtDay.open(court, date, [booking], 1);
+
+    expect(() => bookIn(reopened, '10:30', luis)).not.toThrow();
+  });
+
   it('una reserva que no esta en la agenda no se cancela', () => {
     expect(() => emptyDay().cancel(BookingId.of(999), ana, now)).toThrow(BookingNotFound);
   });

@@ -36,11 +36,13 @@ export class CourtDay {
     readonly version: number,
   ) {}
 
-  // Monta la rejilla del horario de la pista y coloca en ella sus reservas.
+  // Monta la rejilla del horario de la pista y coloca en ella sus reservas. Las
+  // canceladas no ocupan franja.
   static open(court: Court, date: CalendarDate, bookings: Booking[], version: number): CourtDay {
+    const active = bookings.filter((b) => !b.isCancelled());
     const cells = court.openingHours
       .slots()
-      .map((slot) => ({ slot, booking: bookings.find((b) => b.slot.equals(slot)) }));
+      .map((slot) => ({ slot, booking: active.find((b) => b.slot.equals(slot)) }));
     return new CourtDay(court, date, cells, version);
   }
 
@@ -54,13 +56,15 @@ export class CourtDay {
     return cell.booking;
   }
 
-  cancel(bookingId: BookingId, by: UserId, now: Date): void {
+  cancel(bookingId: BookingId, by: UserId, now: Date): Booking {
     const cell = this.cells.find((c) => c.booking?.id.equals(bookingId));
     if (!cell?.booking) throw new BookingNotFound();
 
-    cell.booking.cancel(by, now);
-    this.cancelled.push(cell.booking);
+    const booking = cell.booking;
+    booking.cancel(by, now);
+    this.cancelled.push(booking);
     cell.booking = undefined;
+    return booking;
   }
 
   // Lo que ha cambiado desde que se cargo: lo que hay que guardar.

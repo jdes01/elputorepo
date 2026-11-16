@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { bookings, clubs, courts } from '../../../schema';
 import { DATABASE, type Database } from '../../../shared/infrastructure/database.module';
 import { MyBookingsFinder, type MyBookingView } from '../../application/queries/list-my-bookings/my-bookings.finder';
@@ -27,7 +27,7 @@ export class DrizzleMyBookingsFinder extends MyBookingsFinder {
       .from(bookings)
       .innerJoin(courts, eq(courts.id, bookings.courtId))
       .innerJoin(clubs, eq(clubs.id, courts.clubId))
-      .where(eq(bookings.userId, userId.toString()))
+      .where(and(eq(bookings.userId, userId.toString()), isNull(bookings.cancelledAt)))
       .orderBy(asc(bookings.date), asc(bookings.start));
   }
 }

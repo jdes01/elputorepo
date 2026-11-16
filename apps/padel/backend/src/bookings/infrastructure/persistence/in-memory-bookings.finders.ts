@@ -18,7 +18,9 @@ export class InMemoryCourtDayFinder extends CourtDayFinder {
   async find(courtId: CourtId, date: CalendarDate): Promise<CourtDayView | undefined> {
     const court = await this.courts.findById(courtId);
     if (!court) return undefined;
-    const booked = this.courtDays.allBookings().filter((b) => b.courtId.equals(courtId) && b.date.equals(date));
+    const booked = this.courtDays
+      .allBookings()
+      .filter((b) => b.courtId.equals(courtId) && b.date.equals(date) && !b.isCancelled());
     return {
       opens: court.openingHours.opens.toString(),
       closes: court.openingHours.closes.toString(),
@@ -37,7 +39,7 @@ export class InMemoryMyBookingsFinder extends MyBookingsFinder {
   }
 
   async ofUser(userId: UserId): Promise<MyBookingView[]> {
-    const mine = this.courtDays.allBookings().filter((b) => b.userId.equals(userId));
+    const mine = this.courtDays.allBookings().filter((b) => b.userId.equals(userId) && !b.isCancelled());
     const views = mine.map((b) => {
       const court = this.courts.all().find((c) => c.id.equals(b.courtId))!;
       const club = this.clubs.all().find((c) => c.id.equals(court.clubId))!;

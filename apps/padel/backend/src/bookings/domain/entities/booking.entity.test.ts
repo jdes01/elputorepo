@@ -3,7 +3,12 @@ import { CourtId } from '../../../clubs/domain/value-objects/court-id.value-obje
 import { CalendarDate } from '../../../shared/domain/value-objects/calendar-date.value-object';
 import { TimeOfDay } from '../../../shared/domain/value-objects/time-of-day.value-object';
 import { TimeSlot } from '../../../shared/domain/value-objects/time-slot.value-object';
-import { BookingInThePast, CancellationTooLate, NotBookingOwner } from '../errors/booking.errors';
+import {
+  BookingAlreadyCancelled,
+  BookingInThePast,
+  CancellationTooLate,
+  NotBookingOwner,
+} from '../errors/booking.errors';
 import { BookingId } from '../value-objects/booking-id.value-object';
 import { UserId } from '../value-objects/user-id.value-object';
 import { Booking } from './booking.entity';
@@ -35,8 +40,20 @@ describe('Booking.book', () => {
 });
 
 describe('Booking.cancel', () => {
-  it('la cancela quien la hizo, con 24 h de antelacion', () => {
-    expect(() => book({ on: '2026-11-21', at: '10:30' }).cancel(ana, now)).not.toThrow();
+  it('la cancela quien la hizo, con 24 h de antelacion, y queda marcada', () => {
+    const booking = book({ on: '2026-11-21', at: '10:30' });
+
+    booking.cancel(ana, now);
+
+    expect(booking.isCancelled()).toBe(true);
+    expect(booking.cancelledOn()).toEqual(now);
+  });
+
+  it('una cancelada no se cancela otra vez', () => {
+    const booking = book({ on: '2026-11-21', at: '10:30' });
+    booking.cancel(ana, now);
+
+    expect(() => booking.cancel(ana, now)).toThrow(BookingAlreadyCancelled);
   });
 
   it('nadie mas puede cancelarla', () => {

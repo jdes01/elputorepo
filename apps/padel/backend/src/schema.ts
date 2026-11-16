@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, integer, pgTable, primaryKey, serial, text } from 'drizzle-orm/pg-core';
+import { check, integer, pgTable, primaryKey, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 // La fuente de verdad del schema. drizzle-kit genera migrations/ comparando este
 // fichero con el ultimo snapshot.
@@ -34,6 +34,8 @@ export const bookings = pgTable('bookings', {
   date: text().notNull(),
   start: text().notNull(),
   end: text().notNull(),
+  // Una reserva cancelada no se borra: se queda, con cuando se cancelo.
+  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
 });
 
 // La version de la agenda de cada pista y dia (el aggregate CourtDay). Cada

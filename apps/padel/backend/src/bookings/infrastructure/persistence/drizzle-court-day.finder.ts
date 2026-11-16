@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import type { CourtId } from '../../../clubs/domain/value-objects/court-id.value-object';
 import { bookings, courts } from '../../../schema';
 import type { CalendarDate } from '../../../shared/domain/value-objects/calendar-date.value-object';
@@ -22,7 +22,9 @@ export class DrizzleCourtDayFinder extends CourtDayFinder {
     const booked = await this.db
       .select({ start: bookings.start })
       .from(bookings)
-      .where(and(eq(bookings.courtId, courtId.toNumber()), eq(bookings.date, date.toString())));
+      .where(
+        and(eq(bookings.courtId, courtId.toNumber()), eq(bookings.date, date.toString()), isNull(bookings.cancelledAt)),
+      );
     return { ...court, bookedStarts: booked.map((b) => b.start) };
   }
 }

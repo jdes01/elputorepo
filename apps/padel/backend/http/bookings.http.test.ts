@@ -96,6 +96,27 @@ describe('DELETE /bookings/:id', () => {
     expect(slots).toContainEqual({ start: '10:30', end: '12:00', free: true });
   });
 
+  it('la cancelada deja de salir en mis reservas, y llega el correo de cancelacion', async () => {
+    const court = await givenCourt();
+    const user = someUser();
+    const booking = (await book(court.id, user)).body;
+
+    await app.call('DELETE', `/bookings/${booking.id}`, { user });
+
+    expect((await app.call('GET', '/me/bookings', { user })).body).toEqual([]);
+    const mails = app.mailer.sent.filter((mail) => mail.to === user).map((mail) => mail.subject);
+    expect(mails).toEqual(['Reserva confirmada', 'Reserva cancelada']);
+  });
+
+  it('404 si se cancela dos veces', async () => {
+    const court = await givenCourt();
+    const user = someUser();
+    const booking = (await book(court.id, user)).body;
+    await app.call('DELETE', `/bookings/${booking.id}`, { user });
+
+    expect((await app.call('DELETE', `/bookings/${booking.id}`, { user })).status).toBe(404);
+  });
+
   it('403 si la reserva es de otro', async () => {
     const court = await givenCourt();
     const booking = (await book(court.id, someUser())).body;

@@ -1,22 +1,32 @@
 import { Injectable } from '@nestjs/common';
+import { EventBus } from '../../../../shared/application/event-bus';
 import { BookingNotFound } from '../../../domain/errors/booking.errors';
+import { BookingWasCancelledEvent } from '../../../domain/events/booking-was-cancelled.event';
 import { CourtDayRepository } from '../../../domain/repositories/court-day.repository';
 import { retryWhenCourtDayChanges } from '../retry-when-court-day-changes';
 import type { CancelBookingCommand } from './cancel-booking.command';
 
 @Injectable()
 export class CancelBookingHandler {
-  constructor(private readonly courtDays: CourtDayRepository) {}
+  constructor(
+    private readonly courtDays: CourtDayRepository,
+    private readonly events: EventBus,
+  ) {}
 
   async execute({ userId, bookingId }: CancelBookingCommand): Promise<void> {
     const now = new Date();
 
-    await retryWhenCourtDayChanges(async () => {
+    const booking = await retryWhenCourtDayChanges(async () => {
       const day = await this.courtDays.loadContaining(bookingId);
       if (!day) throw new BookingNotFound();
-      day.cancel(bookingId, userId, now);
+      const cancelled = day.cancel(bookingId, userId, now);
       await this.courtDays.save(day);
+      return cancelled;
     });
     console.log('reserva cancelada', bookingId.toNumber());
+
+    await this.events.publish(
+      new BookingWasCancelledEvent(booking.id, booking.courtId, booking.userId, booking.date, booking.slot, now),
+    );
   }
 }

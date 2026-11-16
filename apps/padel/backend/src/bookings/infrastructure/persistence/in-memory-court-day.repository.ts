@@ -22,7 +22,9 @@ export class InMemoryCourtDayRepository extends CourtDayRepository {
   }
 
   async load(court: Court, date: CalendarDate): Promise<CourtDay> {
-    const ofTheDay = this.allBookings().filter((b) => b.courtId.equals(court.id) && b.date.equals(date));
+    const ofTheDay = this.allBookings().filter(
+      (b) => b.courtId.equals(court.id) && b.date.equals(date) && !b.isCancelled(),
+    );
     return CourtDay.open(court, date, ofTheDay, this.versions.get(keyOf(court, date)) ?? 0);
   }
 
@@ -37,7 +39,8 @@ export class InMemoryCourtDayRepository extends CourtDayRepository {
     if ((this.versions.get(key) ?? 0) !== day.version) throw new CourtDayChangedMeanwhile();
     this.versions.set(key, day.version + 1);
     for (const b of day.newBookings()) this.bookings.set(b.id.toNumber(), b);
-    for (const b of day.cancelledBookings()) this.bookings.delete(b.id.toNumber());
+    // Las canceladas se quedan, marcadas.
+    for (const b of day.cancelledBookings()) this.bookings.set(b.id.toNumber(), b);
   }
 
   // Fuera del puerto: lo leen los finders en memoria.

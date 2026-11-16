@@ -24,6 +24,12 @@ export class NotBookingOwner extends DomainError {
   }
 }
 
+export class BookingAlreadyCancelled extends DomainError {
+  constructor() {
+    super('la reserva ya esta cancelada');
+  }
+}
+
 export class CancellationTooLate extends DomainError {
   constructor() {
     super('solo se cancela con 24h de antelacion');
