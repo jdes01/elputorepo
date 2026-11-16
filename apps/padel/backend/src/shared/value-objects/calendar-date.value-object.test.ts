@@ -16,9 +16,15 @@ describe('CalendarDate', () => {
     expect(CalendarDate.parse('2028-02-29').toString()).toBe('2028-02-29');
   });
 
-  it('da el instante de una hora de ese dia', () => {
-    const instant = CalendarDate.parse('2026-11-20').at(TimeOfDay.parse('10:30'));
+  it('da el instante de una hora de ese dia en una zona horaria', () => {
+    const instant = CalendarDate.parse('2026-11-20').at(TimeOfDay.parse('10:30'), 'Europe/Madrid');
 
-    expect(instant).toEqual(new Date(2026, 10, 20, 10, 30));
+    expect(instant).toEqual(new Date('2026-11-20T09:30:00Z'));
+  });
+
+  it('tiene en cuenta el horario de verano', () => {
+    const instant = CalendarDate.parse('2026-07-20').at(TimeOfDay.parse('10:30'), 'Europe/Madrid');
+
+    expect(instant).toEqual(new Date('2026-07-20T08:30:00Z'));
   });
 });

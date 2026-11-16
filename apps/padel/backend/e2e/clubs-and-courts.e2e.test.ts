@@ -57,10 +57,10 @@ describe('crear pista', () => {
     expect(res.status).toBe(400);
   });
 
-  it('revienta con 500 si el club no existe', async () => {
+  it('responde 404 si el club no existe', async () => {
     const res = await api('POST', '/clubs/999999/courts', { body: { name: 'Pista', opens: '09:00', closes: '22:00' } });
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
   });
 
   it('responde 400 si el id del club no es un numero', async () => {

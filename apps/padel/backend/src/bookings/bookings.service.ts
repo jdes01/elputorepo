@@ -1,15 +1,37 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
-import { type ClubRow, type Court, courtFromRow, type CourtRow } from '../clubs/club.model';
+import { CourtNotFound } from '../clubs/club.errors';
+import { type ClubRow, courtFromRow, type CourtRow } from '../clubs/clubs.service';
+import type { Court, SlotAvailability } from '../clubs/court.entity';
 import { ClubName } from '../clubs/value-objects/club-name.value-object';
-import type { CourtId } from '../clubs/value-objects/court-id.value-object';
-import type { CalendarDate } from '../shared/value-objects/calendar-date.value-object';
-import type { TimeOfDay } from '../shared/value-objects/time-of-day.value-object';
+import { CourtId } from '../clubs/value-objects/court-id.value-object';
 import { Mailer } from '../mail.module';
+import { CalendarDate } from '../shared/value-objects/calendar-date.value-object';
+import { TimeOfDay } from '../shared/value-objects/time-of-day.value-object';
 import { TimeSlot } from '../shared/value-objects/time-slot.value-object';
-import { type Booking, bookingFromRow, type BookingRow, type Slot } from './booking.model';
-import type { BookingId } from './value-objects/booking-id.value-object';
-import type { UserId } from './value-objects/user-id.value-object';
+import { Booking } from './booking.entity';
+import { BookingNotFound } from './booking.errors';
+import { BookingId } from './value-objects/booking-id.value-object';
+import { UserId } from './value-objects/user-id.value-object';
+
+interface BookingRow {
+  id: number;
+  court_id: number;
+  user_id: string;
+  date: string;
+  start: string;
+  end: string;
+}
+
+function bookingFromRow(row: BookingRow): Booking {
+  return Booking.restore(
+    BookingId.of(row.id),
+    CourtId.of(row.court_id),
+    UserId.of(row.user_id),
+    CalendarDate.parse(row.date),
+    TimeSlot.startingAt(TimeOfDay.parse(row.start)),
+  );
+}
 
 @Injectable()
 export class BookingsService {
@@ -20,28 +42,30 @@ export class BookingsService {
 
   async book(userId: UserId, courtId: CourtId, date: CalendarDate, start: TimeOfDay): Promise<Booking> {
     const court = await this.findCourt(courtId);
-    if (!court) throw new HttpException('la pista no existe', 404);
+    if (!court) throw new CourtNotFound();
 
-    const slot = TimeSlot.startingAt(start);
+    const booking = Booking.book({
+      id: BookingId.of(await this.nextId()),
+      court,
+      userId,
+      date,
+      start,
+      taken: await this.findBookingsOn(courtId, date),
+      now: new Date(),
+    });
 
-    if (!court.openingHours.contains(slot)) {
-      throw new HttpException('fuera del horario de la pista', 400);
-    }
-
-    if (date.at(slot.start) < new Date()) {
-      throw new HttpException('no se puede reservar en el pasado', 400);
-    }
-
-    const existing = await this.findBookingsOn(courtId, date);
-    if (existing.some((b) => b.slot.overlaps(slot))) {
-      throw new HttpException('la pista ya esta reservada a esa hora', 409);
-    }
-
-    const r = await this.db.query<BookingRow>(
-      'INSERT INTO bookings (court_id, user_id, date, start, "end") VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [courtId.toNumber(), userId.toString(), date.toString(), slot.start.toString(), slot.end.toString()],
+    await this.db.query(
+      'INSERT INTO bookings (id, court_id, user_id, date, start, "end") VALUES ($1, $2, $3, $4, $5, $6)',
+      [
+        booking.id.toNumber(),
+        booking.courtId.toNumber(),
+        booking.userId.toString(),
+        booking.date.toString(),
+        booking.slot.start.toString(),
+        booking.slot.end.toString(),
+      ],
     );
-    console.log('reserva creada', r.rows[0]);
+    console.log('reserva creada', booking.id.toNumber());
 
     // correo de confirmacion
     const club = (await this.db.query<ClubRow>('SELECT * FROM clubs WHERE id = $1', [court.clubId.toNumber()]))
@@ -49,31 +73,28 @@ export class BookingsService {
     await this.mailer.send(
       userId.toString(),
       'Reserva confirmada',
-      `<h1>Reserva confirmada</h1><p>${club.name} - ${court.name}</p><p>${date} de ${slot.start} a ${slot.end}</p>`,
+      `<h1>Reserva confirmada</h1><p>${club.name} - ${court.name}</p><p>${date} de ${booking.slot.start} a ${booking.slot.end}</p>`,
     );
 
-    return bookingFromRow(r.rows[0]!);
+    return booking;
   }
 
   async cancel(userId: UserId, id: BookingId): Promise<void> {
     const row = (await this.db.query<BookingRow>('SELECT * FROM bookings WHERE id = $1', [id.toNumber()])).rows[0];
-    if (!row) throw new HttpException('la reserva no existe', 404);
-    const b = bookingFromRow(row);
-    if (!b.userId.equals(userId)) throw new HttpException('no es tu reserva', 403);
+    if (!row) throw new BookingNotFound();
 
-    const hours = (b.date.at(b.slot.start).getTime() - Date.now()) / 1000 / 60 / 60;
-    if (hours < 24) throw new HttpException('solo se cancela con 24h de antelacion', 400);
+    bookingFromRow(row).cancel(userId, new Date());
 
     await this.db.query('DELETE FROM bookings WHERE id = $1', [id.toNumber()]);
     console.log('reserva cancelada', id.toNumber());
   }
 
-  async availability(courtId: CourtId, date: CalendarDate): Promise<Slot[]> {
+  async availability(courtId: CourtId, date: CalendarDate): Promise<SlotAvailability[]> {
     const court = await this.findCourt(courtId);
-    if (!court) throw new Error('la pista no existe');
+    if (!court) throw new CourtNotFound();
     const bookings = await this.findBookingsOn(courtId, date);
 
-    return court.openingHours.slots().map((slot) => ({ slot, free: !bookings.some((b) => b.slot.overlaps(slot)) }));
+    return court.availability(bookings.map((b) => b.slot));
   }
 
   async myBookings(userId: UserId): Promise<Booking[]> {
@@ -106,5 +127,10 @@ export class BookingsService {
       date.toString(),
     ]);
     return r.rows.map(bookingFromRow);
+  }
+
+  private async nextId(): Promise<number> {
+    const r = await this.db.query<{ id: string }>("SELECT nextval(pg_get_serial_sequence('bookings', 'id')) AS id");
+    return Number(r.rows[0]!.id);
   }
 }

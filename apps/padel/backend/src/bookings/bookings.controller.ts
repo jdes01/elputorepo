@@ -12,7 +12,8 @@ import { CourtId } from '../clubs/value-objects/court-id.value-object';
 import { CalendarDate } from '../shared/value-objects/calendar-date.value-object';
 import { TimeOfDay } from '../shared/value-objects/time-of-day.value-object';
 import { ZodPipe } from '../zod.pipe';
-import type { Booking, Slot } from './booking.model';
+import type { SlotAvailability } from '../clubs/court.entity';
+import type { Booking } from './booking.entity';
 import { BookingsService } from './bookings.service';
 import { BookingId } from './value-objects/booking-id.value-object';
 import { UserId } from './value-objects/user-id.value-object';
@@ -87,6 +88,6 @@ function toMyBookingResponse(booking: Booking): MyBookingResponse {
   };
 }
 
-function toSlotResponse({ slot, free }: Slot): SlotResponse {
+function toSlotResponse({ slot, free }: SlotAvailability): SlotResponse {
   return { start: slot.start.toString(), end: slot.end.toString(), free };
 }

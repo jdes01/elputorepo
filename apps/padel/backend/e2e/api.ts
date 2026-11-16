@@ -48,16 +48,5 @@ export function daysFromNow(days: number) {
   return formatDate(d);
 }
 
-// Una franja que empieza dentro de menos de 24 h, en una pista abierta 00:00-23:59.
-export function slotWithinNext24h() {
-  const t = new Date(Date.now() + 2 * 60 * 60 * 1000);
-  // La franja tiene que acabar antes de las 23:59: si no cabe hoy, la primera de manana.
-  if (t.getHours() * 60 + t.getMinutes() > 22 * 60) {
-    t.setDate(t.getDate() + 1);
-    t.setHours(0, 30);
-  }
-  return { date: formatDate(t), start: `${pad(t.getHours())}:${pad(t.getMinutes())}` };
-}
-
 const pad = (n: number) => String(n).padStart(2, '0');
 const formatDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;

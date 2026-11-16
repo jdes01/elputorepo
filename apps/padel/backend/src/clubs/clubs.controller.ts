@@ -9,7 +9,8 @@ import {
 import type { z } from 'zod';
 import { TimeOfDay } from '../shared/value-objects/time-of-day.value-object';
 import { ZodPipe } from '../zod.pipe';
-import type { Club, Court } from './club.model';
+import type { Club } from './club.entity';
+import type { Court } from './court.entity';
 import { ClubsService } from './clubs.service';
 import { ClubId } from './value-objects/club-id.value-object';
 import { ClubName } from './value-objects/club-name.value-object';

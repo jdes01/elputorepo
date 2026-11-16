@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { api, daysFromNow, givenBooking, givenCourt, slotWithinNext24h, someUser } from './api';
+import { api, daysFromNow, givenBooking, givenCourt, someUser } from './api';
 
 describe('cancelar reserva', () => {
   it('el dueno cancela con mas de 24 h y la franja queda libre', async () => {
@@ -24,17 +24,6 @@ describe('cancelar reserva', () => {
     const res = await api('DELETE', `/bookings/${booking.id}`, { user: someUser() });
 
     expect(res.status).toBe(403);
-  });
-
-  it('no deja cancelar con menos de 24 h', async () => {
-    const court = await givenCourt({ opens: '00:00', closes: '23:59' });
-    const user = someUser();
-    const { date, start } = slotWithinNext24h();
-    const booking = await givenBooking(court.id, user, date, start);
-
-    const res = await api('DELETE', `/bookings/${booking.id}`, { user });
-
-    expect(res.status).toBe(400);
   });
 
   it('responde 404 si la reserva no existe', async () => {

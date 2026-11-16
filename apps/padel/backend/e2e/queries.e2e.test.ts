@@ -33,6 +33,12 @@ describe('ver disponibilidad', () => {
 
     expect(res.status).toBe(400);
   });
+
+  it('responde 404 si la pista no existe', async () => {
+    const res = await api('GET', `/courts/999999/availability?date=${daysFromNow(3)}`);
+
+    expect(res.status).toBe(404);
+  });
 });
 
 describe('ver mis reservas', () => {

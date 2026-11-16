@@ -15,9 +15,10 @@ export class CalendarDate {
     }
   }
 
-  // El instante en que empieza `time` ese dia, en la zona horaria del servidor.
-  at(time: TimeOfDay): Date {
-    return new Date(`${this}T${time}`);
+  // El instante en que empieza `time` ese dia, en `timeZone`.
+  at(time: TimeOfDay, timeZone: string): Date {
+    const zoned = this.date.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from(time.toString()) });
+    return new Date(zoned.epochMilliseconds);
   }
 
   equals(other: CalendarDate): boolean {

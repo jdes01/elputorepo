@@ -501,3 +501,92 @@ viven en un solo sitio y se prueban sin BD.
   cosa de las entities (capítulo 8).
 - Pizarra: **29 e2e, 29 unitarios, 0 integración. e2e ~5 s, unitarios
   ~0,25 s.** Por primera vez la pirámide tiene base.
+
+---
+
+## Capítulo 8. Entities: las reglas tienen dueño
+
+**Tag:** `cap-08` · **Idea:** un value object sabe de un valor; una entity
+sabe de una cosa que vive en el tiempo y tiene identidad. Las reglas de "quién
+puede hacer qué y cuándo" van en la entity, con nombres del dominio. El service
+deja de decidir: carga, pide a la entity y guarda.
+
+### Qué enseñar
+
+1. Las tres entities (`club.entity.ts`, `court.entity.ts`, `booking.entity.ts`):
+   constructor privado y **named constructors** que dicen qué está pasando.
+   - `Club.register`, `Court.open(id, club, ...)`, `Booking.book({...})`:
+     nacen y aplican las reglas de alta.
+   - `restore(...)`: reconstruyen una que ya existía, sin reglas.
+2. **Métodos de dominio**:
+   - `court.slotAt(start)`: solo hay franjas en la rejilla. Reservar a las
+     10:00 en una pista que abre a las 09:00 ya no se puede.
+   - `court.availability(taken)`: la disponibilidad del día.
+   - `booking.cancel(by, now)`: el dueño, con 24 h.
+   - `Booking.book` comprueba la rejilla, el pasado y las franjas ya reservadas.
+3. **`now` es un parámetro.** La entity no lee el reloj; se lo pasan. Por eso
+   "no se cancela con menos de 24 h" se prueba con una fecha fija, sin esperar
+   a que sea mañana.
+4. **La identidad nace con la entity.** El id sale de la secuencia de la tabla
+   antes de crearla (`nextId`), no al guardarla.
+5. **Errores de dominio** (`club.errors.ts`, `booking.errors.ts`):
+   `SlotAlreadyTaken`, `CancellationTooLate`... sin un solo código HTTP. Un
+   único filtro, `domain-error.filter.ts`, los traduce. El service ya no sabe de
+   HTTP.
+6. **La hora del club.** `CalendarDate.at(time, timeZone)` y `CLUBS_TIME_ZONE`:
+   una reserva a las 10:30 es a las 10:30 de Madrid, esté el servidor donde
+   esté. El test del horario de verano lo demuestra.
+7. `GLOSSARY.md`: cada término del dominio y su nombre en el código.
+
+### El momento clave: los tests
+
+Lanza los e2e del capítulo 7 contra este código:
+
+```sh
+git checkout cap-08
+git checkout cap-07 -- apps/padel/backend/e2e
+make test:e2e
+git checkout cap-08 -- apps/padel/backend/e2e
+```
+
+```
+× revienta con 500 si el club no existe              expected 404 to be 500
+× rechaza una franja que se solapa con otra reserva  expected 400 to be 409
+Tests  2 failed | 27 passed (29)
+```
+
+- El primero es un pecado arreglado: un club que no existe es un 404.
+- El segundo es más interesante. El test reservaba a las 11:00 encima de una
+  reserva de las 10:30. Con la rejilla, las 11:00 no es una franja: se rechaza
+  antes de mirar solapes. **Una regla nueva del dominio cambió lo que significa
+  un test viejo.** Ahora reserva la misma franja.
+
+Y la pirámide **se recorta por arriba**. Con las reglas en las entities y sus
+unitarios, salen de los e2e los que solo probaban reglas: "justo cuando acaba
+la anterior", "acaba después del cierre", "empieza antes de abrir" y "menos de
+24 h". Quedan los que solo se ven desde HTTP: un camino por caso de uso, un
+test por cada código de estado, la validación y el correo.
+
+```sh
+make test:unit     # 46 en ~350 ms
+make test:e2e      # 26 en ~6 s
+```
+
+### Qué discutir
+
+- **¿Dónde está la regla de solapes?** En `Booking.book`, pero necesita las
+  otras reservas (`taken`). Quien se las pasa es el service, que las lee de la
+  BD. Si dos peticiones leen a la vez, ninguna ve la otra: la carrera sigue ahí.
+  Una entity protege sus reglas dentro de sí misma; las que cruzan varias
+  instancias necesitan algo más (capítulo 14).
+- **`Booking` sigue teniendo `courtName?` y `clubName?`.** Una entity con
+  campos que solo existen para una pantalla. Es el "un solo modelo para todo"
+  del capítulo 6, ahora más visible: la entity carga con la vista.
+- **El service ya casi no hace nada** más que SQL y orquestar. Los
+  repositorios (capítulo 9) se llevan el SQL; los casos de uso (capítulo 10),
+  la orquestación.
+- **La petición espera al correo.** Mira los tiempos de los e2e: reservar
+  tarda más de 100 ms y casi todo es SMTP. Es el pecado del capítulo 1 dando
+  la cara (se discute en el capítulo 13).
+- Pizarra: **26 e2e, 46 unitarios, 0 integración. e2e ~6 s, unitarios
+  ~0,35 s.** Por primera vez hay menos e2e que antes y más tests en total.
