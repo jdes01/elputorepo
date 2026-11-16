@@ -11,7 +11,7 @@ MISE := $(shell command -v mise 2>/dev/null || echo $(HOME)/.local/bin/mise)
 TASK := $(MISE) exec -- node_modules/.bin/task
 PSQL := docker compose exec postgres psql -U postgres padel
 
-.PHONY: help setup up down logs psql reset migrate read-model dev images app lint format format\:check typecheck deps\:check build test test\:unit test\:http test\:integration test\:e2e
+.PHONY: help setup up down logs psql reset migrate read-model dev images app observability lint format format\:check typecheck deps\:check build test test\:unit test\:http test\:integration test\:e2e
 
 help: ## Esta lista
 	@sed -nE 's/^([a-zA-Z_-]+(\\:[a-zA-Z_-]+)?):[^#]*## (.*)/\1\t\3/p' $(MAKEFILE_LIST) | sed 's/\\//' | awk -F'\t' '{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -24,8 +24,11 @@ setup: ## Primera vez: node, dependencias y git hooks
 up: ## Levanta postgres (idempotente)
 	docker compose up -d --wait
 
-down: ## Para todo lo del compose, con o sin app (conserva los datos)
-	docker compose --profile app down
+observability: ## Levanta Grafana, Loki, Tempo y Prometheus (http://localhost:3001)
+	docker compose up -d lgtm
+
+down: ## Para todo lo del compose (conserva los datos)
+	docker compose --profile '*' down
 
 logs: ## Logs de postgres
 	docker compose logs -f postgres
@@ -34,7 +37,7 @@ psql: ## Consola de la BD
 	$(PSQL)
 
 reset: ## Borra la BD, la levanta vacia y la migra
-	docker compose --profile app down -v
+	docker compose --profile '*' down -v
 	docker compose up -d --wait
 	$(TASK) migrate
 

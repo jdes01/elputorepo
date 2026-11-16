@@ -1458,3 +1458,90 @@ En los tests:
   error de la app: es una pieza degradada. El nivel decide qué despierta a
   alguien a las tres de la mañana.
 - Pizarra: **1 e2e, 70 unitarios, 27 controllers, 22 integración.**
+
+---
+
+## Capítulo 21. Grafana, Loki, Tempo, Prometheus y OpenTelemetry
+
+**Tag:** `cap-21` · **Idea:** los logs dicen _qué_ pasó; no dicen _dónde se fue
+el tiempo_. OpenTelemetry añade las otras dos señales (trazas y métricas) y
+enlaza las tres con un identificador: el `trace_id`. Todo llega a una sola
+imagen, `grafana/otel-lgtm`: Grafana, Loki (logs), Tempo (trazas), Prometheus
+(métricas) y un colector OTLP.
+
+### Qué enseñar
+
+1. **El compose** (`docker-compose.yml`): un servicio `lgtm` con la versión
+   fijada, en un perfil (`make observability`): la imagen pesa casi 4 GB y para
+   tocar el backend no hace falta. Grafana en `localhost:3001`, el colector en
+   `4318` (OTLP por HTTP). `make down` y `make reset` pasan a
+   `--profile '*'`, para parar también este.
+2. **El SDK** (`src/instrumentation.ts`): `NodeSDK` con las instrumentaciones de
+   http, express, nest, `pg`, `mongodb`, `redis` y `pino`. Se importa **el
+   primero** en `main.ts`, porque parchean cada librería cuando se carga y lo
+   que ya estaba cargado no se parchea. Las de Mongo y Redis son dos líneas: el
+   driver y el cliente que ya usamos tienen instrumentación, y con ellas la
+   traza enseña las dos bases de datos que añadimos en los capítulos 16 y 17.
+3. **Un solo interruptor**: `OTEL_EXPORTER_OTLP_ENDPOINT`. Sin ella no arranca
+   nada y la app va igual; los tests nunca la necesitan. Con ella, el SDK exporta
+   trazas, métricas y logs a esa dirección. `config.ts` la valida como el resto
+   (`config.test.ts`: sin ella es válida, con una URL se usa, con otra cosa la
+   app no arranca).
+   `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 make dev`.
+4. **Un span a mano para el correo** (`mail.module.ts`): nodemailer no tiene
+   instrumentación, así que `smtp.send` envuelve `sendMail`. Sin SDK, la API de
+   OpenTelemetry no hace nada: es una llamada gratis.
+5. **Logs con `trace_id`**: la instrumentación de pino añade `trace_id` y
+   `span_id` a cada línea y la manda también a Loki. Los dos ids conviven: el
+   `correlationId` del capítulo anterior nace en el cliente o en el borde; el
+   `trace_id` lo entiende Tempo.
+
+### El momento clave: qué buscar en Grafana
+
+`make up` y `make observability`, el backend con la variable, una reserva, la
+disponibilidad dos veces y "mis reservas". En Grafana, _Explore_:
+
+- **Tempo, una reserva entera.** `{ name = "POST /bookings" }`. Unos 120 ms, y
+  se lee el capítulo 13 al 17 de un vistazo: las consultas de la agenda a
+  Postgres, la escritura entre `BEGIN` y `COMMIT`, y después lo que cuelga de
+  los eventos: `update court_days` y `update my_bookings` en Mongo (el
+  proyector), `redis-DEL court-day:...` (la invalidación de la caché) y
+  `smtp.send`, unos 50 ms con Mailpit. Todo **dentro de la petición**: quien
+  reserva espera al correo y al modelo de lectura, porque el event bus es en
+  proceso. Con un SMTP de verdad serían segundos, y esa es la conversación para
+  el siguiente paso (una cola).
+- **Tempo, la caché funcionando.** `{ name =~ "GET .*availability" }`. La
+  primera lectura: `redis-GET` (falla), `find courts` y `find court_days` en
+  Mongo, y `redis-SET`. La de después de reservar, lo mismo, porque la reserva
+  la invalidó. Una tercera sería solo `redis-GET`.
+- **Tempo, "mis reservas".** `{ name = "GET /me/bookings" }`: un solo
+  `find my_bookings`, ni una consulta a Postgres. El N+1 del capítulo 6 se
+  arregló con un JOIN en el 11 y desapareció del todo con el modelo de lectura
+  del 16, y aquí se ve sin leer el código.
+- **Loki, los logs con su traza.**
+  `{service_name="padel-backend"} | correlationId="clase-21"`. Cada línea trae
+  `correlationId`, `trace_id` y `bookingId`; desde el `trace_id` se salta a la
+  traza en Tempo, y desde la traza se llega a sus logs.
+- **Prometheus, métricas.** `http_server_request_duration_seconds_count` por
+  `http_route` y, para el p95 por ruta:
+  `histogram_quantile(0.95, sum by (le, http_route) (rate(http_server_request_duration_seconds_bucket[5m])))`.
+  Las métricas se exportan cada 60 s por defecto (`OTEL_METRIC_EXPORT_INTERVAL=5000`
+  lo baja a 5 s para la clase).
+
+### Qué discutir
+
+- **Tres señales, un identificador.** Un log aislado no tiene contexto, una
+  métrica agregada no tiene detalle y una traza no dice qué se escribió. El
+  `trace_id` es lo que las une.
+- **Autoinstrumentación vs. spans a mano.** Lo que tiene instrumentación (http,
+  pg, mongodb, redis) sale gratis; lo que no (el correo) se envuelve a mano. Se
+  desactivan los spans de cada middleware de express (`ignoreLayersType`): un
+  span por capa esconde lo que se quiere ver.
+- **La traza como herramienta de diseño, no solo de operación.** Aquí vale para
+  comprobar un refactor: el número de consultas de una petición, o si una
+  lectura toca la caché, es un hecho observable, no una opinión.
+- **Cardinalidad.** `http.route` es `/courts/:courtId/availability`;
+  `http.target` sería `/courts/1/availability?date=...`, una etiqueta distinta
+  por petición que mata a Prometheus.
+- **Qué falta:** muestreo (hoy se exporta todo), alertas y dashboards.
+- Pizarra: **1 e2e, 73 unitarios, 27 controllers, 22 integración.**

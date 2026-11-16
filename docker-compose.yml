@@ -79,3 +79,16 @@ services:
       - '8080:8080'
     depends_on:
       api: { condition: service_healthy }
+
+  # Grafana, Tempo, Loki y Prometheus con un colector de OpenTelemetry, en una
+  # sola imagen. Grafana en :3001; el colector recibe OTLP en 4317 (gRPC) y 4318
+  # (HTTP). El backend lo usa con OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318.
+  # Es un perfil: la imagen pesa casi 4 GB y para trabajar en el backend no
+  # hace falta. `make observability` la levanta.
+  lgtm:
+    image: grafana/otel-lgtm:0.35.0
+    profiles: [observability]
+    ports:
+      - '3001:3000'
+      - '4317:4317'
+      - '4318:4318'
