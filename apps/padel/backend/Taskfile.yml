@@ -27,6 +27,10 @@ tasks:
     desc: Unitarios (sin BD ni red)
     cmds: [node_modules/.bin/vitest run --config vitest.config.mts]
 
+  test:integration:
+    desc: Repositorios contra un postgres de usar y tirar (necesita docker)
+    cmds: [node_modules/.bin/vitest run --config vitest.integration.config.mts]
+
   test:e2e:
     desc: e2e de API contra la app compilada y un postgres de usar y tirar (necesita docker)
     deps: [build]

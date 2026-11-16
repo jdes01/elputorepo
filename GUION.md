@@ -590,3 +590,62 @@ make test:e2e      # 26 en ~6 s
   la cara (se discute en el capítulo 13).
 - Pizarra: **26 e2e, 46 unitarios, 0 integración. e2e ~6 s, unitarios
   ~0,35 s.** Por primera vez hay menos e2e que antes y más tests en total.
+
+---
+
+## Capítulo 9. Repositorios: puertos y adaptadores
+
+**Tag:** `cap-09` · **Idea:** el dominio dice qué necesita guardar y buscar
+(un puerto); otra pieza decide cómo (un adaptador). Los services dejan de
+saber que existe SQL.
+
+### Qué enseñar
+
+1. **Los puertos** (`club.repository.ts`, `court.repository.ts`,
+   `booking.repository.ts`): clases abstractas con lo que el dominio necesita,
+   en su idioma. `findByCourtAndDate`, `findByUser`, `nextId`. Reciben y
+   devuelven **entities**, nunca filas.
+2. **Los adaptadores** (`drizzle-*.repository.ts`): el puerto sobre Postgres,
+   con drizzle. Es el único sitio que sabe que una reserva es una fila de
+   `bookings`. Las funciones fila → entity (`toBooking`) viven aquí.
+3. **El cableado** (`clubs.module.ts`):
+   ```ts
+   { provide: ClubRepository, useClass: DrizzleClubRepository }
+   ```
+   El service pide `ClubRepository` y Nest le da el de drizzle. Es una clase
+   abstracta y no una interface porque las interfaces de TypeScript no existen
+   en runtime y Nest necesita algo con lo que buscar.
+4. **Los services ya no tienen SQL.** Compara `bookings.service.ts` con el del
+   capítulo 8: cargar, pedir a la entity y guardar. Las tablas ajenas
+   desaparecen: el módulo de reservas pide `CourtRepository` y
+   `ClubRepository`, que `ClubsModule` exporta.
+5. **Tests de integración** (`*.integration.test.ts`): los adaptadores contra
+   un Postgres real, sin app ni HTTP.
+   ```sh
+   make test:integration     # 9 tests, ~5 s (casi todo es el contenedor)
+   ```
+   Pruébalo: quita el filtro por fecha de `findByCourtAndDate` y falla
+   "por pista y dia, solo las de esa pista ese dia".
+
+### El momento clave: los tests
+
+- **Refactor puro por arriba.** Antes de tocar ningún test, los 26 e2e pasan
+  con los repositorios.
+- **Un e2e baja de piso.** "Las reservas de otro día no ocupan la franja"
+  probaba, en el fondo, un `WHERE date = ...`. Ahora lo prueba la integración
+  del repositorio, sin HTTP y sin app, y el e2e sale.
+
+### Qué discutir
+
+- **¿Para qué un puerto si solo hay un adaptador?** Para que el dominio y los
+  services no dependan de drizzle ni de Postgres. Se nota en los tests: el
+  capítulo 10 prueba los casos de uso con repositorios en memoria, sin docker.
+- **Un repositorio por entidad que se guarda, no por tabla.** Y con métodos del
+  dominio (`findByUser`), no un `query(sql)` genérico disfrazado.
+- **El N+1 sigue ahí.** "Mis reservas" pide la pista y el club de cada
+  reserva, ahora a través de los repositorios. Ordenar el código no lo arregla:
+  lo arregla un modelo de lectura (capítulo 11).
+- **El service ya solo orquesta.** Y orquesta tres casos de uso distintos en
+  la misma clase. Eso es el capítulo 10.
+- Pizarra: **25 e2e, 46 unitarios, 9 integración. e2e ~6 s, integración
+  ~5 s, unitarios ~0,35 s.**

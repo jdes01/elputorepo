@@ -17,15 +17,6 @@ describe('ver disponibilidad', () => {
     ]);
   });
 
-  it('las reservas de otro dia no ocupan la franja', async () => {
-    const court = await givenCourt({ opens: '09:00', closes: '10:30' });
-    await givenBooking(court.id, someUser(), daysFromNow(3), '09:00');
-
-    const res = await api('GET', `/courts/${court.id}/availability?date=${daysFromNow(4)}`);
-
-    expect(res.body).toEqual([{ start: '09:00', end: '10:30', free: true }]);
-  });
-
   it('responde 400 sin fecha', async () => {
     const court = await givenCourt();
 
