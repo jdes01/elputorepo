@@ -95,11 +95,22 @@ describe('reservar pista', () => {
     expect(res.status).toBe(401);
   });
 
-  it('revienta con 500 si falta la hora de inicio', async () => {
+  it('responde 400 si falta la hora de inicio', async () => {
     const court = await givenCourt();
 
     const res = await api('POST', '/bookings', { user: someUser(), body: { courtId: court.id, date: daysFromNow(3) } });
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
+  });
+
+  it('responde 400 si la fecha no existe', async () => {
+    const court = await givenCourt();
+
+    const res = await api('POST', '/bookings', {
+      user: someUser(),
+      body: { courtId: court.id, date: '2026-02-30', start: '10:30' },
+    });
+
+    expect(res.status).toBe(400);
   });
 });

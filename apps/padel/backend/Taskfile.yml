@@ -5,17 +5,17 @@ version: '3'
 tasks:
   dev:
     desc: El backend en watch
-    cmds: [node_modules/.bin/nest start --watch]
+    cmds: [node_modules/.bin/nest start --watch --builder swc]
 
   build:
-    desc: Compila a dist/
-    sources: [src/**/*.ts, tsconfig.json, tsconfig.build.json, nest-cli.json]
+    desc: Compila a dist/ (nest + swc; el typecheck va aparte)
+    sources: [src/**/*.ts, .swcrc, tsconfig.build.json, nest-cli.json]
     generates: [dist/**/*]
-    cmds: [node_modules/.bin/nest build]
+    cmds: [node_modules/.bin/nest build --builder swc]
 
   start:
     desc: Arranca lo ya compilado
-    cmds: [node dist/main.js]
+    cmds: [node dist/src/main.js]
 
   test:e2e:
     desc: e2e de API contra la app compilada y un postgres de usar y tirar (necesita docker)

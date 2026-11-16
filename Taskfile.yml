@@ -28,6 +28,8 @@ output:
     error_only: true
 
 includes:
+  # Se consume como FUENTE: no tiene build.
+  contracts: { taskfile: ./apps/padel/contracts/Taskfile.yml, dir: ./apps/padel/contracts }
   backend: { taskfile: ./apps/padel/backend/Taskfile.yml, dir: ./apps/padel/backend }
   frontend: { taskfile: ./apps/padel/frontend/Taskfile.yml, dir: ./apps/padel/frontend }
 
@@ -42,19 +44,19 @@ tasks:
 
   lint:
     desc: oxlint en todos los paquetes
-    deps: [backend:lint, frontend:lint]
+    deps: [contracts:lint, backend:lint, frontend:lint]
 
   format:
     desc: oxfmt en todos los paquetes (ESCRIBE)
-    deps: [backend:format, frontend:format, format:root]
+    deps: [contracts:format, backend:format, frontend:format, format:root]
 
   format:check:
     desc: Comprueba el formato sin escribir
-    deps: [backend:format:check, frontend:format:check, format:root:check]
+    deps: [contracts:format:check, backend:format:check, frontend:format:check, format:root:check]
 
   typecheck:
     desc: tsc en todos los paquetes
-    deps: [backend:typecheck, frontend:typecheck]
+    deps: [contracts:typecheck, backend:typecheck, frontend:typecheck]
 
   test:
     desc: Todos los tests (de momento, solo hay e2e)

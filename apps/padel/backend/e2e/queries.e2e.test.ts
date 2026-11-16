@@ -25,6 +25,14 @@ describe('ver disponibilidad', () => {
 
     expect(res.body).toEqual([{ start: '09:00', end: '10:30', free: true }]);
   });
+
+  it('responde 400 sin fecha', async () => {
+    const court = await givenCourt();
+
+    const res = await api('GET', `/courts/${court.id}/availability`);
+
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('ver mis reservas', () => {
@@ -41,5 +49,11 @@ describe('ver mis reservas', () => {
       { date: daysFromNow(3), start: '12:00', club_name: 'Club Norte', court_name: 'Pista 1' },
       { date: daysFromNow(4), start: '09:00', club_name: 'Club Norte', court_name: 'Pista 1' },
     ]);
+  });
+
+  it('responde 401 sin usuario', async () => {
+    const res = await api('GET', '/me/bookings');
+
+    expect(res.status).toBe(401);
   });
 });

@@ -42,4 +42,13 @@ describe('cancelar reserva', () => {
 
     expect(res.status).toBe(404);
   });
+
+  it('responde 401 sin usuario', async () => {
+    const court = await givenCourt();
+    const booking = await givenBooking(court.id, someUser(), daysFromNow(3), '10:30');
+
+    const res = await api('DELETE', `/bookings/${booking.id}`);
+
+    expect(res.status).toBe(401);
+  });
 });

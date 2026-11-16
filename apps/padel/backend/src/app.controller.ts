@@ -1,6 +1,21 @@
 import { Body, Controller, Delete, Get, Headers, HttpException, Param, Post, Query } from '@nestjs/common';
+import {
+  bookCourt,
+  cancelBooking,
+  createClub,
+  createCourt,
+  getAvailability,
+  listCourts,
+  type Booking,
+  type Club,
+  type Court,
+  type MyBooking,
+  type Slot,
+} from '@padel/contracts';
 import { createTransport } from 'nodemailer';
 import { Pool } from 'pg';
+import type { z } from 'zod';
+import { ZodPipe } from './zod.pipe';
 
 // DATABASE_URL y SMTP_URL permiten apuntar a otra BD y a otro servidor de correo:
 // los e2e usan los de sus contenedores.
@@ -14,14 +29,14 @@ export class AppController {
   // ---------- clubs ----------
 
   @Post('clubs')
-  async createClub(@Body() body: any) {
-    const r = await db.query(`INSERT INTO clubs (name) VALUES ('${body.name}') RETURNING *`);
+  async createClub(@Body(new ZodPipe(createClub.body)) body: z.output<typeof createClub.body>): Promise<Club> {
+    const r = await db.query('INSERT INTO clubs (name) VALUES ($1) RETURNING *', [body.name]);
     console.log('club creado', r.rows[0]);
     return r.rows[0];
   }
 
   @Get('clubs')
-  async listClubs() {
+  async listClubs(): Promise<Club[]> {
     const r = await db.query('SELECT * FROM clubs ORDER BY id');
     return r.rows;
   }
@@ -29,7 +44,10 @@ export class AppController {
   // ---------- courts ----------
 
   @Post('clubs/:clubId/courts')
-  async createCourt(@Param('clubId') clubId: string, @Body() body: any) {
+  async createCourt(
+    @Param(new ZodPipe(createCourt.params)) { clubId }: z.output<typeof createCourt.params>,
+    @Body(new ZodPipe(createCourt.body)) body: z.output<typeof createCourt.body>,
+  ): Promise<Court> {
     const r = await db.query('INSERT INTO courts (club_id, name, opens, closes) VALUES ($1, $2, $3, $4) RETURNING *', [
       clubId,
       body.name,
@@ -41,7 +59,9 @@ export class AppController {
   }
 
   @Get('clubs/:clubId/courts')
-  async listCourts(@Param('clubId') clubId: string) {
+  async listCourts(
+    @Param(new ZodPipe(listCourts.params)) { clubId }: z.output<typeof listCourts.params>,
+  ): Promise<Court[]> {
     const r = await db.query('SELECT * FROM courts WHERE club_id = $1 ORDER BY id', [clubId]);
     return r.rows;
   }
@@ -49,11 +69,14 @@ export class AppController {
   // ---------- availability ----------
 
   @Get('courts/:courtId/availability')
-  async availability(@Param('courtId') courtId: string, @Query('date') date: string) {
+  async availability(
+    @Param(new ZodPipe(getAvailability.params)) { courtId }: z.output<typeof getAvailability.params>,
+    @Query(new ZodPipe(getAvailability.query)) { date }: z.output<typeof getAvailability.query>,
+  ): Promise<Slot[]> {
     const court = (await db.query('SELECT * FROM courts WHERE id = $1', [courtId])).rows[0];
     const bookings = (await db.query('SELECT * FROM bookings WHERE court_id = $1 AND date = $2', [courtId, date])).rows;
 
-    const slots = [];
+    const slots: Slot[] = [];
     let m = parseInt(court.opens.split(':')[0]) * 60 + parseInt(court.opens.split(':')[1]);
     const closes = parseInt(court.closes.split(':')[0]) * 60 + parseInt(court.closes.split(':')[1]);
     while (m + 90 <= closes) {
@@ -69,15 +92,18 @@ export class AppController {
   // ---------- bookings ----------
 
   @Post('bookings')
-  async book(@Headers('x-user-id') userId: string, @Body() body: any) {
+  async book(
+    @Headers('x-user-id') userId: string,
+    @Body(new ZodPipe(bookCourt.body)) body: z.output<typeof bookCourt.body>,
+  ): Promise<Booking> {
     if (!userId) throw new HttpException('falta x-user-id', 401);
 
     const court = (await db.query('SELECT * FROM courts WHERE id = $1', [body.courtId])).rows[0];
     if (!court) throw new HttpException('la pista no existe', 404);
 
-    // 90 minutos, a mano
-    const h = parseInt(body.start.split(':')[0]);
-    const min = parseInt(body.start.split(':')[1]);
+    // 90 minutos, a mano. El contrato garantiza "HH:MM", asi que se lee por posicion.
+    const h = Number(body.start.slice(0, 2));
+    const min = Number(body.start.slice(3, 5));
     const endMin = h * 60 + min + 90;
     const end = String(Math.floor(endMin / 60)).padStart(2, '0') + ':' + String(endMin % 60).padStart(2, '0');
 
@@ -122,7 +148,12 @@ export class AppController {
   }
 
   @Delete('bookings/:id')
-  async cancel(@Headers('x-user-id') userId: string, @Param('id') id: string) {
+  async cancel(
+    @Headers('x-user-id') userId: string,
+    @Param(new ZodPipe(cancelBooking.params)) { id }: z.output<typeof cancelBooking.params>,
+  ): Promise<{ ok: true }> {
+    if (!userId) throw new HttpException('falta x-user-id', 401);
+
     const b = (await db.query('SELECT * FROM bookings WHERE id = $1', [id])).rows[0];
     if (!b) throw new HttpException('la reserva no existe', 404);
     if (b.user_id !== userId) throw new HttpException('no es tu reserva', 403);
@@ -132,11 +163,13 @@ export class AppController {
 
     await db.query('DELETE FROM bookings WHERE id = $1', [id]);
     console.log('reserva cancelada', id);
-    return { ok: true };
+    return { ok: true as const };
   }
 
   @Get('me/bookings')
-  async myBookings(@Headers('x-user-id') userId: string) {
+  async myBookings(@Headers('x-user-id') userId: string): Promise<MyBooking[]> {
+    if (!userId) throw new HttpException('falta x-user-id', 401);
+
     const r = await db.query(
       `SELECT b.*, c.name AS court_name, cl.name AS club_name
        FROM bookings b JOIN courts c ON c.id = b.court_id JOIN clubs cl ON cl.id = c.club_id

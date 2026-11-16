@@ -1,16 +1,17 @@
+import type { ApiError, Club, Court, MyBooking, Slot } from '@padel/contracts';
 import { useEffect, useState } from 'react';
 
 const API = 'http://localhost:3000';
 
 export default function App() {
   const [userId, setUserId] = useState(localStorage.getItem('userId') || 'ana@padel.local');
-  const [clubs, setClubs] = useState<any[]>([]);
-  const [clubId, setClubId] = useState<any>(null);
-  const [courts, setCourts] = useState<any[]>([]);
-  const [courtId, setCourtId] = useState<any>(null);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [clubId, setClubId] = useState<number | null>(null);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [courtId, setCourtId] = useState<number | null>(null);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [slots, setSlots] = useState<any[]>([]);
-  const [myBookings, setMyBookings] = useState<any[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [myBookings, setMyBookings] = useState<MyBooking[]>([]);
   const [clubName, setClubName] = useState('');
   const [courtName, setCourtName] = useState('');
   const [opens, setOpens] = useState('09:00');
@@ -72,7 +73,7 @@ export default function App() {
       headers: { 'content-type': 'application/json', 'x-user-id': userId },
       body: JSON.stringify({ courtId, date, start }),
     });
-    if (!res.ok) setError((await res.json()).message);
+    if (!res.ok) setError(((await res.json()) as ApiError).message);
     fetch(API + '/courts/' + courtId + '/availability?date=' + date)
       .then((r) => r.json())
       .then(setSlots);
@@ -84,7 +85,7 @@ export default function App() {
   async function cancel(id: number) {
     setError('');
     const res = await fetch(API + '/bookings/' + id, { method: 'DELETE', headers: { 'x-user-id': userId } });
-    if (!res.ok) setError((await res.json()).message);
+    if (!res.ok) setError(((await res.json()) as ApiError).message);
     fetch(API + '/me/bookings', { headers: { 'x-user-id': userId } })
       .then((r) => r.json())
       .then(setMyBookings);

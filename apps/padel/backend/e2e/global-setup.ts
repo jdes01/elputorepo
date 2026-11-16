@@ -11,7 +11,7 @@ declare module 'vitest' {
 }
 
 // Caja negra de verdad: un postgres y un servidor de correo de usar y tirar, y la app COMPILADA
-// (dist/main.js) arrancada como proceso aparte. El test solo habla HTTP, asi
+// (dist/src/main.js) arrancada como proceso aparte. El test solo habla HTTP, asi
 // que sobrevive a cualquier refactor de dentro, incluso a cambiar de framework.
 // El precio es la velocidad: contenedor + arranque de la app en cada ejecucion.
 export default async function setup(project: TestProject) {
@@ -25,7 +25,7 @@ export default async function setup(project: TestProject) {
     .start();
 
   const port = '3999';
-  const app = spawn('node', ['dist/main.js'], {
+  const app = spawn('node', ['dist/src/main.js'], {
     env: {
       ...process.env,
       DATABASE_URL: pg.getConnectionUri(),

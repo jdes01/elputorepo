@@ -1,0 +1,10 @@
+{
+  "extends": "../../../configs/tsconfig.web.json",
+  "compilerOptions": {
+    // Lo compilan el navegador y node: ningun tipo de entorno.
+    "types": [],
+    // node ejecuta esta fuente tal cual (type stripping) cuando la carga el backend.
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"]
+}

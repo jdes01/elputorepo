@@ -16,6 +16,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    // Los paquetes que se consumen como fuente (contracts) importan con .ts: node
+    // los ejecuta tal cual y necesita la extension real.
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "noEmit": true
   }
 }

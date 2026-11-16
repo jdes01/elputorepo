@@ -1,0 +1,11 @@
+# Tareas de @padel/contracts.
+#
+# Sin `build`: se consume como FUENTE. Vite lo compila en el front y node lo
+# ejecuta tal cual (type stripping) en el backend.
+version: '3'
+
+tasks:
+  typecheck: { cmds: [node_modules/.bin/tsc -p tsconfig.json] }
+  lint: { cmds: [node_modules/.bin/oxlint -c ../../../configs/oxlintrc.json --deny-warnings .] }
+  format: { cmds: [node_modules/.bin/oxfmt -c ../../../configs/oxfmtrc.json .] }
+  format:check: { cmds: [node_modules/.bin/oxfmt -c ../../../configs/oxfmtrc.json --check .] }

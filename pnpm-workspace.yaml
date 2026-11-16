@@ -8,6 +8,9 @@ packages:
 # react eso es un "Invalid hook call" en runtime; con tipos, dos copias de un
 # mismo tipo nominal que dejan de encajar entre paquetes.
 catalog:
+  # Viaja en @padel/contracts, que back y front compilan como fuente: dos copias
+  # de zod partirian los tipos del contrato en dos.
+  zod: 4.5.4
   react: 19.2.8
   react-dom: 19.2.8
   '@types/react': 19.2.18
@@ -29,6 +32,8 @@ allowBuilds:
   # Su postinstall descarga el binario de Go. Sin el, lo intenta en la PRIMERA
   # ejecucion, que es peor: sin red en ese momento, falla.
   '@go-task/cli': true
+  # El backend compila con SWC (nest build --builder swc). Necesita su binding nativo.
+  '@swc/core': true
 
   # --- negaciones revisadas ---------------------------------------------------
   # Transitivas de testcontainers. Compilan bindings nativos OPCIONALES: sin

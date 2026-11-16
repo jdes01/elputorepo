@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@padel/contracts": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
