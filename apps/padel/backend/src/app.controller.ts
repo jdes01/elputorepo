@@ -15,14 +15,11 @@ import {
 import { createTransport } from 'nodemailer';
 import { Pool } from 'pg';
 import type { z } from 'zod';
+import { loadConfig } from './config';
 import { ZodPipe } from './zod.pipe';
 
-// DATABASE_URL y SMTP_URL permiten apuntar a otra BD y a otro servidor de correo:
-// los e2e usan los de sus contenedores.
-export const db = new Pool({
-  connectionString: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5433/padel',
-});
-const mailer = createTransport(process.env.SMTP_URL ?? 'smtp://localhost:1025');
+export const db = new Pool({ connectionString: loadConfig().databaseUrl });
+const mailer = createTransport(loadConfig().smtpUrl);
 
 @Controller()
 export class AppController {

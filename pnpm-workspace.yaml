@@ -34,6 +34,8 @@ allowBuilds:
   '@go-task/cli': true
   # El backend compila con SWC (nest build --builder swc). Necesita su binding nativo.
   '@swc/core': true
+  # Instala el binario nativo. Lo usa drizzle-kit para cargar el schema y su config.
+  esbuild: true
 
   # --- negaciones revisadas ---------------------------------------------------
   # Transitivas de testcontainers. Compilan bindings nativos OPCIONALES: sin

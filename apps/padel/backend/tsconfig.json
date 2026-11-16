@@ -8,5 +8,5 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src", "e2e", "vitest.e2e.config.mts"]
+  "include": ["src", "e2e", "vitest.e2e.config.mts", "drizzle.config.ts"]
 }

@@ -11,7 +11,7 @@ MISE := $(shell command -v mise 2>/dev/null || echo $(HOME)/.local/bin/mise)
 TASK := $(MISE) exec -- node_modules/.bin/task
 PSQL := docker compose exec postgres psql -U postgres padel
 
-.PHONY: help setup up down logs psql reset dev lint format format\:check typecheck build test test\:e2e
+.PHONY: help setup up down logs psql reset migrate dev lint format format\:check typecheck build test test\:e2e
 
 help: ## Esta lista
 	@sed -nE 's/^([a-zA-Z_-]+(\\:[a-zA-Z_-]+)?):[^#]*## (.*)/\1\t\3/p' $(MAKEFILE_LIST) | sed 's/\\//' | awk -F'\t' '{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -33,11 +33,15 @@ logs: ## Logs de postgres
 psql: ## Consola de la BD
 	$(PSQL)
 
-reset: ## Borra la BD y la levanta vacia
+reset: ## Borra la BD, la levanta vacia y la migra
 	docker compose down -v
 	docker compose up -d --wait
+	$(TASK) migrate
 
-dev: up ## Postgres, backend y frontend en watch
+migrate: up ## Aplica las migraciones pendientes
+	$(TASK) migrate
+
+dev: migrate ## Postgres (migrado), backend y frontend en watch
 	$(TASK) --output prefixed dev
 
 lint: ## task lint

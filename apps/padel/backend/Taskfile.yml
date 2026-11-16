@@ -2,6 +2,12 @@
 # vive en el Taskfile de la raiz.
 version: '3'
 
+# La BD y el correo del docker-compose.yml, vistos desde el host. Literal a proposito: en
+# local siempre vale lo mismo y no es un secreto.
+env:
+  DATABASE_URL: postgres://postgres:postgres@localhost:5433/padel
+  SMTP_URL: smtp://localhost:1025
+
 tasks:
   dev:
     desc: El backend en watch
@@ -21,6 +27,14 @@ tasks:
     desc: e2e de API contra la app compilada y un postgres de usar y tirar (necesita docker)
     deps: [build]
     cmds: [node_modules/.bin/vitest run --config vitest.e2e.config.mts]
+
+  migration:generate:
+    desc: 'Genera la migracion del diff entre src/schema.ts y la ultima. Ej: task backend:migration:generate -- --name add-x'
+    cmds: ['node_modules/.bin/drizzle-kit generate {{.CLI_ARGS}}']
+
+  migrate:
+    desc: Aplica las migraciones pendientes a la BD local
+    cmds: [node_modules/.bin/drizzle-kit migrate]
 
   typecheck: { cmds: [node_modules/.bin/tsc -p tsconfig.json] }
   lint: { cmds: [node_modules/.bin/oxlint -c ../../../configs/oxlintrc.json --deny-warnings .] }

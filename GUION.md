@@ -273,3 +273,78 @@ cabecera `X-User-Id`.
   "comprobar tipos" es un patrón que se repite en todo el ecosistema.
 - Pizarra: **27 e2e, 0 unitarios, 0 integración, ~9 s.** Todavía no ha
   aparecido ninguna capa nueva: la validación solo se puede probar desde fuera.
+
+---
+
+## Capítulo 5. Config tipada y migraciones
+
+**Tag:** `cap-05` · **Idea:** el schema de la BD y la configuración son parte
+del código. Se versionan, se validan y fallan pronto y con un mensaje claro.
+
+### Qué enseñar
+
+1. **Config** (`apps/padel/backend/src/config.ts`). Es el único sitio que lee
+   `process.env` y lo valida con zod al arrancar. Pruébalo sin la variable:
+   ```sh
+   cd apps/padel/backend && node dist/src/main.js
+   # Error: Configuracion invalida:
+   # ✖ Invalid input: expected string, received undefined
+   #   → at DATABASE_URL
+   # ✖ Invalid input: expected string, received undefined
+   #   → at SMTP_URL
+   ```
+   Antes se conectaba a una URL inventada y fallaba en la primera petición. El
+   servidor de correo, igual: `SMTP_URL` entra en la config validada.
+2. **Schema** (`src/schema.ts`): la fuente de verdad, en TypeScript. Las
+   migraciones salen de ahí:
+   ```sh
+   task backend:migration:generate -- --name lo-que-sea
+   ```
+   Enseña `migrations/0000_init.sql`. Es SQL legible y se revisa en el PR como
+   cualquier otro código.
+3. **Aplicarlas es un paso aparte**, no algo que la app hace al arrancar:
+   ```sh
+   make migrate     # también lo hace `make dev` antes de levantar nada
+   ```
+   La app asume que la BD está al día. Los e2e aplican las **mismas**
+   migraciones al contenedor (`e2e/global-setup.ts`).
+4. **Constraints**: FKs, `NOT NULL` y un `CHECK (opens < closes)`. Son la
+   última línea de defensa: aunque el código se equivoque, la BD no guarda
+   basura.
+
+### El momento clave: verde no significa igual
+
+Los 27 e2e pasan sin tocar ninguno. Pero el comportamiento **sí** ha cambiado,
+y justo donde no miraba ningún test:
+
+| Petición                        | Capítulo 4              | Capítulo 5              |
+| ------------------------------- | ----------------------- | ----------------------- |
+| Pista que cierra antes de abrir | 201, la guarda tal cual | 500, la para el `CHECK` |
+| Pista en un club que no existe  | 201, pista huérfana     | 500, la para la FK      |
+
+Se añaden dos e2e que fijan el comportamiento nuevo (su nombre empieza por
+`revienta con 500`). Los capítulos 7 y 8 los convertirán en 400 y 404. Pregunta a la clase: _¿es mejor o peor
+que antes?_ Mejor: un 500 es un error que se ve; una pista huérfana es
+corrupción silenciosa que aparece meses después.
+
+### Qué discutir
+
+- **Migrar al arrancar vs. paso aparte.** Con varias réplicas arrancando a la
+  vez, todas intentarían migrar. Y un rollback de la app no deshace el schema.
+  Separarlo obliga a pensar en migraciones compatibles hacia atrás (eso sale en
+  el capítulo de CI/CD).
+- **La primera migración choca con la BD de antes.** Las tablas ya existían
+  (las creó el `CREATE TABLE` del capítulo 0) y `make migrate` falla. Encima
+  drizzle-kit **no dice por qué**. Solución: `make reset`. En producción no
+  hay reset: se "adopta" el schema existente marcando la migración inicial
+  como aplicada. Buen ejemplo de por qué las migraciones conviene tenerlas
+  desde el día 1.
+- **Config: lo que cambia entre entornos vs. lo que no.** `DATABASE_URL` y
+  `SMTP_URL` cambian y vienen de env. En local están como literales en el
+  Taskfile del backend, porque no son secretos reales.
+- **Lo que este capítulo no hace:** las consultas siguen siendo SQL a pelo y
+  las fechas siguen siendo texto. Usar drizzle para leer y escribir llega con
+  los repositorios (capítulo 9); los tipos de fecha llegan con los value objects
+  (capítulo 7).
+- Pizarra: **29 e2e, 0 unitarios, 0 integración, ~5 s** (con el build en caché;
+  ~8 s si hay que compilar). Casi todo es contenedor y arranque de la app.

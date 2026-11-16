@@ -1,6 +1,9 @@
 import { spawn } from 'node:child_process';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { GenericContainer, Wait } from 'testcontainers';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import { Pool } from 'pg';
 import type { TestProject } from 'vitest/node';
 
 declare module 'vitest' {
@@ -23,6 +26,7 @@ export default async function setup(project: TestProject) {
     .withExposedPorts(1025, 8025)
     .withWaitStrategy(Wait.forHttp('/readyz', 8025))
     .start();
+  await applyMigrations(pg.getConnectionUri());
 
   const port = '3999';
   const app = spawn('node', ['dist/src/main.js'], {
@@ -51,6 +55,13 @@ export default async function setup(project: TestProject) {
     await pg.stop();
     await mailpit.stop();
   };
+}
+
+// Las mismas migraciones que en local: si una no aplica, los e2e lo cantan.
+async function applyMigrations(url: string) {
+  const pool = new Pool({ connectionString: url });
+  await migrate(drizzle(pool), { migrationsFolder: 'migrations' });
+  await pool.end();
 }
 
 // Sondeo: cada intento ESPERA al anterior a proposito, no se puede paralelizar.
