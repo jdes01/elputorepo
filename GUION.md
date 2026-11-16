@@ -1545,3 +1545,87 @@ disponibilidad dos veces y "mis reservas". En Grafana, _Explore_:
   por petición que mata a Prometheus.
 - **Qué falta:** muestreo (hoy se exporta todo), alertas y dashboards.
 - Pizarra: **1 e2e, 73 unitarios, 27 controllers, 22 integración.**
+
+---
+
+## Capítulo 22. CI más rápida: caché, paralelismo, solo lo afectado
+
+**Tag:** `cap-22` · **Idea:** la CI del capítulo 19 era un job en serie, sin
+caché y que corría dos veces por cada push a una rama con PR. Una CI lenta no
+es solo esperar: es que la gente deja de esperarla, mergea en rojo o agrupa
+cambios para no pagarla. Tres palancas, y ninguna toca un `task`: los comandos
+siguen siendo los mismos, cambia **cómo** se reparten.
+
+### Qué enseñar
+
+1. **Paralelismo** (`.github/workflows/ci.yml`): el job `check` pasa a ser una
+   `matrix` de cuatro grupos que corren a la vez en runners distintos:
+   - `lint format:check typecheck deps:check build`
+   - `test:unit test:http`
+   - `test:integration`
+   - `test:e2e`
+
+   Dentro de cada job, `task --parallel` lanza las del grupo a la vez. La CI
+   tarda lo que el grupo más lento, no la suma. Integración y e2e van en grupos
+   distintos porque son los que levantan contenedores (Postgres, Mongo, Redis y
+   Mailpit) y los que más tardan. El nombre del job es el grupo, así que sigue
+   diciendo qué ha fallado, y `fail-fast: false` hace que un rojo no cancele
+   los otros: se ven todos los fallos de una vez.
+
+2. **Caché**:
+   - Las herramientas: `jdx/mise-action` ya guarda node, pnpm y actionlint.
+   - Las dependencias: `actions/cache` guarda el store de pnpm con el hash de
+     `pnpm-lock.yaml` como clave. Con el mismo lockfile, `pnpm install` enlaza
+     lo que ya está y no descarga nada. Con otro, `restore-keys` recupera el
+     último store y solo baja lo que cambió.
+   - Las capas de docker: el job `images` construye cada imagen con
+     `docker/build-push-action` y la caché de GitHub Actions (`type=gha`), con
+     un `scope` por imagen, y la deja en el docker del runner (`load: true`)
+     con el nombre que espera el compose. Después levanta el perfil `app`
+     como antes, sin construir nada. CD (`cd.yml`) usa el **mismo scope**: lo
+     que construyó el PR, al llegar a `main` solo se publica.
+3. **Solo lo afectado**:
+   - `push` solo en `main`; las ramas pasan por `pull_request`. Se acaba el
+     doble disparo del capítulo 19.
+   - `paths-ignore: ['**.md']`: un cambio en el guion, el plan o el glosario
+     no ejecuta la CI.
+   - `concurrency` con `cancel-in-progress`: un push nuevo a un PR cancela la
+     ejecución anterior, que ya no vale para nada.
+   - Lo que no cambió no se rehace: el `build` del Taskfile tiene `sources` y
+     `generates`, y las capas de docker que no cambian salen de la caché.
+
+### El momento clave: medirlo
+
+En local, la misma máquina y los mismos `task`, se cronometran las dos formas:
+
+```sh
+time (for t in lint format:check typecheck deps:check build test:unit test:http \
+  test:integration test:e2e; do node_modules/.bin/task $t || break; done)
+time node_modules/.bin/task --parallel test:e2e          # el grupo más lento
+```
+
+La primera es la CI del 19; la segunda, lo que marca el reloj con la del 22.
+
+En GitHub la proporción es parecida, pero cada job paga su arranque: el
+checkout, mise y `pnpm install`. Por eso la caché del store importa más con
+cuatro jobs que con uno: el arranque se paga cuatro veces. Que las cachés
+aciertan se ve en el primer PR real: el paso de `actions/cache` dice
+`Cache restored` y buildx marca las capas `CACHED`. `act` no imita la caché
+`type=gha`, así que en local no se puede comprobar.
+
+### Qué discutir
+
+- **Paralelo no es gratis.** Cuatro jobs son cuatro runners: más minutos
+  facturados aunque el reloj marque menos. Se paga en dinero lo que se gana en
+  espera. Con una suite de segundos no compensa; con una de 20 minutos, sí.
+- **Una caché mal puesta engaña.** Si la clave no incluye todo lo que cambia el
+  resultado, un PR pasa en verde con dependencias viejas. Por eso la clave es el
+  hash del lockfile y no "la rama".
+- **"Solo lo afectado" de verdad** es saber qué paquetes toca un cambio y
+  ejecutar solo sus tests (Nx, Turborepo, `pnpm --filter ...[origin/main]`).
+  Aquí el backend es casi todo el repo y casi cualquier cambio lo toca, así que
+  lo que más rinde es no ejecutar nada cuando solo cambian los `.md`.
+- **El orden de las palancas.** Primero que no corra lo que no hace falta,
+  luego la caché y por último el paralelismo, que es el único que cuesta más.
+- Pizarra: **1 e2e, 73 unitarios, 27 controllers, 22 integración.** No cambia:
+  el capítulo no toca la app.

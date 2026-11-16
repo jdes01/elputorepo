@@ -2,9 +2,14 @@
 # aqui, falla igual en local con ese mismo comando.
 name: CI
 
+# Las ramas pasan por PR y main por push: un push a una rama con PR abierto ya no
+# dispara CI dos veces. Un cambio que solo toca .md no ejecuta nada.
 on:
   push:
+    branches: [main]
+    paths-ignore: ['**.md']
   pull_request:
+    paths-ignore: ['**.md']
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -14,31 +19,65 @@ permissions:
   contents: read
 
 jobs:
+  # Un job por grupo, todos a la vez: la CI tarda lo que el grupo mas lento, no
+  # la suma. El nombre del job dice que grupo ha fallado.
   check:
+    name: ${{ matrix.tasks }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tasks:
+          - lint format:check typecheck deps:check build
+          - test:unit test:http
+          - test:integration
+          - test:e2e
     steps:
       - uses: actions/checkout@v4
       # node, pnpm y actionlint, de mise.toml y package.json: las versiones de
-      # un portatil con `make setup`.
+      # un portatil con `make setup`. La action guarda en cache lo que instala.
       - uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde # v5.2.1
+      # El store de pnpm entre ejecuciones: con el mismo lockfile, instalar es
+      # enlazar lo que ya esta y no descargar nada.
+      - id: pnpm
+        run: echo "store=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm.outputs.store }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
-      - run: node_modules/.bin/task lint
-      - run: node_modules/.bin/task format:check
-      - run: node_modules/.bin/task typecheck
-      - run: node_modules/.bin/task deps:check
-      - run: node_modules/.bin/task build
-      # Los runners de GitHub traen docker: integracion y e2e levantan sus
-      # Postgres, Mongo, Redis y Mailpit aqui igual que en local.
-      - run: node_modules/.bin/task --output interleaved test:unit
-      - run: node_modules/.bin/task --output interleaved test:http
-      - run: node_modules/.bin/task --output interleaved test:integration
-      - run: node_modules/.bin/task --output interleaved test:e2e
+      # Las del grupo a la vez dentro del job; las que piden lo mismo (build) lo
+      # comparten, por el `run: once` del Taskfile. Integracion y e2e levantan
+      # sus Postgres, Mongo, Redis y Mailpit con testcontainers.
+      - run: node_modules/.bin/task --parallel ${{ matrix.tasks }}
 
   # Construye las imagenes y levanta el perfil `app` entero (postgres, mongo,
   # redis, mailpit, migraciones, api y front) esperando a que este sano: un
-  # Dockerfile roto o una api que no arranca se ve en el PR, no al publicar.
+  # Dockerfile roto o una api que no arranca se ve en el PR, no al publicar. Las
+  # capas van a la cache de GitHub Actions con el mismo scope que usa CD: si el
+  # PR ya las construyo, al llegar a main solo se publican.
   images:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: make app
+      - uses: docker/setup-buildx-action@v3
+      # `load` deja cada imagen en el docker del runner con el nombre que espera
+      # el compose, que asi no construye nada.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/padel/backend/Dockerfile
+          load: true
+          tags: padel-backend:local
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/padel/frontend/Dockerfile
+          load: true
+          tags: padel-frontend:local
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+      - run: docker compose --profile app up -d --wait
