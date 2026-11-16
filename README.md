@@ -10,6 +10,6 @@ hecha a propósito y mejora commit a commit: `PLAN.md` es la hoja de ruta y
 
 ```sh
 pnpm install
-docker compose up -d      # postgres en localhost:5433
+docker compose up -d      # postgres :5433, Mailpit :1025 (web en :8025)
 pnpm dev                  # api :3000, web :5173
 ```

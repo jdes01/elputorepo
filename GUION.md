@@ -42,3 +42,61 @@ partida normal de casi cualquier proyecto real, y funciona.
   fichero?_ Respuesta a la que llegar: necesito saber que no rompo nada. Antes
   de llegar ahí (capítulo 3), el capítulo 1 enseña qué pasa cuando se cambia
   sin esa red.
+
+---
+
+## Capítulo 1. Así se metía un commit antes
+
+**Tag:** `cap-01` · **Idea:** llega un requisito, mandar un correo de
+confirmación al reservar, y se mete como se ha metido siempre: a mano, sin
+tests, probando en local y mirando si llega. Funciona. Y aun así tiene
+problemas que nadie va a ver hasta producción.
+
+### Qué enseñar
+
+1. El diff entero (`git show cap-01`): nodemailer, un Mailpit en el compose y
+   17 líneas en el controlador. El mensaje del commit es "mandar correo al
+   reservar". No dice por qué, ni cómo se probó, ni qué riesgos tiene.
+2. Pruébalo como se probaba entonces:
+   ```sh
+   docker compose up -d
+   pnpm dev
+   ```
+   Reserva en http://localhost:5173 y abre Mailpit en http://localhost:8025.
+   Ahí está el correo. "Funciona".
+3. El usuario ahora es su email (`X-User-Id: ana@padel.local`): a esa dirección
+   va el correo.
+
+### El momento clave: tres demos en vivo
+
+- **Inyección de HTML.** Crea un club llamado `Club <b>Norte</b>` y reserva en
+  él. En Mailpit, "Norte" sale en negrita: el nombre va al HTML sin escapar.
+  Con un `<a href>` sale un enlace a donde quiera quien creó el club.
+- **El SMTP se cae.**
+  ```sh
+  docker compose stop mailpit
+  ```
+  Reserva: **500**. El usuario cree que no ha reservado y reintenta: **409**,
+  "la pista ya está reservada". La reserva se guardó antes de intentar el
+  correo, así que la pista está ocupada por alguien que cree que no la tiene.
+  ```sh
+  docker compose start mailpit
+  ```
+- **¿Cómo se prueba esto sin abrir Mailpit?** No se puede. No hay tests, y
+  aunque los hubiera, el controlador crea su propio transporte de correo con
+  `localhost:1025` escrito a mano. No hay dónde enchufar otro servidor.
+
+### Qué discutir
+
+- **"Funciona" no es un criterio.** Todo lo de arriba funciona en la demo
+  feliz. Los fallos están en los bordes: datos raros, servicios caídos,
+  reintentos.
+- **El mensaje del commit.** Dentro de seis meses, alguien hará
+  `git blame` en esas líneas y leerá "mandar correo al reservar". Compáralo con
+  los mensajes de los capítulos siguientes.
+- **La petición espera al SMTP.** Si el servidor de correo tarda 5 segundos,
+  reservar tarda 5 segundos.
+- Todo esto está en la tabla de pecados de `PLAN.md`. Lo arreglan el e2e del
+  capítulo 3 (probar el correo), la config del 5 (el servidor por env), y los
+  eventos del 13 (sacar el correo de la reserva, y que un correo caído no
+  tumbe la reserva).

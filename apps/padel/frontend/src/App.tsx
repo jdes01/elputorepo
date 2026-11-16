@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 const API = 'http://localhost:3000';
 
 export default function App() {
-  const [userId, setUserId] = useState(localStorage.getItem('userId') || 'ana');
+  const [userId, setUserId] = useState(localStorage.getItem('userId') || 'ana@padel.local');
   const [clubs, setClubs] = useState<any[]>([]);
   const [clubId, setClubId] = useState<any>(null);
   const [courts, setCourts] = useState<any[]>([]);

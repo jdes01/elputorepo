@@ -1,7 +1,9 @@
 import { Body, Controller, Delete, Get, Headers, HttpException, Param, Post, Query } from '@nestjs/common';
+import nodemailer from 'nodemailer';
 import { Pool } from 'pg';
 
 export const db = new Pool({ connectionString: 'postgres://postgres:postgres@localhost:5433/padel' });
+const mailer = nodemailer.createTransport({ host: 'localhost', port: 1025 });
 
 @Controller()
 export class AppController {
@@ -97,6 +99,21 @@ export class AppController {
       [body.courtId, userId, body.date, body.start, end],
     );
     console.log('reserva creada', r.rows[0]);
+
+    // correo de confirmacion
+    const info = (
+      await db.query(
+        'SELECT c.name AS court, cl.name AS club FROM courts c JOIN clubs cl ON cl.id = c.club_id WHERE c.id = $1',
+        [body.courtId],
+      )
+    ).rows[0];
+    await mailer.sendMail({
+      from: 'reservas@padel.local',
+      to: userId,
+      subject: 'Reserva confirmada',
+      html: `<h1>Reserva confirmada</h1><p>${info.club} - ${info.court}</p><p>${body.date} de ${body.start} a ${end}</p>`,
+    });
+
     return r.rows[0];
   }
 
