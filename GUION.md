@@ -142,3 +142,60 @@ comprobaciones, una sola puerta.
   que todo el mundo ignora.
 - El typecheck `strict` pasa a la primera. ¿Buena noticia? No: el `any` lo tapa
   todo. Un harness verde no significa código sano.
+
+---
+
+## Capítulo 3. Una red antes de tocar nada: e2e
+
+**Tag:** `cap-03` · **Idea:** para refactorizar hace falta una red de
+seguridad. Con todo pegado en un controlador, la única superficie que se puede
+testear sin atarse a la implementación es la de fuera: HTTP.
+
+### Qué enseñar
+
+1. Lanza los tests (necesita docker):
+   ```sh
+   make test:e2e
+   ```
+   20 tests en 4 ficheros. ~8 s en total: compilar, levantar un postgres y un
+   Mailpit en docker, arrancar la app y ~1 s de tests de verdad.
+2. `apps/padel/backend/e2e/global-setup.ts`: caja negra de verdad. Un postgres
+   y un Mailpit de usar y tirar (testcontainers) y la app **compilada** como
+   proceso aparte. Los tests solo hablan HTTP. El Mailpit se da por listo
+   cuando responde su `/readyz`: un servicio puede aceptar conexiones antes de
+   estar listo, y esperar solo al puerto da fallos de vez en cuando.
+3. Uno de los tests, por ejemplo `book.e2e.test.ts`. Un caso de uso por fichero,
+   un test por regla. Ahí está `manda un correo de confirmacion a quien
+reserva`: lee la API de Mailpit (`mailsTo` en `e2e/api.ts`). Lo que en el
+   capítulo 1 era abrir una web y mirar, ahora es un test.
+4. La **costura**: para poder testear hubo que tocar el código de producción en
+   tres líneas, `DATABASE_URL`, `SMTP_URL` y `PORT` leídos de env
+   (`app.controller.ts`, `main.ts`). Es lo mínimo para meter el test sin cambiar
+   comportamiento. Es la respuesta a la pregunta del capítulo 1: _¿dónde
+   enchufo otro servidor de correo?_
+5. Demuestra que la red funciona: rompe una regla y lanza los tests.
+   ```sh
+   # en app.controller.ts, cambia `if (hours < 24)` por `if (hours < 0)`
+   make test:e2e      # falla "no deja cancelar con menos de 24 h"
+   ```
+   Anécdota de cuando se preparó esto: al anular la regla de solapes con un
+   `if (false)`, ni llegaron a correr los tests. El build falló porque la
+   variable del bucle quedaba sin usar (`noUnusedLocals`). El harness del
+   capítulo 2 pilló la rotura antes que la red del 3.
+
+### Qué discutir
+
+- **Tests que fijan pecados.** `revienta con 500 si falta la hora de inicio` y
+  `revienta con 500 si el nombre lleva comilla simple` testean comportamiento
+  **malo**, y su nombre lo dice. Fijan lo que hay hoy para que el refactor
+  no lo cambie sin querer. El capítulo que lo arregle cambiará el
+  test a propósito. Pregunta: _¿por qué no arreglarlo ya?_ Porque un commit que
+  añade tests y cambia comportamiento a la vez no deja ver qué rompió qué.
+- **La pirámide está invertida**, y es lo correcto hoy. Un unitario ahora
+  obligaría a mockear `db.query`: un test atado a la implementación que muere
+  justo en el refactor que debía proteger.
+- Apunta en la pizarra: **20 e2e, 0 unitarios, 0 integración, ~8 s.** Se
+  vuelve a apuntar al final de cada capítulo.
+- Lo que estos tests **no** pillan: la carrera, y la reserva a medias cuando el
+  SMTP se cae. Un test secuencial con todo levantado no ve ninguna de las dos.
+  La reserva a medias se arregla en el capítulo 13, y la carrera en el 14.

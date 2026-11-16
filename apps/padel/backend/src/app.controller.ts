@@ -1,10 +1,13 @@
 import { Body, Controller, Delete, Get, Headers, HttpException, Param, Post, Query } from '@nestjs/common';
+import { createTransport } from 'nodemailer';
 import { Pool } from 'pg';
 
-// DATABASE_URL permite apuntar a otra BD: los e2e usan la de su contenedor.
+// DATABASE_URL y SMTP_URL permiten apuntar a otra BD y a otro servidor de correo:
+// los e2e usan los de sus contenedores.
 export const db = new Pool({
   connectionString: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5433/padel',
 });
+const mailer = createTransport(process.env.SMTP_URL ?? 'smtp://localhost:1025');
 
 @Controller()
 export class AppController {
@@ -100,6 +103,21 @@ export class AppController {
       [body.courtId, userId, body.date, body.start, end],
     );
     console.log('reserva creada', r.rows[0]);
+
+    // correo de confirmacion
+    const info = (
+      await db.query(
+        'SELECT c.name AS court, cl.name AS club FROM courts c JOIN clubs cl ON cl.id = c.club_id WHERE c.id = $1',
+        [body.courtId],
+      )
+    ).rows[0];
+    await mailer.sendMail({
+      from: 'reservas@padel.local',
+      to: userId,
+      subject: 'Reserva confirmada',
+      html: `<h1>Reserva confirmada</h1><p>${info.club} - ${info.court}</p><p>${body.date} de ${body.start} a ${end}</p>`,
+    });
+
     return r.rows[0];
   }
 

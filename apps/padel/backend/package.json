@@ -6,6 +6,7 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "nodemailer": "10.5.0",
     "pg": "8.23.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "^7.8.0"
@@ -18,6 +19,7 @@
     "@types/pg": "8.23.1",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "testcontainers": "12.1.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
