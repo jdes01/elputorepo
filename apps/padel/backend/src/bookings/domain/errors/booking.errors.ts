@@ -29,3 +29,10 @@ export class CancellationTooLate extends DomainError {
     super('solo se cancela con 24h de antelacion');
   }
 }
+
+// Otra reserva cambio la agenda de la pista entre que la leimos y la guardamos.
+export class CourtDayChangedMeanwhile extends DomainError {
+  constructor() {
+    super('la agenda de la pista ha cambiado mientras reservabas');
+  }
+}

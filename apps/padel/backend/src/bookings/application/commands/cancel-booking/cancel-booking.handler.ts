@@ -1,19 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { BookingNotFound } from '../../../domain/errors/booking.errors';
-import { BookingRepository } from '../../../domain/repositories/booking.repository';
+import { CourtDayRepository } from '../../../domain/repositories/court-day.repository';
+import { retryWhenCourtDayChanges } from '../retry-when-court-day-changes';
 import type { CancelBookingCommand } from './cancel-booking.command';
 
 @Injectable()
 export class CancelBookingHandler {
-  constructor(private readonly bookings: BookingRepository) {}
+  constructor(private readonly courtDays: CourtDayRepository) {}
 
   async execute({ userId, bookingId }: CancelBookingCommand): Promise<void> {
-    const booking = await this.bookings.findById(bookingId);
-    if (!booking) throw new BookingNotFound();
+    const now = new Date();
 
-    booking.cancel(userId, new Date());
-
-    await this.bookings.remove(booking);
+    await retryWhenCourtDayChanges(async () => {
+      const day = await this.courtDays.loadContaining(bookingId);
+      if (!day) throw new BookingNotFound();
+      day.cancel(bookingId, userId, now);
+      await this.courtDays.save(day);
+    });
     console.log('reserva cancelada', bookingId.toNumber());
   }
 }

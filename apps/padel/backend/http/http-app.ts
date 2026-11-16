@@ -3,8 +3,8 @@ import { Pool } from 'pg';
 import { AppModule } from '../src/app.module';
 import { CourtDayFinder } from '../src/bookings/application/queries/get-availability/court-day.finder';
 import { MyBookingsFinder } from '../src/bookings/application/queries/list-my-bookings/my-bookings.finder';
-import { BookingRepository } from '../src/bookings/domain/repositories/booking.repository';
-import { InMemoryBookingRepository } from '../src/bookings/infrastructure/persistence/in-memory-booking.repository';
+import { CourtDayRepository } from '../src/bookings/domain/repositories/court-day.repository';
+import { InMemoryCourtDayRepository } from '../src/bookings/infrastructure/persistence/in-memory-court-day.repository';
 import {
   InMemoryCourtDayFinder,
   InMemoryMyBookingsFinder,
@@ -31,7 +31,7 @@ type Options = { body?: unknown; user?: string };
 export async function startHttpApp() {
   const clubs = new InMemoryClubRepository();
   const courts = new InMemoryCourtRepository();
-  const bookings = new InMemoryBookingRepository();
+  const courtDays = new InMemoryCourtDayRepository(courts);
   const mailer = new RecordingMailer();
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
@@ -45,16 +45,16 @@ export async function startHttpApp() {
     .useValue(clubs)
     .overrideProvider(CourtRepository)
     .useValue(courts)
-    .overrideProvider(BookingRepository)
-    .useValue(bookings)
+    .overrideProvider(CourtDayRepository)
+    .useValue(courtDays)
     .overrideProvider(ClubsFinder)
     .useValue(new InMemoryClubsFinder(clubs))
     .overrideProvider(CourtsFinder)
     .useValue(new InMemoryCourtsFinder(courts))
     .overrideProvider(CourtDayFinder)
-    .useValue(new InMemoryCourtDayFinder(courts, bookings))
+    .useValue(new InMemoryCourtDayFinder(courts, courtDays))
     .overrideProvider(MyBookingsFinder)
-    .useValue(new InMemoryMyBookingsFinder(bookings, courts, clubs))
+    .useValue(new InMemoryMyBookingsFinder(courtDays, courts, clubs))
     .compile();
 
   const app = configureHttp(moduleRef.createNestApplication({ logger: false }));

@@ -5,12 +5,12 @@ import type { CalendarDate } from '../../../shared/domain/value-objects/calendar
 import { CourtDayFinder, type CourtDayView } from '../../application/queries/get-availability/court-day.finder';
 import { MyBookingsFinder, type MyBookingView } from '../../application/queries/list-my-bookings/my-bookings.finder';
 import type { UserId } from '../../domain/value-objects/user-id.value-object';
-import type { InMemoryBookingRepository } from './in-memory-booking.repository';
+import type { InMemoryCourtDayRepository } from './in-memory-court-day.repository';
 
 export class InMemoryCourtDayFinder extends CourtDayFinder {
   constructor(
     private readonly courts: InMemoryCourtRepository,
-    private readonly bookings: InMemoryBookingRepository,
+    private readonly courtDays: InMemoryCourtDayRepository,
   ) {
     super();
   }
@@ -18,7 +18,7 @@ export class InMemoryCourtDayFinder extends CourtDayFinder {
   async find(courtId: CourtId, date: CalendarDate): Promise<CourtDayView | undefined> {
     const court = await this.courts.findById(courtId);
     if (!court) return undefined;
-    const booked = await this.bookings.findByCourtAndDate(courtId, date);
+    const booked = this.courtDays.allBookings().filter((b) => b.courtId.equals(courtId) && b.date.equals(date));
     return {
       opens: court.openingHours.opens.toString(),
       closes: court.openingHours.closes.toString(),
@@ -29,7 +29,7 @@ export class InMemoryCourtDayFinder extends CourtDayFinder {
 
 export class InMemoryMyBookingsFinder extends MyBookingsFinder {
   constructor(
-    private readonly bookings: InMemoryBookingRepository,
+    private readonly courtDays: InMemoryCourtDayRepository,
     private readonly courts: InMemoryCourtRepository,
     private readonly clubs: InMemoryClubRepository,
   ) {
@@ -37,7 +37,7 @@ export class InMemoryMyBookingsFinder extends MyBookingsFinder {
   }
 
   async ofUser(userId: UserId): Promise<MyBookingView[]> {
-    const mine = this.bookings.all().filter((b) => b.userId.equals(userId));
+    const mine = this.courtDays.allBookings().filter((b) => b.userId.equals(userId));
     const views = mine.map((b) => {
       const court = this.courts.all().find((c) => c.id.equals(b.courtId))!;
       const club = this.clubs.all().find((c) => c.id.equals(court.clubId))!;

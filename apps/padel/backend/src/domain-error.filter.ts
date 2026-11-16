@@ -1,6 +1,11 @@
 import { type ArgumentsHost, Catch, type ExceptionFilter } from '@nestjs/common';
 import type { Response } from 'express';
-import { BookingNotFound, NotBookingOwner, SlotAlreadyTaken } from './bookings/domain/errors/booking.errors';
+import {
+  BookingNotFound,
+  CourtDayChangedMeanwhile,
+  NotBookingOwner,
+  SlotAlreadyTaken,
+} from './bookings/domain/errors/booking.errors';
 import { ClubNotFound, CourtNotFound } from './clubs/domain/errors/club.errors';
 import { DomainError } from './shared/domain/errors/domain-error';
 
@@ -17,6 +22,6 @@ export class DomainErrorFilter implements ExceptionFilter {
 function statusOf(error: DomainError): number {
   if (error instanceof ClubNotFound || error instanceof CourtNotFound || error instanceof BookingNotFound) return 404;
   if (error instanceof NotBookingOwner) return 403;
-  if (error instanceof SlotAlreadyTaken) return 409;
+  if (error instanceof SlotAlreadyTaken || error instanceof CourtDayChangedMeanwhile) return 409;
   return 400;
 }

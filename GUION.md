@@ -907,3 +907,90 @@ existe un correo.
   alternativa (que la entity apunte sus eventos y quien la guarda los
   recoja) evita olvidarse de publicar, a cambio de más piezas.
 - Pizarra: **1 e2e, 56 unitarios, 23 controllers, 12 integración.**
+
+---
+
+## Capítulo 14. La carrera: la agenda del día como aggregate
+
+**Tag:** `cap-14` · **Idea:** "no hay dos reservas en la misma franja" no es
+una regla de una reserva: es una regla de **la agenda de una pista un día**.
+Mientras cada reserva se decide por su cuenta, dos que llegan a la vez leen la
+misma agenda vacía y entran las dos. El patrón aggregate dice: agrupa lo que
+tiene que ser consistente, modifícalo solo a través de su raíz, y guárdalo entero
+o no lo guardes.
+
+### Qué enseñar
+
+1. **Primero, que el bug existe** (`book-court.handler.integration.test.ts`):
+   diez reservas de la misma franja a la vez, contra Postgres. Con el código del
+   capítulo 13 entraban **7, 8 o 3**, según la ejecución. El pecado de la tabla
+   de `PLAN.md` desde el capítulo 0, por fin con un test.
+   - Detalle que sale preparando la demo: sin calentar el pool de conexiones, la
+     carrera no se reproducía. La primera petición usaba la conexión ya abierta
+     y terminaba mientras las otras nueve aún se conectaban. En producción, con
+     el pool caliente, sí pasa. Un test de concurrencia tiene que preparar la
+     concurrencia.
+2. **El aggregate es la rejilla del día**
+   (`bookings/domain/aggregates/court-day.aggregate.ts`):
+   ```
+   CourtDay (pista 1, 2099-01-10, version 3)
+     09:00  libre
+     10:30  reserva #7 (ana)
+     12:00  libre
+     ...
+   ```
+   `CourtDay.open` monta la rejilla con el horario de la pista y coloca las
+   reservas. Reservar es ocupar una casilla libre (`day.book`); cancelar es
+   liberarla (`day.cancel`). La regla de solapes desaparece como cálculo: con
+   la rejilla, dos reservas solo chocan si quieren la misma casilla.
+3. **Lo que se simplifica alrededor:** `Booking.book` ya solo comprueba "no en
+   el pasado", `Court.slotAt` desaparece y no hay que pasar las reservas del día
+   (`taken`) de un lado a otro.
+4. **La versión** (tabla `court_days`, `drizzle-court-day.repository.ts`):
+   cargar la agenda trae su versión. Guardarla hace
+   `UPDATE court_days SET version = version + 1 WHERE ... AND version = <la leída>`.
+   Si no actualiza ninguna fila, otra petición se adelantó: `CourtDayChangedMeanwhile`,
+   y no se guarda nada. Un día sin fila es versión 0: el `INSERT` con
+   `ON CONFLICT DO NOTHING` hace lo mismo para la primera reserva.
+5. **El reintento** (`retry-when-court-day-changes.ts`): si la agenda cambió,
+   se vuelve a cargar (ya con el otro cambio dentro) y se vuelve a decidir. Si la
+   franja ahora está ocupada, `SlotAlreadyTaken`, un 409 normal. Si era otra
+   franja, entra. Reservar y cancelar lo usan igual.
+6. **Una sola puerta.** `BookingRepository` desaparece: las reservas se crean,
+   se cancelan y se guardan solo a través de `CourtDayRepository`. En la BD
+   siguen en su tabla `bookings`. El aggregate es una frontera de consistencia
+   en el código, no una tabla.
+
+### El momento clave: los tests
+
+```sh
+make test:integration
+```
+
+- "Diez reservas a la vez de la misma franja: solo entra una": en verde.
+- "Cinco reservas a la vez de franjas distintas: entran todas": la versión no
+  bloquea reservas que no chocan, solo obliga a reintentar.
+- Demo: en `drizzle-court-day.repository.ts`, borra la línea
+  `if (claimed.length === 0) throw new CourtDayChangedMeanwhile();` y lánzalo.
+  Entran **las diez**.
+- Los mismos escenarios, en unitarios y sin docker
+  (`book-court.handler.test.ts`), con la agenda en memoria, que también lleva
+  versión. Y la rejilla tiene los suyos (`court-day.aggregate.test.ts`): franja
+  fuera de la rejilla, ocupada, la de al lado, cancelar la deja libre.
+
+### Qué discutir
+
+- **¿Por qué no una constraint en la BD?** Una exclusion constraint de Postgres
+  sobre los rangos de hora también lo impediría, y es una buena segunda red.
+  Pero la regla quedaría en SQL, lejos del dominio. Con el aggregate, la regla
+  está en un sitio y la BD solo garantiza "nadie guardó encima de lo que leíste".
+- **¿Por qué la agenda de un día y no la pista entera?** El tamaño del
+  aggregate es el de la regla. Si fuera la pista, dos reservas de días distintos
+  se pisarían la versión sin necesidad. Si fuera la reserva, no protegería nada.
+- **Bloqueo optimista vs. pesimista.** Un `SELECT ... FOR UPDATE` también
+  serviría: bloquea al leer y los demás esperan. El optimista no bloquea nunca y
+  reintenta cuando choca, que sale barato si los choques son raros, y aquí lo
+  son: dos personas en la misma pista y el mismo día al mismo milisegundo.
+- **La lectura no pasa por el aggregate.** La disponibilidad sigue saliendo de
+  su finder (capítulo 11): la rejilla existe para decidir, no para listar.
+- Pizarra: **1 e2e, 60 unitarios, 23 controllers, 15 integración.**

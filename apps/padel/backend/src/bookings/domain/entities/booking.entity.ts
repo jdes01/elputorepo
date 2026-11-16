@@ -1,10 +1,8 @@
-import type { Court } from '../../../clubs/domain/entities/court.entity';
 import type { CourtId } from '../../../clubs/domain/value-objects/court-id.value-object';
 import { CLUBS_TIME_ZONE } from '../../../shared/domain/time-zone';
 import type { CalendarDate } from '../../../shared/domain/value-objects/calendar-date.value-object';
-import type { TimeOfDay } from '../../../shared/domain/value-objects/time-of-day.value-object';
 import type { TimeSlot } from '../../../shared/domain/value-objects/time-slot.value-object';
-import { BookingInThePast, CancellationTooLate, NotBookingOwner, SlotAlreadyTaken } from '../errors/booking.errors';
+import { BookingInThePast, CancellationTooLate, NotBookingOwner } from '../errors/booking.errors';
 import type { BookingId } from '../value-objects/booking-id.value-object';
 import type { UserId } from '../value-objects/user-id.value-object';
 
@@ -19,22 +17,19 @@ export class Booking {
     readonly slot: TimeSlot,
   ) {}
 
-  // `taken`: las reservas que ya tiene la pista. Solo cuentan las de ese dia.
+  // Que la franja exista y este libre lo decide la agenda del dia (CourtDay), que
+  // es quien la crea. La reserva solo sabe que no puede ser en el pasado.
   static book(props: {
     id: BookingId;
-    court: Court;
+    courtId: CourtId;
     userId: UserId;
     date: CalendarDate;
-    start: TimeOfDay;
-    taken: Booking[];
+    slot: TimeSlot;
     now: Date;
   }): Booking {
-    const { id, court, userId, date, start, taken, now } = props;
-    const booking = new Booking(id, court.id, userId, date, court.slotAt(start));
-
+    const { id, courtId, userId, date, slot, now } = props;
+    const booking = new Booking(id, courtId, userId, date, slot);
     if (booking.startsAt() < now) throw new BookingInThePast();
-    if (taken.some((other) => booking.collidesWith(other))) throw new SlotAlreadyTaken();
-
     return booking;
   }
 
@@ -53,9 +48,5 @@ export class Booking {
 
   equals(other: Booking): boolean {
     return this.id.equals(other.id);
-  }
-
-  private collidesWith(other: Booking): boolean {
-    return this.courtId.equals(other.courtId) && this.date.equals(other.date) && this.slot.overlaps(other.slot);
   }
 }

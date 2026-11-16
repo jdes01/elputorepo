@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, integer, pgTable, serial, text } from 'drizzle-orm/pg-core';
+import { check, integer, pgTable, primaryKey, serial, text } from 'drizzle-orm/pg-core';
 
 // La fuente de verdad del schema. drizzle-kit genera migrations/ comparando este
 // fichero con el ultimo snapshot.
@@ -35,3 +35,18 @@ export const bookings = pgTable('bookings', {
   start: text().notNull(),
   end: text().notNull(),
 });
+
+// La version de la agenda de cada pista y dia (el aggregate CourtDay). Cada
+// reserva la sube en uno; si al guardar ya no es la que se leyo, alguien se
+// adelanto. Un dia sin fila es un dia sin reservas: version 0.
+export const courtDays = pgTable(
+  'court_days',
+  {
+    courtId: integer('court_id')
+      .notNull()
+      .references(() => courts.id),
+    date: text().notNull(),
+    version: integer().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.courtId, t.date] })],
+);

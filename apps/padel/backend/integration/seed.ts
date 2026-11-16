@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { Booking } from '../src/bookings/domain/entities/booking.entity';
 import { UserId } from '../src/bookings/domain/value-objects/user-id.value-object';
-import { DrizzleBookingRepository } from '../src/bookings/infrastructure/persistence/drizzle-booking.repository';
+import { DrizzleCourtDayRepository } from '../src/bookings/infrastructure/persistence/drizzle-court-day.repository';
 import { Club } from '../src/clubs/domain/entities/club.entity';
 import { Court } from '../src/clubs/domain/entities/court.entity';
 import { ClubName } from '../src/clubs/domain/value-objects/club-name.value-object';
@@ -17,7 +16,7 @@ import type { Database } from '../src/shared/infrastructure/database.module';
 export function seed(db: Database) {
   const clubs = new DrizzleClubRepository(db);
   const courts = new DrizzleCourtRepository(db);
-  const bookings = new DrizzleBookingRepository(db);
+  const courtDays = new DrizzleCourtDayRepository(db);
 
   return {
     someUser: () => UserId.of(`${randomUUID()}@padel.local`),
@@ -36,16 +35,14 @@ export function seed(db: Database) {
     },
 
     async booking(court: Court, userId: UserId, on: string, at: string) {
-      const booking = Booking.book({
-        id: await bookings.nextId(),
-        court,
+      const day = await courtDays.load(court, CalendarDate.parse(on));
+      const booking = day.book({
+        id: await courtDays.nextBookingId(),
         userId,
-        date: CalendarDate.parse(on),
         start: TimeOfDay.parse(at),
-        taken: [],
         now: new Date('2026-01-01'),
       });
-      await bookings.save(booking);
+      await courtDays.save(day);
       return booking;
     },
   };

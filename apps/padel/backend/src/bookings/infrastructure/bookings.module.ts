@@ -9,12 +9,12 @@ import { GetAvailabilityHandler } from '../application/queries/get-availability/
 import { ListMyBookingsHandler } from '../application/queries/list-my-bookings/list-my-bookings.handler';
 import { MyBookingsFinder } from '../application/queries/list-my-bookings/my-bookings.finder';
 import { CourtWasBookedEvent } from '../domain/events/court-was-booked.event';
-import { BookingRepository } from '../domain/repositories/booking.repository';
+import { CourtDayRepository } from '../domain/repositories/court-day.repository';
 import { BookCourtController } from './controllers/book-court.controller';
 import { CancelBookingController } from './controllers/cancel-booking.controller';
 import { GetAvailabilityController } from './controllers/get-availability.controller';
 import { ListMyBookingsController } from './controllers/list-my-bookings.controller';
-import { DrizzleBookingRepository } from './persistence/drizzle-booking.repository';
+import { DrizzleCourtDayRepository } from './persistence/drizzle-court-day.repository';
 import { DrizzleCourtDayFinder } from './persistence/drizzle-court-day.finder';
 import { DrizzleMyBookingsFinder } from './persistence/drizzle-my-bookings.finder';
 
@@ -25,7 +25,7 @@ import { DrizzleMyBookingsFinder } from './persistence/drizzle-my-bookings.finde
     // Escritura: command handlers sobre repositorios.
     BookCourtHandler,
     CancelBookingHandler,
-    { provide: BookingRepository, useClass: DrizzleBookingRepository },
+    { provide: CourtDayRepository, useClass: DrizzleCourtDayRepository },
     // Lectura: query handlers sobre finders.
     GetAvailabilityHandler,
     ListMyBookingsHandler,

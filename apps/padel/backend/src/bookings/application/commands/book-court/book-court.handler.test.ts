@@ -14,13 +14,13 @@ import { RecordingEventBus } from '../../../../shared/infrastructure/recording-e
 import { SlotAlreadyTaken } from '../../../domain/errors/booking.errors';
 import { CourtWasBookedEvent } from '../../../domain/events/court-was-booked.event';
 import { UserId } from '../../../domain/value-objects/user-id.value-object';
-import { InMemoryBookingRepository } from '../../../infrastructure/persistence/in-memory-booking.repository';
+import { InMemoryCourtDayRepository } from '../../../infrastructure/persistence/in-memory-court-day.repository';
 import { BookCourtCommand } from './book-court.command';
 import { BookCourtHandler } from './book-court.handler';
 
 // Sin mocks: repositorios en memoria que cumplen los mismos puertos que los de
 // drizzle. El test dice que pasa, no que metodos se llaman.
-let bookings: InMemoryBookingRepository;
+let courtDays: InMemoryCourtDayRepository;
 let events: RecordingEventBus;
 let bookCourt: BookCourtHandler;
 let court: Court;
@@ -32,9 +32,9 @@ const at = (text: string) => TimeOfDay.parse(text);
 beforeEach(async () => {
   const clubs = new InMemoryClubRepository();
   const courts = new InMemoryCourtRepository();
-  bookings = new InMemoryBookingRepository();
   events = new RecordingEventBus();
-  bookCourt = new BookCourtHandler(bookings, courts, events);
+  courtDays = new InMemoryCourtDayRepository(courts);
+  bookCourt = new BookCourtHandler(courts, courtDays, events);
 
   const club = Club.register(await clubs.nextId(), ClubName.of('Club Norte'));
   await clubs.save(club);
@@ -46,7 +46,7 @@ describe('BookCourtHandler', () => {
   it('guarda la reserva', async () => {
     const booking = await bookCourt.execute(new BookCourtCommand(ana, court.id, day, at('10:30')));
 
-    expect(await bookings.findById(booking.id)).toBe(booking);
+    expect(courtDays.allBookings()).toEqual([booking]);
   });
 
   it('publica que se ha reservado la pista', async () => {
@@ -73,7 +73,27 @@ describe('BookCourtHandler', () => {
     const second = bookCourt.execute(new BookCourtCommand(UserId.of('luis@padel.local'), court.id, day, at('10:30')));
 
     await expect(second).rejects.toThrow(SlotAlreadyTaken);
-    expect(await bookings.findByCourtAndDate(court.id, day)).toHaveLength(1);
+    expect(courtDays.allBookings()).toHaveLength(1);
     expect(events.published).toHaveLength(1);
+  });
+
+  it('dos a la vez de la misma franja: entra una y la otra se entera de que esta ocupada', async () => {
+    const results = await Promise.allSettled([
+      bookCourt.execute(new BookCourtCommand(ana, court.id, day, at('10:30'))),
+      bookCourt.execute(new BookCourtCommand(UserId.of('luis@padel.local'), court.id, day, at('10:30'))),
+    ]);
+
+    expect(results.map((r) => r.status).toSorted()).toEqual(['fulfilled', 'rejected']);
+    expect(results.find((r) => r.status === 'rejected')?.reason).toBeInstanceOf(SlotAlreadyTaken);
+    expect(courtDays.allBookings()).toHaveLength(1);
+  });
+
+  it('dos a la vez de franjas distintas: entran las dos', async () => {
+    await Promise.all([
+      bookCourt.execute(new BookCourtCommand(ana, court.id, day, at('10:30'))),
+      bookCourt.execute(new BookCourtCommand(UserId.of('luis@padel.local'), court.id, day, at('12:00'))),
+    ]);
+
+    expect(courtDays.allBookings()).toHaveLength(2);
   });
 });

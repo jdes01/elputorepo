@@ -39,7 +39,7 @@ export class DrizzleCourtRepository extends CourtRepository {
   }
 }
 
-function toCourt(row: typeof courts.$inferSelect): Court {
+export function toCourt(row: typeof courts.$inferSelect): Court {
   return Court.restore(
     CourtId.of(row.id),
     ClubId.of(row.clubId),
