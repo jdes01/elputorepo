@@ -348,3 +348,87 @@ corrupción silenciosa que aparece meses después.
   (capítulo 7).
 - Pizarra: **29 e2e, 0 unitarios, 0 integración, ~5 s** (con el build en caché;
   ~8 s si hay que compilar). Casi todo es contenedor y arranque de la app.
+
+---
+
+## Capítulo 6. MVC: parece bien hecho
+
+**Tag:** `cap-06` · **Idea:** ordenar el código en capas es el primer paso
+que da casi todo el mundo, y está bien darlo. Pero un MVC "de manual" esconde
+errores que solo se ven cuando la app crece. Este capítulo los comete **a
+propósito**; los siguientes los desmontan uno a uno.
+
+### Qué enseñar
+
+1. La estructura nueva de `apps/padel/backend/src`:
+   ```
+   clubs/      club.model.ts     clubs.controller.ts     clubs.service.ts
+   bookings/   booking.model.ts  bookings.controller.ts  bookings.service.ts
+   database.module.ts   (el Pool, inyectado en los services)
+   mail.module.ts       (el Mailer, inyectado igual)
+   ```
+   - **Modelo**: la forma de los datos (`booking.model.ts`).
+   - **Controller**: recibe HTTP, valida con el contrato y delega.
+   - **Service**: la lógica y el SQL, directo.
+   - **Vista**: en una API, el JSON que devuelve el controller.
+2. El controller ya no sabe nada de SQL ni de reglas: 40 líneas de rutas.
+3. **Refactor puro**: los 29 e2e pasan sin cambiar ni una línea de test.
+   ```sh
+   make test:e2e
+   git diff cap-05 cap-06 --stat -- apps/padel/backend/e2e   # vacío
+   ```
+   Sin la red del capítulo 3, este movimiento habría sido un acto de fe. El
+   correo incluido: el test que lo comprueba sigue en verde.
+
+### El momento clave: "¿esto está bien?"
+
+Antes de enseñar los problemas, pregunta a la clase si este código está bien.
+Tiene carpetas, capas, inyección de dependencias y tests en verde. La mayoría
+dirá que sí. Después, busca con ellos estos errores (la tabla completa está en
+`PLAN.md`):
+
+- **Un solo modelo para todo** (`booking.model.ts`). `Booking` es la fila de la
+  tabla, lo que se guarda, lo que se lista y lo que responde la API. Para "mis
+  reservas" hacía falta el nombre de la pista y del club, así que el modelo
+  ganó `court_name?` y `club_name?`: campos que **a veces** vienen y nada en el
+  tipo dice cuándo. Pregunta: _¿qué pasa cuando otra pantalla necesite el
+  precio?_ Otro campo opcional más. Lo arregla separar lectura y escritura
+  (capítulo 11).
+- **Modelo = fila = JSON.** Renombrar una columna rompe el contrato con el
+  front. Ese acoplamiento ya estaba antes, pero ahora tiene nombre de capa y
+  parece intencionado.
+- **Service gordo, modelo anémico.** Todas las reglas (90 minutos, horario,
+  pasado, solapes, 24 h) están en `BookingsService`, mezcladas con SQL.
+  `Booking` es una bolsa de datos sin comportamiento. Para probar "no se cancela
+  con menos de 24 h" hace falta una BD. Lo arreglan los value objects y las entities
+  (capítulos 7 y 8).
+- **El service sabe de HTTP.** Lanza `HttpException(..., 409)`. La regla de
+  negocio "la pista está ocupada" conoce los códigos de estado. Si mañana la
+  misma lógica se llama desde una cola, ¿qué significa un 409 allí?
+- **El service manda el correo.** `book` guarda la reserva, monta el HTML y
+  llama al `Mailer`, todo en el mismo método. El correo del capítulo 1 tiene
+  ahora una capa con nombre, pero sigue con los mismos problemas: si el SMTP
+  falla, la reserva queda a medias. Lo arreglan los eventos de dominio
+  (capítulo 13).
+- **Tablas ajenas.** `BookingsService` lee `courts` y `clubs` con su propio
+  SQL. El módulo de reservas depende del esquema interno del de clubs sin que
+  ningún import lo diga. Lo arreglan los repositorios (capítulo 9).
+- **N+1 en "mis reservas".** Por cada reserva, una consulta para la pista y
+  otra para el club: con 50 reservas, 101 consultas. Con la red de tests no se
+  nota (2 reservas, todo en local). Se ve en producción o en las trazas del
+  capítulo 21.
+  Quien sí lo vio fue el **linter**: `no-await-in-loop` paró el commit. Se
+  apagó en línea, con un comentario que dice por qué. Otra vez el harness
+  del capítulo 2 pilla algo que los tests no ven.
+
+### Qué discutir
+
+- **¿Por qué no hay repositorios?** Porque todavía no hay nada que proteger
+  detrás de ellos. Un repositorio devuelve entidades del dominio, y aún no
+  existen. Meterlo ahora sería una capa que pasa filas de un lado a otro.
+  Llegan en el capítulo 9, después de los value objects y las entities.
+- **Ningún test lo ha pillado.** La red de e2e protege el comportamiento, no
+  el diseño. Los errores de diseño se ven al cambiar cosas, no al ejecutarlas.
+- Pizarra: **29 e2e, 0 unitarios, 0 integración, ~5 s.** Sigue sin aparecer
+  ninguna capa de tests por debajo: con las reglas pegadas al SQL, no hay nada
+  que se pueda probar sin BD.
