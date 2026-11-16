@@ -1,12 +1,15 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
+import { pino } from 'pino';
 import { createClient } from 'redis';
 import { RedisCourtDayCache } from './bookings/infrastructure/read-model/cache/redis-court-day.cache';
 import { MongoReadModelProjector } from './bookings/infrastructure/read-model/mongo-read-model.projector';
 import { rebuildReadModel } from './bookings/infrastructure/read-model/rebuild-read-model';
 import { loadConfig } from './config';
 import * as schema from './schema';
+
+const logger = pino();
 
 // `task backend:read-model:rebuild`: rehace el modelo de lectura de Mongo desde
 // Postgres, y vacia la cache. Para cuando se ha perdido un evento, se cambia la forma de una vista
@@ -19,7 +22,7 @@ async function main() {
   try {
     const projector = new MongoReadModelProjector(mongo.db(), new RedisCourtDayCache(redis));
     const rebuilt = await rebuildReadModel(drizzle(pool, { schema }), projector);
-    console.log(`modelo de lectura rehecho: ${rebuilt.courts} pistas, ${rebuilt.bookings} reservas`);
+    logger.info(rebuilt, 'modelo de lectura rehecho');
   } finally {
     await pool.end();
     await mongo.close();

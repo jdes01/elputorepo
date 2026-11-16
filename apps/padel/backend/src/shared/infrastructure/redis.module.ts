@@ -1,4 +1,4 @@
-import { Global, Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
+import { Global, Inject, Logger, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { createClient } from 'redis';
 import { loadConfig } from '../../config';
 
@@ -17,7 +17,8 @@ export type Redis = ReturnType<typeof connectTo>;
       useFactory: async (): Promise<Redis> => {
         const client = connectTo(loadConfig().redisUrl);
         // node-redis exige escuchar 'error': si no, un Redis caido tumba el proceso.
-        client.on('error', (error: Error) => console.error('redis:', error.message));
+        const logger = new Logger('Redis');
+        client.on('error', (error: Error) => logger.error(error.message));
         await client.connect();
         return client;
       },

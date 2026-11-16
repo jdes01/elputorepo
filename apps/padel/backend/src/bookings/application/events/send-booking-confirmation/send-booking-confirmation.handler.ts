@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ClubRepository } from '../../../../clubs/domain/repositories/club.repository';
 import { CourtRepository } from '../../../../clubs/domain/repositories/court.repository';
 import { escapeHtml } from '../../../../shared/application/escape-html';
@@ -10,13 +10,15 @@ import type { CourtWasBookedEvent } from '../../../domain/events/court-was-booke
 // existe.
 @Injectable()
 export class SendBookingConfirmationHandler implements EventHandler<CourtWasBookedEvent> {
+  private readonly logger = new Logger(SendBookingConfirmationHandler.name);
+
   constructor(
     private readonly courts: CourtRepository,
     private readonly clubs: ClubRepository,
     private readonly mailer: Mailer,
   ) {}
 
-  async handle({ courtId, userId, date, slot }: CourtWasBookedEvent): Promise<void> {
+  async handle({ bookingId, courtId, userId, date, slot }: CourtWasBookedEvent): Promise<void> {
     const court = (await this.courts.findById(courtId))!;
     const club = (await this.clubs.findById(court.clubId))!;
     const where = escapeHtml(`${club.name} - ${court.name}`);
@@ -25,5 +27,6 @@ export class SendBookingConfirmationHandler implements EventHandler<CourtWasBook
       'Reserva confirmada',
       `<h1>Reserva confirmada</h1><p>${where}</p><p>${date} de ${slot.start} a ${slot.end}</p>`,
     );
+    this.logger.log({ bookingId: bookingId.toNumber() }, 'correo de confirmacion enviado');
   }
 }

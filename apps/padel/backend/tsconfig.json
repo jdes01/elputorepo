@@ -14,6 +14,7 @@
     "http",
     "e2e",
     "integration",
+    "vitest.silence-logs.ts",
     "vitest.config.mts",
     "vitest.http.config.mts",
     "vitest.integration.config.mts",

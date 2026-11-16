@@ -38,14 +38,6 @@
 
   "overrides": [
     {
-      // El backend aun loguea con console.log. Se apaga aqui, a la vista, hasta
-      // que haya un logger estructurado: un aviso que nadie atiende es ruido.
-      "files": ["**/backend/src/**"],
-      "rules": {
-        "no-console": "off"
-      }
-    },
-    {
       // Imports por efecto: reflect-metadata monta los metadatos de los
       // decoradores antes de que arranque Nest.
       "files": ["**/src/main.ts"],

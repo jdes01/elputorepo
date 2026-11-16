@@ -17,8 +17,13 @@ async function givenCourt() {
   return (await app.call('POST', `/clubs/${club.id}/courts`, { body })).body;
 }
 
-const book = (courtId: number, user: string | undefined, start = '10:30', date = DAY) =>
-  app.call('POST', '/bookings', { user, body: { courtId, date, start } });
+const book = (
+  courtId: number,
+  user: string | undefined,
+  start = '10:30',
+  date = DAY,
+  headers?: Record<string, string>,
+) => app.call('POST', '/bookings', { user, headers, body: { courtId, date, start } });
 
 describe('POST /bookings', () => {
   it('201 con la reserva, y manda el correo', async () => {
@@ -177,5 +182,31 @@ describe('GET /me/bookings', () => {
 
   it('401 sin usuario', async () => {
     expect((await app.call('GET', '/me/bookings')).status).toBe(401);
+  });
+});
+
+describe('id de correlacion', () => {
+  it('se devuelve el que manda el cliente y sale en todas las lineas de log de la peticion', async () => {
+    const court = await givenCourt();
+    const id = randomUUID();
+
+    const res = await book(court.id, someUser(), '10:30', DAY, { 'x-request-id': id });
+
+    expect(res.headers.get('x-request-id')).toBe(id);
+    const lines = app.logs.filter((line) => line.correlationId === id);
+    // La reserva (command handler), el correo (event handler) y la peticion terminada.
+    expect(lines.map((line) => line.msg)).toEqual([
+      'reserva creada',
+      'correo de confirmacion enviado',
+      'request completed',
+    ]);
+  });
+
+  it('si el cliente no manda ninguno, se genera uno y se devuelve', async () => {
+    const court = await givenCourt();
+
+    const res = await book(court.id, someUser());
+
+    expect(res.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/);
   });
 });

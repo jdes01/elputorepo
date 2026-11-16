@@ -1,13 +1,25 @@
 import { Module } from '@nestjs/common';
+import { LoggerModule } from 'nestjs-pino';
+import { loadConfig } from './config';
 import { BookingsModule } from './bookings/infrastructure/bookings.module';
 import { ClubsModule } from './clubs/infrastructure/clubs.module';
 import { DatabaseModule } from './shared/infrastructure/database.module';
 import { EventBusModule } from './shared/infrastructure/in-process-event-bus';
+import { loggerParams } from './shared/infrastructure/logging';
 import { MailModule } from './shared/infrastructure/mail.module';
 import { MongoModule } from './shared/infrastructure/mongo.module';
 import { RedisModule } from './shared/infrastructure/redis.module';
 
 @Module({
-  imports: [DatabaseModule, MongoModule, RedisModule, MailModule, EventBusModule, ClubsModule, BookingsModule],
+  imports: [
+    LoggerModule.forRootAsync({ useFactory: () => loggerParams(loadConfig().logLevel) }),
+    DatabaseModule,
+    MongoModule,
+    RedisModule,
+    MailModule,
+    EventBusModule,
+    ClubsModule,
+    BookingsModule,
+  ],
 })
 export class AppModule {}

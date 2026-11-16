@@ -1372,3 +1372,89 @@ No hay remoto: nada de esto se ha visto correr en GitHub. Lo que sí:
   nunca en el repositorio.
 - Pizarra: **1 e2e, 70 unitarios, 25 controllers, 22 integración.** No cambia:
   el capítulo no toca la app.
+
+---
+
+## Capítulo 20. Logging estructurado con correlation id
+
+**Tag:** `cap-20` · **Idea:** un `console.log('reserva creada', 7)` sirve con
+una sola petición. Con veinte a la vez, las líneas se mezclan y no hay forma de
+saber cuáles son de la misma. Los logs pasan a ser JSON, una línea por hecho, y
+cada petición lleva un id que sale en todas sus líneas: las del command
+handler, las del event handler que manda el correo y las de la caché cuando
+Redis falla.
+
+### Qué enseñar
+
+1. **Logs en JSON** (`shared/infrastructure/logging.ts`, `nestjs-pino`). Una
+   línea = un objeto con `level`, `time`, `msg` y los campos que importan
+   (`bookingId`, `courtId`). Se puede filtrar con `jq` y, en el capítulo
+   siguiente, indexar en Loki. Los `console.*` del backend desaparecen: los de
+   los handlers, `main.ts`, el event bus, el cliente de Redis
+   (`redis.module.ts`) y la caché (`redis-court-day.cache.ts`). El nivel se pone
+   con `LOG_LEVEL` (`config.ts`).
+2. **El id de correlación**: `X-Request-Id` (o `X-Correlation-Id`) si el cliente
+   lo manda, uno nuevo si no, y siempre devuelto en la respuesta. El cliente puede
+   así anotar el id de una petición que falló y pedirnos "las líneas de esta".
+3. **Sin pasar el id por parámetro.** `nestjs-pino` guarda el logger de la
+   petición en un `AsyncLocalStorage`. Los handlers escriben con el `Logger` de
+   Nest, sin inyección y sin saber de HTTP, y su línea sale con el id de la
+   petición que los ejecuta. El event handler del correo y el proyector corren
+   dentro de la misma petición (el bus es en proceso), así que lo que
+   escriben sale con el mismo id.
+4. **Fuera de una petición no hay id.** Los scripts que no levantan Nest
+   (`migrate.ts`, `rebuild-read-model.ts`) usan `pino` a secas: mismo formato,
+   sin id. Y los avisos del cliente de Redis al perder la conexión salen sin id,
+   porque no los provoca ninguna petición: los provoca el socket.
+5. **La regla de lint** (`configs/oxlintrc.json`): el override que apagaba
+   `no-console` en el backend desaparece. Un `console.log` nuevo rompe el lint.
+
+### El momento clave: el mismo id en todas las líneas
+
+```sh
+node dist/src/main.js > api.log     # con la config de siempre
+curl -XPOST :3000/bookings -H 'x-request-id: clase-20' -H 'x-user-id: ana@padel.local' \
+  -H 'content-type: application/json' -d '{"courtId":1,"date":"...","start":"10:30"}'
+jq -c 'select(.correlationId == "clase-20") | {context, msg}' api.log
+```
+
+Salen tres líneas con `clase-20`: `reserva creada` (`BookCourtHandler`),
+`correo de confirmacion enviado` (`SendBookingConfirmationHandler`) y
+`request completed` (la petición, con su método, ruta, estado y duración). Sin
+la cabecera, el id lo genera el servidor y vuelve en la respuesta.
+
+Ahora `docker compose stop redis` y se pide la disponibilidad con
+`x-request-id: sin-redis`: responde 200 y aparecen dos `warn` de
+`RedisCourtDayCache` ("Redis no responde, se sigue sin cache", al leer y al
+guardar) con ese id. El fallo de la caché ya se puede atar a la petición que lo
+sufrió. Entre medias, el cliente de Redis apunta sus `error` de conexión, sin
+id.
+
+En los tests:
+
+- Controllers: la cabecera de respuesta es la que se mandó, las tres líneas de
+  esa petición llevan su id, y sin cabecera se genera un UUID. El logger
+  escribe a una lista, no a la salida del test.
+- Unitarios e integración no arrancan app: un `setupFile`
+  (`vitest.silence-logs.ts`) apaga el logger de Nest para que no ensucie la
+  salida. El test del event bus espía `Logger.prototype.error` en vez de
+  `console.error`.
+
+### Qué discutir
+
+- **Correlation id vs. trace id.** Hoy el id nace en el servidor (o en el
+  cliente) y solo une líneas de log. En el capítulo 21 aparece el trace id de
+  OpenTelemetry, que une además los spans, y los dos conviven en cada línea.
+- **Qué no loguear.** Las cabeceras de la petición viajan en `request completed`
+  (`x-user-id` es un email). En producción se redactan (`redact` de pino) o no
+  se sacan.
+- **Un id que viene de fuera es un dato no fiable.** Va a los logs: JSON ya
+  escapa saltos de línea, pero conviene limitar su longitud si el servidor
+  queda expuesto a internet.
+- **El event bus en proceso** hace posible que el id llegue al correo y al
+  proyector gratis. Con una cola de verdad, el id tendría que viajar dentro del
+  mensaje.
+- **¿`warn` o `error` para la caché?** La petición sale bien, así que no es un
+  error de la app: es una pieza degradada. El nivel decide qué despierta a
+  alguien a las tres de la mañana.
+- Pizarra: **1 e2e, 70 unitarios, 27 controllers, 22 integración.**

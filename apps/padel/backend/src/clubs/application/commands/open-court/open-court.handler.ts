@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventBus } from '../../../../shared/application/event-bus';
 import { Court } from '../../../domain/entities/court.entity';
 import { ClubNotFound } from '../../../domain/errors/club.errors';
@@ -9,6 +9,8 @@ import type { OpenCourtCommand } from './open-court.command';
 
 @Injectable()
 export class OpenCourtHandler {
+  private readonly logger = new Logger(OpenCourtHandler.name);
+
   constructor(
     private readonly clubs: ClubRepository,
     private readonly courts: CourtRepository,
@@ -21,7 +23,7 @@ export class OpenCourtHandler {
 
     const court = Court.open(await this.courts.nextId(), club, name, openingHours);
     await this.courts.save(court);
-    console.log('pista creada', court.id.toNumber());
+    this.logger.log({ courtId: court.id.toNumber() }, 'pista creada');
 
     await this.events.publish(
       new CourtWasOpenedEvent(court.id, club.id, court.name, club.name, court.openingHours, new Date()),

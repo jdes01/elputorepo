@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventBus } from '../../../../shared/application/event-bus';
 import { BookingNotFound } from '../../../domain/errors/booking.errors';
 import { BookingWasCancelledEvent } from '../../../domain/events/booking-was-cancelled.event';
@@ -8,6 +8,8 @@ import type { CancelBookingCommand } from './cancel-booking.command';
 
 @Injectable()
 export class CancelBookingHandler {
+  private readonly logger = new Logger(CancelBookingHandler.name);
+
   constructor(
     private readonly courtDays: CourtDayRepository,
     private readonly events: EventBus,
@@ -23,7 +25,7 @@ export class CancelBookingHandler {
       await this.courtDays.save(day);
       return cancelled;
     });
-    console.log('reserva cancelada', bookingId.toNumber());
+    this.logger.log({ bookingId: bookingId.toNumber() }, 'reserva cancelada');
 
     await this.events.publish(
       new BookingWasCancelledEvent(booking.id, booking.courtId, booking.userId, booking.date, booking.slot, now),

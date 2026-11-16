@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import type { EventHandler } from '../application/event-bus';
 import { DomainEvent } from '../domain/events/domain-event';
@@ -32,7 +33,7 @@ describe('InProcessEventBus', () => {
   });
 
   it('si un handler falla, los demas reciben el evento y quien publica no se entera', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const logged = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
     const bus = new InProcessEventBus();
     const healthy = new Recorder<SomethingWasDoneEvent>();
     bus.subscribe(SomethingWasDoneEvent, {
@@ -44,6 +45,6 @@ describe('InProcessEventBus', () => {
 
     await expect(bus.publish(new SomethingWasDoneEvent(new Date()))).resolves.toBeUndefined();
     expect(healthy.seen).toHaveLength(1);
-    expect(console.error).toHaveBeenCalled();
+    expect(logged).toHaveBeenCalled();
   });
 });

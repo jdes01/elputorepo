@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { loadConfig } from './config';
 import { configureHttp } from './http';
@@ -8,9 +9,9 @@ import { configureHttp } from './http';
 // app asume que la BD esta al dia.
 async function main() {
   const { port } = loadConfig();
-  const app = configureHttp(await NestFactory.create(AppModule));
+  const app = configureHttp(await NestFactory.create(AppModule, { bufferLogs: true }));
   await app.listen(port);
-  console.log(`escuchando en http://localhost:${port}`);
+  app.get(Logger).log(`escuchando en http://localhost:${port}`);
 }
 
 main();

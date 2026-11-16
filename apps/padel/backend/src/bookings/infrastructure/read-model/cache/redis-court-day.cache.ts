@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { CourtId } from '../../../../clubs/domain/value-objects/court-id.value-object';
 import type { CalendarDate } from '../../../../shared/domain/value-objects/calendar-date.value-object';
 import { REDIS, type Redis } from '../../../../shared/infrastructure/redis.module';
@@ -11,6 +11,8 @@ const TTL_SECONDS = 60;
 
 @Injectable()
 export class RedisCourtDayCache extends CourtDayCache {
+  private readonly logger = new Logger(RedisCourtDayCache.name);
+
   constructor(@Inject(REDIS) private readonly redis: Redis) {
     super();
   }
@@ -38,7 +40,7 @@ export class RedisCourtDayCache extends CourtDayCache {
     try {
       return await command();
     } catch (error) {
-      console.error('cache: Redis no responde, se sigue sin cache:', (error as Error).message);
+      this.logger.warn({ err: error }, 'Redis no responde, se sigue sin cache');
       return undefined;
     }
   }

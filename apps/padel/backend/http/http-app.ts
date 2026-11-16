@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { MongoClient } from 'mongodb';
+import { PARAMS_PROVIDER_TOKEN } from 'nestjs-pino';
 import { Pool } from 'pg';
 import { AppModule } from '../src/app.module';
 import { CourtDayFinder } from '../src/bookings/application/queries/get-availability/court-day.finder';
@@ -21,6 +22,7 @@ import {
 } from '../src/clubs/infrastructure/persistence/in-memory-clubs.finders';
 import { InMemoryCourtRepository } from '../src/clubs/infrastructure/persistence/in-memory-court.repository';
 import { configureHttp } from '../src/http';
+import { loggerParams } from '../src/shared/infrastructure/logging';
 import { Mailer } from '../src/shared/application/mailer';
 import { MongoCourtDayFinder } from '../src/bookings/infrastructure/read-model/mongo-court-day.finder';
 import { MongoReadModelProjector } from '../src/bookings/infrastructure/read-model/mongo-read-model.projector';
@@ -29,7 +31,7 @@ import { MONGO } from '../src/shared/infrastructure/mongo.module';
 import { REDIS } from '../src/shared/infrastructure/redis.module';
 import { RecordingMailer } from '../src/shared/infrastructure/recording-mailer';
 
-type Options = { body?: unknown; user?: string };
+type Options = { body?: unknown; user?: string; headers?: Record<string, string> };
 
 // La app de verdad (AppModule: controllers, handlers, validacion y filtro de
 // errores) con cada puerto en memoria. Sin postgres, sin SMTP, sin docker.
@@ -38,8 +40,13 @@ export async function startHttpApp() {
   const courts = new InMemoryCourtRepository();
   const courtDays = new InMemoryCourtDayRepository(courts);
   const mailer = new RecordingMailer();
+  // Los logs de la app, ya en JSON, a una lista en vez de a la salida del test.
+  const logs: Record<string, unknown>[] = [];
+  const logStream = { write: (line: string) => void logs.push(JSON.parse(line)) };
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(PARAMS_PROVIDER_TOKEN)
+    .useValue(loggerParams('info', logStream))
     .overrideProvider(Pool)
     .useValue({})
     .overrideProvider(DATABASE)
@@ -73,16 +80,17 @@ export async function startHttpApp() {
     .useValue(new InMemoryMyBookingsFinder(courtDays, courts, clubs))
     .compile();
 
-  const app = configureHttp(moduleRef.createNestApplication({ logger: false }));
+  const app = configureHttp(moduleRef.createNestApplication({ bufferLogs: true }));
   await app.listen(0);
   const url = await app.getUrl();
 
   return {
     mailer,
+    logs,
     close: () => app.close(),
 
-    async call(method: string, path: string, { body, user }: Options = {}) {
-      const headers: Record<string, string> = {};
+    async call(method: string, path: string, { body, user, headers: extra }: Options = {}) {
+      const headers: Record<string, string> = { ...extra };
       if (body !== undefined) headers['content-type'] = 'application/json';
       if (user !== undefined) headers['x-user-id'] = user;
       const res = await fetch(url + path, {
@@ -91,7 +99,7 @@ export async function startHttpApp() {
         body: body === undefined ? undefined : JSON.stringify(body),
       });
       const text = await res.text();
-      return { status: res.status, body: text ? JSON.parse(text) : undefined };
+      return { status: res.status, headers: res.headers, body: text ? JSON.parse(text) : undefined };
     },
   };
 }

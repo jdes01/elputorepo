@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CourtNotFound } from '../../../../clubs/domain/errors/club.errors';
 import { CourtRepository } from '../../../../clubs/domain/repositories/court.repository';
 import { EventBus } from '../../../../shared/application/event-bus';
@@ -10,6 +10,8 @@ import type { BookCourtCommand } from './book-court.command';
 
 @Injectable()
 export class BookCourtHandler {
+  private readonly logger = new Logger(BookCourtHandler.name);
+
   constructor(
     private readonly courts: CourtRepository,
     private readonly courtDays: CourtDayRepository,
@@ -27,7 +29,7 @@ export class BookCourtHandler {
       await this.courtDays.save(day);
       return booked;
     });
-    console.log('reserva creada', booking.id.toNumber());
+    this.logger.log({ bookingId: booking.id.toNumber(), courtId: court.id.toNumber() }, 'reserva creada');
 
     await this.events.publish(new CourtWasBookedEvent(booking.id, court.id, userId, date, booking.slot, now));
     return booking;

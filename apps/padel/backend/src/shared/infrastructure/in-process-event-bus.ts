@@ -1,4 +1,4 @@
-import { Global, Injectable, Module } from '@nestjs/common';
+import { Global, Injectable, Logger, Module } from '@nestjs/common';
 import { EventBus, type EventHandler } from '../application/event-bus';
 import type { DomainEvent, EventType } from '../domain/events/domain-event';
 
@@ -7,6 +7,7 @@ import type { DomainEvent, EventType } from '../domain/events/domain-event';
 // no se deshace porque falle una reaccion (el correo).
 @Injectable()
 export class InProcessEventBus extends EventBus {
+  private readonly logger = new Logger(InProcessEventBus.name);
   private readonly handlers = new Map<EventType<DomainEvent>, EventHandler<DomainEvent>[]>();
 
   subscribe<E extends DomainEvent>(type: EventType<E>, handler: EventHandler<E>): void {
@@ -20,7 +21,7 @@ export class InProcessEventBus extends EventBus {
     await Promise.all(
       handlers.map((handler) =>
         handler.handle(event).catch((error: unknown) => {
-          console.error(`${handler.constructor.name} fallo con ${event.constructor.name}:`, error);
+          this.logger.error({ err: error }, `${handler.constructor.name} fallo con ${event.constructor.name}`);
         }),
       ),
     );
