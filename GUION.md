@@ -845,3 +845,65 @@ lo habría encontrado un e2e después de levantar dos contenedores.
 - **Lo que ningún test de esta pirámide ve:** la carrera. Dos reservas a la vez
   siguen pudiendo pasar las dos (capítulo 14).
 - Pizarra: **1 e2e, 52 unitarios, 22 controllers, 12 integración.**
+
+---
+
+## Capítulo 13. Eventos de dominio: reservar ya no sabe del correo
+
+**Tag:** `cap-13` · **Idea:** el correo no es parte de reservar; es algo que
+pasa **porque** se ha reservado. El command handler anuncia lo que ha pasado
+(un evento), y quien quiera reaccionar se suscribe. Reservar deja de saber que
+existe un correo.
+
+### Qué enseñar
+
+1. **El evento** (`bookings/domain/events/court-was-booked.event.ts`):
+   `CourtWasBookedEvent`, en pasado, con lo que pasó en value objects.
+2. **El command handler lo publica** (`book-court.handler.ts`): guarda la
+   reserva y hace `events.publish(new CourtWasBookedEvent(...))`. Compara sus
+   dependencias con las del capítulo 12: ya no tiene ni `Mailer` ni
+   `ClubRepository`.
+3. **El bus** (`shared/application/event-bus.ts` es el puerto,
+   `shared/infrastructure/in-process-event-bus.ts` el adaptador): en el mismo
+   proceso y en la misma petición. `BookingsModule` suscribe sus handlers al
+   arrancar.
+4. **El event handler** (`send-booking-confirmation.handler.ts`): escucha
+   `CourtWasBookedEvent`, busca la pista y el club y manda el correo.
+5. **La inyección de HTML, arreglada.** La plantilla se ha mudado, y de paso lo
+   que no escribimos nosotros pasa por `escapeHtml`. Repite la demo del capítulo
+   1 con un club llamado `Club <b>Norte</b>`: ahora el correo enseña las
+   etiquetas en vez de poner la palabra en negrita.
+6. **El SMTP caído ya no tumba la reserva.** Si un handler falla, el bus lo
+   apunta en el log y sigue. Repite la otra demo del capítulo 1:
+   ```sh
+   docker compose stop mailpit     # reserva: 201, y el fallo del correo en el log
+   docker compose start mailpit
+   ```
+
+### El momento clave: los tests
+
+- **El test del command handler cambia de pregunta.** Antes: "¿se ha mandado
+  un correo?". Ahora: "¿se ha publicado `CourtWasBookedEvent`?". Con un
+  `RecordingEventBus`, sin correo de por medio.
+- **El correo tiene su propio test** (`send-booking-confirmation.handler.test.ts`),
+  incluido el del HTML escapado.
+- **El 500 del capítulo 1 tiene test:** "si el correo no sale, la reserva es 201
+  igual", en los de controllers. El e2e no cambia.
+
+### Qué discutir
+
+- **Añadir una reacción ya no toca reservar.** ¿Avisar al club? ¿Sumar puntos
+  de fidelidad? Un handler nuevo y una línea en `onModuleInit`.
+  `BookCourtHandler` no se entera.
+- **El precio de este bus: un correo que falla se pierde.** Queda en el log,
+  pero nadie lo reintenta. Para no perderlo, el evento tendría que guardarse en
+  la misma transacción que la reserva y entregarse después (un outbox). Aquí se
+  elige lo simple y se dice.
+- **La petición sigue esperando al correo.** El bus es en proceso: `publish`
+  espera a los handlers antes de responder. Reservar sigue tardando lo que
+  tarde el SMTP.
+- **¿Por qué publica el handler y no la entity?** Es la opción más directa: el
+  handler sabe qué ha pasado y cuándo, justo después de guardar. La
+  alternativa (que la entity apunte sus eventos y quien la guarda los
+  recoja) evita olvidarse de publicar, a cambio de más piezas.
+- Pizarra: **1 e2e, 56 unitarios, 23 controllers, 12 integración.**

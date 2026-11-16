@@ -39,6 +39,18 @@ describe('POST /bookings', () => {
     expect(app.mailer.sent.filter((mail) => mail.to === user)).toHaveLength(1);
   });
 
+  it('si el correo no sale, la reserva es 201 igual', async () => {
+    const court = await givenCourt();
+    const user = someUser();
+    app.mailer.down = true;
+
+    const res = await book(court.id, user);
+    app.mailer.down = false;
+
+    expect(res.status).toBe(201);
+    expect(app.mailer.sent.filter((mail) => mail.to === user)).toHaveLength(0);
+  });
+
   it('409 si la franja ya esta reservada', async () => {
     const court = await givenCourt();
     await book(court.id, someUser());

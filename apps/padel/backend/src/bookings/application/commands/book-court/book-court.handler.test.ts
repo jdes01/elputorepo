@@ -10,8 +10,9 @@ import { InMemoryClubRepository } from '../../../../clubs/infrastructure/persist
 import { InMemoryCourtRepository } from '../../../../clubs/infrastructure/persistence/in-memory-court.repository';
 import { CalendarDate } from '../../../../shared/domain/value-objects/calendar-date.value-object';
 import { TimeOfDay } from '../../../../shared/domain/value-objects/time-of-day.value-object';
-import { RecordingMailer } from '../../../../shared/infrastructure/recording-mailer';
+import { RecordingEventBus } from '../../../../shared/infrastructure/recording-event-bus';
 import { SlotAlreadyTaken } from '../../../domain/errors/booking.errors';
+import { CourtWasBookedEvent } from '../../../domain/events/court-was-booked.event';
 import { UserId } from '../../../domain/value-objects/user-id.value-object';
 import { InMemoryBookingRepository } from '../../../infrastructure/persistence/in-memory-booking.repository';
 import { BookCourtCommand } from './book-court.command';
@@ -20,7 +21,7 @@ import { BookCourtHandler } from './book-court.handler';
 // Sin mocks: repositorios en memoria que cumplen los mismos puertos que los de
 // drizzle. El test dice que pasa, no que metodos se llaman.
 let bookings: InMemoryBookingRepository;
-let mailer: RecordingMailer;
+let events: RecordingEventBus;
 let bookCourt: BookCourtHandler;
 let court: Court;
 
@@ -32,8 +33,8 @@ beforeEach(async () => {
   const clubs = new InMemoryClubRepository();
   const courts = new InMemoryCourtRepository();
   bookings = new InMemoryBookingRepository();
-  mailer = new RecordingMailer();
-  bookCourt = new BookCourtHandler(bookings, courts, clubs, mailer);
+  events = new RecordingEventBus();
+  bookCourt = new BookCourtHandler(bookings, courts, events);
 
   const club = Club.register(await clubs.nextId(), ClubName.of('Club Norte'));
   await clubs.save(club);
@@ -48,29 +49,31 @@ describe('BookCourtHandler', () => {
     expect(await bookings.findById(booking.id)).toBe(booking);
   });
 
-  it('manda el correo de confirmacion a quien reserva', async () => {
-    await bookCourt.execute(new BookCourtCommand(ana, court.id, day, at('10:30')));
+  it('publica que se ha reservado la pista', async () => {
+    const booking = await bookCourt.execute(new BookCourtCommand(ana, court.id, day, at('10:30')));
 
-    expect(mailer.sent).toHaveLength(1);
-    expect(mailer.sent[0]).toMatchObject({ to: 'ana@padel.local', subject: 'Reserva confirmada' });
-    expect(mailer.sent[0]!.html).toContain('Club Norte - Pista 1');
-    expect(mailer.sent[0]!.html).toContain('2099-01-10 de 10:30 a 12:00');
+    expect(events.published).toHaveLength(1);
+    const event = events.published[0] as CourtWasBookedEvent;
+    expect(event).toBeInstanceOf(CourtWasBookedEvent);
+    expect(event.bookingId.equals(booking.id)).toBe(true);
+    expect(event.userId.equals(ana)).toBe(true);
+    expect(event.slot.equals(booking.slot)).toBe(true);
   });
 
-  it('si la pista no existe, ni reserva ni correo', async () => {
+  it('si la pista no existe, ni reserva ni evento', async () => {
     const booking = bookCourt.execute(new BookCourtCommand(ana, CourtId.of(999), day, at('10:30')));
 
     await expect(booking).rejects.toThrow(CourtNotFound);
-    expect(mailer.sent).toHaveLength(0);
+    expect(events.published).toHaveLength(0);
   });
 
-  it('si la franja ya esta reservada, ni reserva ni correo', async () => {
+  it('si la franja ya esta reservada, ni reserva ni evento', async () => {
     await bookCourt.execute(new BookCourtCommand(ana, court.id, day, at('10:30')));
 
     const second = bookCourt.execute(new BookCourtCommand(UserId.of('luis@padel.local'), court.id, day, at('10:30')));
 
     await expect(second).rejects.toThrow(SlotAlreadyTaken);
     expect(await bookings.findByCourtAndDate(court.id, day)).toHaveLength(1);
-    expect(mailer.sent).toHaveLength(1);
+    expect(events.published).toHaveLength(1);
   });
 });
