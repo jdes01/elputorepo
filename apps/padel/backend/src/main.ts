@@ -29,8 +29,9 @@ async function main() {
 
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  await app.listen(3000);
-  console.log('escuchando en http://localhost:3000');
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  console.log(`escuchando en http://localhost:${port}`);
 }
 
 main();

@@ -1,0 +1,23 @@
+# Tareas del frontend. Como en el backend, lo que cruza paquetes lo declara el
+# Taskfile de la raiz.
+version: '3'
+
+tasks:
+  dev:
+    desc: Vite en watch
+    cmds: [node_modules/.bin/vite]
+
+  build:
+    desc: Bundle de produccion
+    sources: [src/**/*, index.html, vite.config.ts, tsconfig.json]
+    generates: [dist/**/*]
+    cmds: [node_modules/.bin/vite build]
+
+  typecheck:
+    cmds:
+      - node_modules/.bin/tsc -p tsconfig.json
+      - node_modules/.bin/tsc -p tsconfig.node.json
+
+  lint: { cmds: [node_modules/.bin/oxlint -c ../../../configs/oxlintrc.json --deny-warnings .] }
+  format: { cmds: [node_modules/.bin/oxfmt -c ../../../configs/oxfmtrc.json .] }
+  format:check: { cmds: [node_modules/.bin/oxfmt -c ../../../configs/oxfmtrc.json --check .] }

@@ -1,15 +1,12 @@
 {
+  "extends": "../../../configs/tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2023",
+    // Nest compila a CommonJS: sin "type": "module" en package.json, nodenext emite CJS.
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "outDir": "dist",
-    "rootDir": "src",
+    "types": ["node"],
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": ["node"]
+    "emitDecoratorMetadata": true
   },
-  "include": ["src"]
+  "include": ["src", "e2e", "vitest.e2e.config.mts"]
 }

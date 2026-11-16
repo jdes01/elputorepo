@@ -1,0 +1,26 @@
+# Se instala con `make setup`. Saltar un gate: git commit/push --no-verify.
+#
+# Este fichero no sabe que herramientas hay debajo: llama a `task`, igual que el
+# Makefile. Son dos formas de entrar al MISMO grafo.
+
+min_version: 2.1.12
+
+pre-commit:
+  parallel: true
+  jobs:
+    # `task format` ESCRIBE, y por eso lleva stage_fixed: lo que arregle entra en
+    # el commit en vez de dejarte el arbol sucio.
+    - name: format
+      run: node_modules/.bin/task format
+      stage_fixed: true
+
+    - name: lint
+      run: node_modules/.bin/task lint
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: typecheck
+      run: node_modules/.bin/task typecheck
+    - name: build
+      run: node_modules/.bin/task build

@@ -8,8 +8,10 @@ hecha a propósito y mejora commit a commit: `PLAN.md` es la hoja de ruta y
 
 ## Arrancar
 
+Requisitos: docker con compose, git y [mise](https://mise.jdx.dev).
+
 ```sh
-pnpm install
-docker compose up -d      # postgres :5433, Mailpit :1025 (web en :8025)
-pnpm dev                  # api :3000, web :5173
+make setup     # node, dependencias y git hooks
+make dev       # postgres :5433, Mailpit :8025, api :3000, web :5173
+make           # lista todo lo demás
 ```

@@ -100,3 +100,45 @@ problemas que nadie va a ver hasta producción.
   capítulo 3 (probar el correo), la config del 5 (el servidor por env), y los
   eventos del 13 (sacar el correo de la reserva, y que un correo caído no
   tumbe la reserva).
+
+---
+
+## Capítulo 2. El harness
+
+**Tag:** `cap-02` · **Idea:** antes de tocar el código, montar lo que hace que
+todo el equipo (y los agentes de IA) trabajen igual: mismas versiones, mismas
+comprobaciones, una sola puerta.
+
+### Qué enseñar
+
+1. Desde cero:
+   ```sh
+   make setup     # instala node 26 con mise, dependencias y git hooks
+   make           # lista todo lo que se puede hacer
+   make dev       # postgres, api y web
+   ```
+2. **mise** (`mise.toml`): la versión de node está en el repo, no en la máquina
+   de cada uno.
+3. **Catálogo de pnpm** (`pnpm-workspace.yaml`): una versión por dependencia
+   compartida. Dos copias de react = "Invalid hook call" en runtime.
+4. **La cadena** (cabecera de `Taskfile.yml`):
+   ```
+   Makefile  ─┐
+   lefthook  ─┼─>  Taskfile.yml (raíz)  ──>  Taskfile de cada app
+   (CI)      ─┘
+   ```
+   Makefile, hooks y CI llaman a lo mismo. "En mi máquina pasaba" deja de ser
+   una explicación posible.
+5. **lefthook** (`lefthook.yml`): haz un commit con un `==` y mira cómo lo para.
+6. `configs/tsconfig.web.json`: lo importante es lo que **no** declara (los
+   tipos de node). Una barrera puesta con configuración, no con disciplina.
+
+### Qué discutir
+
+- El lint encontró tres `==` en el código guarro y un import de nodemailer
+  mal usado en el del capítulo 1. **Primer valor del harness: bugs gratis.**
+- `no-console` está apagado en el backend con un comentario que lo
+  explica (`configs/oxlintrc.json`). Deuda declarada y a la vista vs. un aviso
+  que todo el mundo ignora.
+- El typecheck `strict` pasa a la primera. ¿Buena noticia? No: el `any` lo tapa
+  todo. Un harness verde no significa código sano.

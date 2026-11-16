@@ -1,0 +1,78 @@
+# La puerta unica de todo lo que es codigo.
+#
+#   Makefile  ─┐
+#   lefthook  ─┼─>  ESTE FICHERO  ──>  Taskfile de cada paquete
+#   (CI)      ─┘    (el grafo)         (sus tasks y el comando real)
+#
+# Makefile, lefthook y (mas adelante) CI son formas distintas de llamar aqui, no
+# definiciones distintas de lo mismo. Ninguno sabe que herramienta hay debajo, y
+# por eso "en mi maquina pasaba" deja de ser una explicacion posible.
+#
+#   - Taskfile de cada paquete -> sus tareas y el comando real, por
+#     node_modules/.bin/ y no por pnpm (arrancar pnpm cuesta ~750 ms).
+#   - este fichero             -> lo que abarca varios paquetes.
+#   - Makefile                 -> lo que envuelve docker.
+#
+#   task              -> lista todo lo disponible
+#   task --dry lint   -> que se ejecutaria, sin ejecutar nada
+
+version: '3'
+
+# Un task que piden varios se ejecuta UNA vez, no una por peticion.
+run: once
+
+# Cada task escribe su salida de golpe al terminar, y solo si falla: con varias
+# tareas en paralelo, intercalada es ilegible y la de las verdes es ruido.
+output:
+  group:
+    error_only: true
+
+includes:
+  backend: { taskfile: ./apps/padel/backend/Taskfile.yml, dir: ./apps/padel/backend }
+  frontend: { taskfile: ./apps/padel/frontend/Taskfile.yml, dir: ./apps/padel/frontend }
+
+tasks:
+  default:
+    cmds: [task --list]
+    silent: true
+
+  dev:
+    desc: Backend y frontend en watch (lanzalo con `make dev`, que le quita el buffer a la salida)
+    deps: [backend:dev, frontend:dev]
+
+  lint:
+    desc: oxlint en todos los paquetes
+    deps: [backend:lint, frontend:lint]
+
+  format:
+    desc: oxfmt en todos los paquetes (ESCRIBE)
+    deps: [backend:format, frontend:format, format:root]
+
+  format:check:
+    desc: Comprueba el formato sin escribir
+    deps: [backend:format:check, frontend:format:check, format:root:check]
+
+  typecheck:
+    desc: tsc en todos los paquetes
+    deps: [backend:typecheck, frontend:typecheck]
+
+  test:
+    desc: Todos los tests (de momento, solo hay e2e)
+    deps: [test:e2e]
+
+  test:e2e:
+    desc: e2e de API (necesita docker)
+    deps: [backend:test:e2e]
+
+  build:
+    desc: Compila todos los paquetes
+    deps: [backend:build, frontend:build]
+
+  # Lo que no es de ningun paquete: PLAN.md, configs/, el compose...
+  format:root:
+    internal: true
+    cmds: ["node_modules/.bin/oxfmt -c configs/oxfmtrc.json . '!apps/**'"]
+
+  format:root:check:
+    internal: true
+    cmds: ["node_modules/.bin/oxfmt -c configs/oxfmtrc.json --check . '!apps/**'"]

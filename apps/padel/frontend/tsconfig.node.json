@@ -1,0 +1,9 @@
+{
+  // Lo que corre en node: la config de vite. Separado para que los tipos de
+  // node no lleguen al codigo del navegador.
+  "extends": "../../../configs/tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts"]
+}

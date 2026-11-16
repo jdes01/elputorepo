@@ -6,9 +6,4 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: padel
     ports:
-      - "5433:5432"
-  mailpit:
-    image: axllent/mailpit:v1.27
-    ports:
-      - "1025:1025"
-      - "8025:8025"
+      - '5433:5432'

@@ -1,9 +1,14 @@
 {
   "name": "padel",
-  "private": true,
   "version": "0.0.0",
-  "packageManager": "pnpm@11.25.0",
-  "scripts": {
-    "dev": "pnpm -r --parallel dev"
-  }
+  "private": true,
+  "devDependencies": {
+    "@go-task/cli": "3.53.1",
+    "lefthook": "2.1.12",
+    "oxfmt": "catalog:"
+  },
+  "engines": {
+    "node": "26.x"
+  },
+  "packageManager": "pnpm@11.25.0"
 }

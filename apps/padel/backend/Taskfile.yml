@@ -1,0 +1,28 @@
+# Tareas del backend. Este fichero solo sabe de si mismo: lo que cruza paquetes
+# vive en el Taskfile de la raiz.
+version: '3'
+
+tasks:
+  dev:
+    desc: El backend en watch
+    cmds: [node_modules/.bin/nest start --watch]
+
+  build:
+    desc: Compila a dist/
+    sources: [src/**/*.ts, tsconfig.json, tsconfig.build.json, nest-cli.json]
+    generates: [dist/**/*]
+    cmds: [node_modules/.bin/nest build]
+
+  start:
+    desc: Arranca lo ya compilado
+    cmds: [node dist/main.js]
+
+  test:e2e:
+    desc: e2e de API contra la app compilada y un postgres de usar y tirar (necesita docker)
+    deps: [build]
+    cmds: [node_modules/.bin/vitest run --config vitest.e2e.config.mts]
+
+  typecheck: { cmds: [node_modules/.bin/tsc -p tsconfig.json] }
+  lint: { cmds: [node_modules/.bin/oxlint -c ../../../configs/oxlintrc.json --deny-warnings .] }
+  format: { cmds: [node_modules/.bin/oxfmt -c ../../../configs/oxfmtrc.json .] }
+  format:check: { cmds: [node_modules/.bin/oxfmt -c ../../../configs/oxfmtrc.json --check .] }

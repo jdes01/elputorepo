@@ -1,2 +1,39 @@
 packages:
-  - "apps/padel/*"
+  - 'apps/padel/*'
+
+# Versiones compartidas: lo que usan varios paquetes se declara aqui una vez y
+# cada package.json lo pide con "catalog:".
+#
+# No es cosmetica: el mismo paquete con dos versiones se instala dos veces. Con
+# react eso es un "Invalid hook call" en runtime; con tipos, dos copias de un
+# mismo tipo nominal que dejan de encajar entre paquetes.
+catalog:
+  react: 19.2.8
+  react-dom: 19.2.8
+  '@types/react': 19.2.18
+  '@types/react-dom': 19.2.5
+  vite: 8.2.2
+  '@vitejs/plugin-react': 6.1.1
+  # node 26 es lo que corre (mise.toml).
+  '@types/node': 26.6.5
+  typescript: 6.0.3
+  oxlint: 1.80.0
+  oxfmt: 0.65.0
+  vitest: 4.1.11
+
+# Scripts de instalacion permitidos. pnpm 11 los bloquea por defecto y falla el
+# install si hay alguno sin revisar: es una decision de confianza, no un tramite.
+allowBuilds:
+  # Su postinstall coloca el binario de la plataforma. Sin el no hay git hooks.
+  lefthook: true
+  # Su postinstall descarga el binario de Go. Sin el, lo intenta en la PRIMERA
+  # ejecucion, que es peor: sin red en ese momento, falla.
+  '@go-task/cli': true
+
+  # --- negaciones revisadas ---------------------------------------------------
+  # Transitivas de testcontainers. Compilan bindings nativos OPCIONALES: sin
+  # ellos hay fallback en JS puro. No merece meter un compilador de C en el install.
+  ssh2: false
+  cpu-features: false
+  # Su postinstall es para usarlo como CLI; como transitiva no aporta nada.
+  protobufjs: false

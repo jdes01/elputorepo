@@ -1,0 +1,10 @@
+{
+  // Lo que usa `nest build`: el tsconfig.json con emision.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src"]
+}

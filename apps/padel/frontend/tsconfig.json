@@ -1,12 +1,7 @@
 {
+  // Codigo del navegador. vite.config.ts es de node y va en tsconfig.node.json.
+  "extends": "../../../configs/tsconfig.web.json",
   "compilerOptions": {
-    "target": "ES2023",
-    "lib": ["ES2023", "DOM"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "skipLibCheck": true,
-    "noEmit": true,
     "types": ["vite/client"]
   },
   "include": ["src"]

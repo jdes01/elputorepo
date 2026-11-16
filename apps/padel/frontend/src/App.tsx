@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 const API = 'http://localhost:3000';
 
 export default function App() {
-  const [userId, setUserId] = useState(localStorage.getItem('userId') || 'ana@padel.local');
+  const [userId, setUserId] = useState(localStorage.getItem('userId') || 'ana');
   const [clubs, setClubs] = useState<any[]>([]);
   const [clubId, setClubId] = useState<any>(null);
   const [courts, setCourts] = useState<any[]>([]);
@@ -19,18 +19,26 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('userId', userId);
-    fetch(API + '/clubs').then((r) => r.json()).then(setClubs);
-    fetch(API + '/me/bookings', { headers: { 'x-user-id': userId } }).then((r) => r.json()).then(setMyBookings);
+    fetch(API + '/clubs')
+      .then((r) => r.json())
+      .then(setClubs);
+    fetch(API + '/me/bookings', { headers: { 'x-user-id': userId } })
+      .then((r) => r.json())
+      .then(setMyBookings);
   }, [userId]);
 
   useEffect(() => {
     if (!clubId) return;
-    fetch(API + '/clubs/' + clubId + '/courts').then((r) => r.json()).then(setCourts);
+    fetch(API + '/clubs/' + clubId + '/courts')
+      .then((r) => r.json())
+      .then(setCourts);
   }, [clubId]);
 
   useEffect(() => {
     if (!courtId) return;
-    fetch(API + '/courts/' + courtId + '/availability?date=' + date).then((r) => r.json()).then(setSlots);
+    fetch(API + '/courts/' + courtId + '/availability?date=' + date)
+      .then((r) => r.json())
+      .then(setSlots);
   }, [courtId, date]);
 
   async function createClub() {
@@ -40,7 +48,9 @@ export default function App() {
       body: JSON.stringify({ name: clubName }),
     });
     setClubName('');
-    fetch(API + '/clubs').then((r) => r.json()).then(setClubs);
+    fetch(API + '/clubs')
+      .then((r) => r.json())
+      .then(setClubs);
   }
 
   async function createCourt() {
@@ -50,27 +60,38 @@ export default function App() {
       body: JSON.stringify({ name: courtName, opens, closes }),
     });
     setCourtName('');
-    fetch(API + '/clubs/' + clubId + '/courts').then((r) => r.json()).then(setCourts);
+    fetch(API + '/clubs/' + clubId + '/courts')
+      .then((r) => r.json())
+      .then(setCourts);
   }
 
   async function book(start: string) {
     setError('');
-    const r = await fetch(API + '/bookings', {
+    const res = await fetch(API + '/bookings', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-user-id': userId },
       body: JSON.stringify({ courtId, date, start }),
     });
-    if (!r.ok) setError((await r.json()).message);
-    fetch(API + '/courts/' + courtId + '/availability?date=' + date).then((r) => r.json()).then(setSlots);
-    fetch(API + '/me/bookings', { headers: { 'x-user-id': userId } }).then((r) => r.json()).then(setMyBookings);
+    if (!res.ok) setError((await res.json()).message);
+    fetch(API + '/courts/' + courtId + '/availability?date=' + date)
+      .then((r) => r.json())
+      .then(setSlots);
+    fetch(API + '/me/bookings', { headers: { 'x-user-id': userId } })
+      .then((r) => r.json())
+      .then(setMyBookings);
   }
 
   async function cancel(id: number) {
     setError('');
-    const r = await fetch(API + '/bookings/' + id, { method: 'DELETE', headers: { 'x-user-id': userId } });
-    if (!r.ok) setError((await r.json()).message);
-    fetch(API + '/me/bookings', { headers: { 'x-user-id': userId } }).then((r) => r.json()).then(setMyBookings);
-    if (courtId) fetch(API + '/courts/' + courtId + '/availability?date=' + date).then((r) => r.json()).then(setSlots);
+    const res = await fetch(API + '/bookings/' + id, { method: 'DELETE', headers: { 'x-user-id': userId } });
+    if (!res.ok) setError((await res.json()).message);
+    fetch(API + '/me/bookings', { headers: { 'x-user-id': userId } })
+      .then((r) => r.json())
+      .then(setMyBookings);
+    if (courtId)
+      fetch(API + '/courts/' + courtId + '/availability?date=' + date)
+        .then((r) => r.json())
+        .then(setSlots);
   }
 
   return (
@@ -86,7 +107,7 @@ export default function App() {
           <h2>Clubs</h2>
           {clubs.map((c) => (
             <div key={c.id}>
-              <button onClick={() => setClubId(c.id)} style={{ fontWeight: c.id == clubId ? 'bold' : 'normal' }}>
+              <button onClick={() => setClubId(c.id)} style={{ fontWeight: c.id === clubId ? 'bold' : 'normal' }}>
                 {c.name}
               </button>
             </div>
@@ -100,7 +121,7 @@ export default function App() {
             <h2>Pistas</h2>
             {courts.map((c) => (
               <div key={c.id}>
-                <button onClick={() => setCourtId(c.id)} style={{ fontWeight: c.id == courtId ? 'bold' : 'normal' }}>
+                <button onClick={() => setCourtId(c.id)} style={{ fontWeight: c.id === courtId ? 'bold' : 'normal' }}>
                   {c.name} ({c.opens}-{c.closes})
                 </button>
               </div>

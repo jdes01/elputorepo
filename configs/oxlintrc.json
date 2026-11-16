@@ -1,0 +1,55 @@
+{
+  "$schema": "../node_modules/oxlint/configuration_schema.json",
+
+  "plugins": ["eslint", "typescript", "import", "promise", "unicorn", "oxc", "react", "react-perf", "jsx-a11y", "node"],
+
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+
+  "env": {
+    "es2024": true,
+    "node": true,
+    "browser": true
+  },
+
+  "rules": {
+    "eqeqeq": "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "no-debugger": "error",
+    "no-console": "warn",
+    // Obsoleta desde el JSX transform automatico: "jsx": "react-jsx".
+    "react/react-in-jsx-scope": "off",
+    // Los @Module de Nest son clases vacias a proposito: el decorador ES el contenido.
+    "@typescript-eslint/no-extraneous-class": ["warn", { "allowWithDecorator": true }],
+    // Marcan CUALQUIER funcion u objeto inline pasado como prop, que es como se
+    // escribe React. Un aviso que nunca se va a atender solo entrena a ignorar
+    // la salida del linter.
+    "react-perf/jsx-no-new-function-as-prop": "off",
+    "react-perf/jsx-no-new-object-as-prop": "off"
+  },
+
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**"],
+
+  "overrides": [
+    {
+      // El backend aun loguea con console.log. Se apaga aqui, a la vista, hasta
+      // que haya un logger estructurado: un aviso que nadie atiende es ruido.
+      "files": ["**/backend/src/**"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      // Imports por efecto: reflect-metadata monta los metadatos de los
+      // decoradores antes de que arranque Nest.
+      "files": ["**/src/main.ts"],
+      "rules": {
+        "import/no-unassigned-import": "off"
+      }
+    }
+  ]
+}

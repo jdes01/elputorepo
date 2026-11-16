@@ -1,9 +1,10 @@
 import { Body, Controller, Delete, Get, Headers, HttpException, Param, Post, Query } from '@nestjs/common';
-import nodemailer from 'nodemailer';
 import { Pool } from 'pg';
 
-export const db = new Pool({ connectionString: 'postgres://postgres:postgres@localhost:5433/padel' });
-const mailer = nodemailer.createTransport({ host: 'localhost', port: 1025 });
+// DATABASE_URL permite apuntar a otra BD: los e2e usan la de su contenedor.
+export const db = new Pool({
+  connectionString: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5433/padel',
+});
 
 @Controller()
 export class AppController {
@@ -54,8 +55,7 @@ export class AppController {
     const closes = parseInt(court.closes.split(':')[0]) * 60 + parseInt(court.closes.split(':')[1]);
     while (m + 90 <= closes) {
       const start = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
-      const end =
-        String(Math.floor((m + 90) / 60)).padStart(2, '0') + ':' + String((m + 90) % 60).padStart(2, '0');
+      const end = String(Math.floor((m + 90) / 60)).padStart(2, '0') + ':' + String((m + 90) % 60).padStart(2, '0');
       const taken = bookings.find((b) => b.start < end && b.end > start);
       slots.push({ start, end, free: !taken });
       m += 90;
@@ -86,8 +86,9 @@ export class AppController {
       throw new HttpException('no se puede reservar en el pasado', 400);
     }
 
-    const existing = (await db.query('SELECT * FROM bookings WHERE court_id = $1 AND date = $2', [body.courtId, body.date]))
-      .rows;
+    const existing = (
+      await db.query('SELECT * FROM bookings WHERE court_id = $1 AND date = $2', [body.courtId, body.date])
+    ).rows;
     for (const b of existing) {
       if (b.start < end && b.end > body.start) {
         throw new HttpException('la pista ya esta reservada a esa hora', 409);
@@ -99,21 +100,6 @@ export class AppController {
       [body.courtId, userId, body.date, body.start, end],
     );
     console.log('reserva creada', r.rows[0]);
-
-    // correo de confirmacion
-    const info = (
-      await db.query(
-        'SELECT c.name AS court, cl.name AS club FROM courts c JOIN clubs cl ON cl.id = c.club_id WHERE c.id = $1',
-        [body.courtId],
-      )
-    ).rows[0];
-    await mailer.sendMail({
-      from: 'reservas@padel.local',
-      to: userId,
-      subject: 'Reserva confirmada',
-      html: `<h1>Reserva confirmada</h1><p>${info.club} - ${info.court}</p><p>${body.date} de ${body.start} a ${end}</p>`,
-    });
-
     return r.rows[0];
   }
 
@@ -121,7 +107,7 @@ export class AppController {
   async cancel(@Headers('x-user-id') userId: string, @Param('id') id: string) {
     const b = (await db.query('SELECT * FROM bookings WHERE id = $1', [id])).rows[0];
     if (!b) throw new HttpException('la reserva no existe', 404);
-    if (b.user_id != userId) throw new HttpException('no es tu reserva', 403);
+    if (b.user_id !== userId) throw new HttpException('no es tu reserva', 403);
 
     const hours = (new Date(b.date + 'T' + b.start).getTime() - Date.now()) / 1000 / 60 / 60;
     if (hours < 24) throw new HttpException('solo se cancela con 24h de antelacion', 400);

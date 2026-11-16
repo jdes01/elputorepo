@@ -1,0 +1,14 @@
+{
+  // Base de todo lo que se compila para el NAVEGADOR.
+  //
+  // Lo importante es lo que NO declara: `types`. Con los tipos de node aqui, un
+  // `import ... from 'node:crypto'` en codigo de navegador pasaria el typecheck
+  // y reventaria en vite. Cada consumidor declara los suyos (una app web:
+  // ["vite/client"]), y tiene que ser el: con pnpm, `vite/client` vive en el
+  // node_modules del paquete y no resolveria desde configs/.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx"
+  }
+}
