@@ -18,6 +18,9 @@ import { CancelBookingController } from './controllers/cancel-booking.controller
 import { GetAvailabilityController } from './controllers/get-availability.controller';
 import { ListMyBookingsController } from './controllers/list-my-bookings.controller';
 import { DrizzleCourtDayRepository } from './persistence/drizzle-court-day.repository';
+import { CachedCourtDayFinder } from './read-model/cache/cached-court-day.finder';
+import { CourtDayCache } from './read-model/cache/court-day.cache';
+import { RedisCourtDayCache } from './read-model/cache/redis-court-day.cache';
 import { MongoCourtDayFinder } from './read-model/mongo-court-day.finder';
 import { MongoMyBookingsFinder } from './read-model/mongo-my-bookings.finder';
 import { MongoReadModelProjector } from './read-model/mongo-read-model.projector';
@@ -33,7 +36,9 @@ import { MongoReadModelProjector } from './read-model/mongo-read-model.projector
     // Lectura: query handlers sobre finders.
     GetAvailabilityHandler,
     ListMyBookingsHandler,
-    { provide: CourtDayFinder, useClass: MongoCourtDayFinder },
+    MongoCourtDayFinder,
+    { provide: CourtDayCache, useClass: RedisCourtDayCache },
+    { provide: CourtDayFinder, useClass: CachedCourtDayFinder },
     { provide: MyBookingsFinder, useClass: MongoMyBookingsFinder },
     // Reacciones a eventos.
     SendBookingConfirmationHandler,

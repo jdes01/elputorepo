@@ -2,12 +2,13 @@
 # vive en el Taskfile de la raiz.
 version: '3'
 
-# La BD, el correo y el modelo de lectura del docker-compose.yml, vistos desde el host. Literal a proposito: en
+# La BD, el correo, el modelo de lectura y la cache del docker-compose.yml, vistos desde el host. Literal a proposito: en
 # local siempre vale lo mismo y no es un secreto.
 env:
   DATABASE_URL: postgres://postgres:postgres@localhost:5433/padel
   SMTP_URL: smtp://localhost:1025
   MONGO_URL: mongodb://localhost:27017/padel
+  REDIS_URL: redis://localhost:6379
 
 tasks:
   dev:

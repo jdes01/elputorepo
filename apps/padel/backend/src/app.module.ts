@@ -5,8 +5,9 @@ import { DatabaseModule } from './shared/infrastructure/database.module';
 import { EventBusModule } from './shared/infrastructure/in-process-event-bus';
 import { MailModule } from './shared/infrastructure/mail.module';
 import { MongoModule } from './shared/infrastructure/mongo.module';
+import { RedisModule } from './shared/infrastructure/redis.module';
 
 @Module({
-  imports: [DatabaseModule, MongoModule, MailModule, EventBusModule, ClubsModule, BookingsModule],
+  imports: [DatabaseModule, MongoModule, RedisModule, MailModule, EventBusModule, ClubsModule, BookingsModule],
 })
 export class AppModule {}

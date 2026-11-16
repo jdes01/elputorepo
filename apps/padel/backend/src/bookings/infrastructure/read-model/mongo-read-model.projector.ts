@@ -4,6 +4,7 @@ import type { CourtWasOpenedEvent } from '../../../clubs/domain/events/court-was
 import { MONGO } from '../../../shared/infrastructure/mongo.module';
 import type { BookingWasCancelledEvent } from '../../domain/events/booking-was-cancelled.event';
 import type { CourtWasBookedEvent } from '../../domain/events/court-was-booked.event';
+import { CourtDayCache } from './cache/court-day.cache';
 import { courtDayId, readModel } from './read-model';
 
 // Mantiene el modelo de lectura al dia con los eventos. Cada escritura es
@@ -13,7 +14,10 @@ import { courtDayId, readModel } from './read-model';
 export class MongoReadModelProjector {
   private readonly model;
 
-  constructor(@Inject(MONGO) db: Db) {
+  constructor(
+    @Inject(MONGO) db: Db,
+    private readonly cache: CourtDayCache,
+  ) {
     this.model = readModel(db);
   }
 
@@ -42,6 +46,9 @@ export class MongoReadModelProjector {
       { $setOnInsert: { courtId, date }, $addToSet: { bookedStarts: event.slot.start.toString() } },
       { upsert: true },
     );
+    // Despues de escribir, nunca antes: si no, una lectura entre medias volveria
+    // a guardar en la cache la agenda vieja.
+    await this.cache.evict(event.courtId, event.date);
     await this.model.myBookings.replaceOne(
       { _id: event.bookingId.toNumber() },
       {
@@ -62,6 +69,7 @@ export class MongoReadModelProjector {
       { _id: courtDayId(event.courtId.toNumber(), event.date.toString()) },
       { $pull: { bookedStarts: event.slot.start.toString() } },
     );
+    await this.cache.evict(event.courtId, event.date);
     await this.model.myBookings.deleteOne({ _id: event.bookingId.toNumber() });
   }
 
@@ -71,6 +79,7 @@ export class MongoReadModelProjector {
       this.model.courts.deleteMany({}),
       this.model.courtDays.deleteMany({}),
       this.model.myBookings.deleteMany({}),
+      this.cache.clear(),
     ]);
   }
 }

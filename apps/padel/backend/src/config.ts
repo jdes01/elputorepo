@@ -6,6 +6,7 @@ const EnvSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   SMTP_URL: z.url({ protocol: /^smtps?$/ }),
   MONGO_URL: z.url({ protocol: /^mongodb(\+srv)?$/ }),
+  REDIS_URL: z.url({ protocol: /^rediss?$/ }),
   PORT: z.coerce.number().int().positive().default(3000),
 });
 
@@ -14,6 +15,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   if (!result.success) {
     throw new Error(`Configuracion invalida:\n${z.prettifyError(result.error)}`);
   }
-  const { DATABASE_URL, SMTP_URL, MONGO_URL, PORT } = result.data;
-  return { databaseUrl: DATABASE_URL, smtpUrl: SMTP_URL, mongoUrl: MONGO_URL, port: PORT };
+  const { DATABASE_URL, SMTP_URL, MONGO_URL, REDIS_URL, PORT } = result.data;
+  return { databaseUrl: DATABASE_URL, smtpUrl: SMTP_URL, mongoUrl: MONGO_URL, redisUrl: REDIS_URL, port: PORT };
 }

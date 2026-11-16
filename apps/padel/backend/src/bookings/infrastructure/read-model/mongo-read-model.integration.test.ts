@@ -15,6 +15,7 @@ import { CourtWasBookedEvent } from '../../domain/events/court-was-booked.event'
 import { BookingId } from '../../domain/value-objects/booking-id.value-object';
 import { UserId } from '../../domain/value-objects/user-id.value-object';
 import { DrizzleCourtDayRepository } from '../persistence/drizzle-court-day.repository';
+import { InMemoryCourtDayCache } from './cache/in-memory-court-day.cache';
 import { MongoCourtDayFinder } from './mongo-court-day.finder';
 import { MongoMyBookingsFinder } from './mongo-my-bookings.finder';
 import { MongoReadModelProjector } from './mongo-read-model.projector';
@@ -28,7 +29,7 @@ let myBookings: MongoMyBookingsFinder;
 
 beforeAll(async () => {
   mongo = await testMongo();
-  projector = new MongoReadModelProjector(mongo.mongo);
+  projector = new MongoReadModelProjector(mongo.mongo, new InMemoryCourtDayCache());
   days = new MongoCourtDayFinder(mongo.mongo);
   myBookings = new MongoMyBookingsFinder(mongo.mongo);
 });

@@ -22,9 +22,11 @@ import {
 import { InMemoryCourtRepository } from '../src/clubs/infrastructure/persistence/in-memory-court.repository';
 import { configureHttp } from '../src/http';
 import { Mailer } from '../src/shared/application/mailer';
+import { MongoCourtDayFinder } from '../src/bookings/infrastructure/read-model/mongo-court-day.finder';
 import { MongoReadModelProjector } from '../src/bookings/infrastructure/read-model/mongo-read-model.projector';
 import { DATABASE } from '../src/shared/infrastructure/database.module';
 import { MONGO } from '../src/shared/infrastructure/mongo.module';
+import { REDIS } from '../src/shared/infrastructure/redis.module';
 import { RecordingMailer } from '../src/shared/infrastructure/recording-mailer';
 
 type Options = { body?: unknown; user?: string };
@@ -45,6 +47,10 @@ export async function startHttpApp() {
     .overrideProvider(MongoClient)
     .useValue({ close: async () => {} })
     .overrideProvider(MONGO)
+    .useValue({})
+    .overrideProvider(REDIS)
+    .useValue({ isOpen: false })
+    .overrideProvider(MongoCourtDayFinder)
     .useValue({})
     // La lectura la hacen los finders en memoria: el proyector no tiene nada que hacer.
     .overrideProvider(MongoReadModelProjector)

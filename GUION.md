@@ -1126,3 +1126,74 @@ En los tests:
   de Postgres: no les hace falta otra cosa. Se proyecta lo que se lee mucho o
   tiene una forma muy distinta de cómo se guarda.
 - Pizarra: **1 e2e, 67 unitarios, 25 controllers, 18 integración.**
+
+## Capítulo 17. Caché con Redis
+
+**Tag:** `cap-17` · **Idea:** la disponibilidad es lo que más se lee. Antes de
+ir a Mongo se mira en Redis; si está, se responde de memoria. Cuando la agenda
+cambia, el proyector borra esa entrada. Y si Redis se cae, la app sigue: una
+caché caída es una caché vacía.
+
+### Qué enseñar
+
+1. **Redis en el compose** y `REDIS_URL` en la config. `redis.module.ts` crea el
+   cliente con `disableOfflineQueue`: si Redis no está, el comando falla al
+   momento en vez de quedarse esperando a que vuelva.
+2. **El puerto** `CourtDayCache` (`read-model/cache/court-day.cache.ts`): `get`,
+   `set`, `evict` y `clear`. Dos adaptadores: Redis y en memoria.
+3. **Cache-aside** (`cached-court-day.finder.ts`): primero la caché; si no
+   está, Mongo, y se guarda para la próxima. Implementa el mismo
+   `CourtDayFinder`: el query handler no sabe que hay caché. Un decorador más
+   sobre el puerto del capítulo 11.
+4. **Invalidar después de escribir**: el proyector escribe en Mongo y luego
+   hace `evict` de esa pista y ese día. La siguiente lectura vuelve a Mongo y ve
+   el dato nuevo. `make read-model` también vacía la caché.
+5. **El TTL como red de seguridad**: cada entrada caduca a los 60 s
+   (`redis-court-day.cache.ts`). Si una invalidación se pierde, el dato viejo
+   dura como mucho eso.
+
+### El momento clave: apagar Redis
+
+```sh
+make dev
+# disponibilidad de una pista: la primera vez va a Mongo
+docker compose exec redis redis-cli keys 'court-day:*'   # ahí está, ttl 60
+# reservar una franja de esa pista
+docker compose exec redis redis-cli keys 'court-day:*'   # vacío: invalidada
+docker compose stop redis
+# la disponibilidad sigue respondiendo 200, en milisegundos
+docker compose start redis
+# la siguiente lectura la vuelve a cachear
+```
+
+Con Redis caído, el log dice `cache: Redis no responde, se sigue sin cache` y
+la petición va directa a Mongo. Ni error ni espera: al contrario que con Mongo
+en el capítulo anterior, aquí perder la pieza solo cuesta velocidad.
+
+En los tests:
+
+- Unitarios (`cached-court-day.finder.test.ts`): con una fuente que cuenta
+  lecturas y la caché en memoria. La segunda lectura no llega a la fuente;
+  tras invalidar, sí; una pista que no existe no se guarda.
+- Integración (`redis-court-day.cache.integration.test.ts`), contra un Redis y
+  un Mongo de usar y tirar: el TTL, que reservar invalida, que `clear` solo
+  borra agendas y que con el cliente cerrado todo sigue funcionando.
+- Los tests de controllers no tocan Redis: la disponibilidad sale del finder en
+  memoria, como antes.
+
+### Qué discutir
+
+- **La carrera lectura–escritura.** Una lectura saca la agenda de Mongo; entre
+  medias, una reserva escribe y borra la entrada; la lectura termina y guarda
+  la agenda vieja. Esa entrada vieja vive hasta el TTL. Por eso hay TTL aunque
+  se invalide, y por eso es corto.
+- **¿Invalidar o actualizar?** Borrar es más simple y nunca deja la caché con
+  un dato que Mongo no tiene. Escribir el dato nuevo ahorra una lectura, pero
+  hay que calcularlo bien en dos sitios.
+- **Qué no se cachea.** "Mis reservas" cambia con cada reserva del usuario y lo
+  lee solo él: la caché casi nunca acertaría. Una pista que no existe tampoco:
+  si se crea luego, se vería tarde.
+- **¿Hacía falta?** Mongo ya responde en milisegundos. La caché se pone cuando
+  una medida dice que la lectura duele, no antes. Aquí se pone para ver el
+  patrón y lo que cuesta mantenerlo coherente.
+- Pizarra: **1 e2e, 70 unitarios, 25 controllers, 22 integración.**

@@ -13,7 +13,7 @@ declare module 'vitest' {
   }
 }
 
-// Caja negra de verdad: un postgres, un mongo y un servidor de correo de usar y tirar, y la app COMPILADA
+// Caja negra de verdad: un postgres, un mongo, un redis y un servidor de correo de usar y tirar, y la app COMPILADA
 // (dist/src/main.js) arrancada como proceso aparte. El test solo habla HTTP, asi
 // que sobrevive a cualquier refactor de dentro, incluso a cambiar de framework.
 // El precio es la velocidad: contenedor + arranque de la app en cada ejecucion.
@@ -30,6 +30,10 @@ export default async function setup(project: TestProject) {
     .withExposedPorts(27017)
     .withWaitStrategy(Wait.forLogMessage(/Waiting for connections/))
     .start();
+  const redis = await new GenericContainer('redis:7.4-alpine')
+    .withExposedPorts(6379)
+    .withWaitStrategy(Wait.forLogMessage(/Ready to accept connections/))
+    .start();
   await applyMigrations(pg.getConnectionUri());
 
   const port = '3999';
@@ -39,6 +43,7 @@ export default async function setup(project: TestProject) {
       DATABASE_URL: pg.getConnectionUri(),
       SMTP_URL: `smtp://${mailpit.getHost()}:${mailpit.getMappedPort(1025)}`,
       MONGO_URL: `mongodb://${mongo.getHost()}:${mongo.getMappedPort(27017)}/padel`,
+      REDIS_URL: `redis://${redis.getHost()}:${redis.getMappedPort(6379)}`,
       PORT: port,
     },
     stdio: ['ignore', 'ignore', 'pipe'],
@@ -60,6 +65,7 @@ export default async function setup(project: TestProject) {
     await pg.stop();
     await mailpit.stop();
     await mongo.stop();
+    await redis.stop();
   };
 }
 
